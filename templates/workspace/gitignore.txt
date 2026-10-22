@@ -1,0 +1,7 @@
+# Private working files. Your ledger, rules, and archive are yours to commit (privately) or not.
+quarantine/
+scout/
+applications/
+imports/
+dist/resume-print.html
+*.tmp

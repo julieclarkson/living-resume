@@ -1,0 +1,55 @@
+{
+  "name": "living-resume",
+  "version": "1.0.0",
+  "description": "Keep your résumé current from your real build history. One evidence-backed ledger builds your PDF, DOCX, web page, JSON Resume, and LinkedIn packet. You approve every line. Runs inside Claude, Codex, and Cursor. Zero dependencies.",
+  "type": "module",
+  "bin": {
+    "living-resume": "bin/living-resume.mjs",
+    "living-resume-mcp": "mcp/server.mjs"
+  },
+  "mcpName": "io.github.julieclarkson/living-resume",
+  "files": [
+    "bin/",
+    "engine/",
+    "mcp/",
+    "templates/",
+    "skills/",
+    "commands/",
+    ".claude-plugin/",
+    ".mcp.json",
+    "product.config.json",
+    "AGENTS.md",
+    "README.md",
+    "LICENSE",
+    "PRIVACY.md",
+    "SECURITY.md",
+    "CHANGELOG.md",
+    ".cursor/",
+    ".codex/",
+    "server.json"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "living-resume": "node bin/living-resume.mjs",
+    "mcp": "node mcp/server.mjs"
+  },
+  "keywords": [
+    "resume",
+    "cv",
+    "json-resume",
+    "linkedin",
+    "career",
+    "mcp",
+    "claude-code",
+    "codex",
+    "cursor",
+    "ai-agent"
+  ],
+  "author": "Jacobus Company, LLC (https://julieclarkson.com)",
+  "homepage": "https://living-resume.julieclarkson.com",
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {}
+}

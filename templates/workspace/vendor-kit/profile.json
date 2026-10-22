@@ -1,0 +1,20 @@
+{
+  "about": "Capability statement facts (Pro). Leave company empty to skip it. Leave any row's value empty until it's true; empty rows are not printed.",
+  "company": "",
+  "tagline": "",
+  "principalTitle": "Principal",
+  "overview": "",
+  "engagements": "",
+  "entity": [
+    { "label": "Legal name", "value": "" },
+    { "label": "Location", "value": "" },
+    { "label": "In business since", "value": "" },
+    { "label": "Contact", "value": "" },
+    { "label": "Website", "value": "" },
+    { "label": "Business type", "value": "" },
+    { "label": "UEI / CAGE", "value": "" },
+    { "label": "NAICS codes", "value": "" },
+    { "label": "Certifications", "value": "" },
+    { "label": "Insurance", "value": "" }
+  ]
+}

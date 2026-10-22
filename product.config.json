@@ -1,0 +1,31 @@
+{
+  "about": "Product identity and the Polar store. Fill organizationId, benefitId, checkoutUrl and portalUrl after creating the Pro product in Polar. Until organizationId is set, Pro activation is closed and everyone runs Free.",
+  "productId": "living-resume",
+  "name": "Living Résumé",
+  "homepage": "https://living-resume.julieclarkson.com",
+  "credit": {
+    "text": "Kept current with Living Résumé",
+    "url": "https://living-resume.julieclarkson.com/?ref=credit"
+  },
+  "store": {
+    "provider": "polar",
+    "apiBase": "https://api.polar.sh",
+    "organizationId": "",
+    "benefitId": "",
+    "checkoutUrl": "",
+    "portalUrl": "",
+    "metadata": {
+      "app": "living-resume",
+      "sku": "living-resume-pro-annual",
+      "tier": "pro",
+      "type": "subscription",
+      "app_url": "https://living-resume.julieclarkson.com"
+    }
+  },
+  "proFeatures": {
+    "scout": "Monthly scout: finds résumé-worthy moments in your build history and current market wording",
+    "tailor": "Tailored PDF and DOCX for a specific job posting",
+    "capability": "One-page capability statement and vendor kit",
+    "no-credit": "No credit link on your web page"
+  }
+}

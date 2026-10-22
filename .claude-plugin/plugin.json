@@ -1,0 +1,20 @@
+{
+  "name": "living-resume",
+  "displayName": "Living Résumé",
+  "description": "Keep your résumé current from your real build history. One evidence-backed ledger builds your PDF, DOCX, web page, JSON Resume, and LinkedIn packet, and you approve every line.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Jacobus Company, LLC",
+    "url": "https://julieclarkson.com"
+  },
+  "homepage": "https://living-resume.julieclarkson.com",
+  "license": "SEE LICENSE IN LICENSE",
+  "keywords": [
+    "resume",
+    "cv",
+    "career",
+    "linkedin",
+    "json-resume",
+    "job-search"
+  ]
+}

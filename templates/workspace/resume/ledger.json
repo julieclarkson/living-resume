@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "about": "Your résumé ledger: the single source for every format. Each line has its wording, where it appears (surfaces), whether it is public, whether it is verified, and private evidence that is never exported. Edit through your AI tool (\"review my résumé updates\") or by hand.",
+  "person": {
+    "name": "",
+    "email": "",
+    "url": "",
+    "location": { "city": "", "region": "", "regionName": "", "countryCode": "", "remote": true },
+    "profiles": []
+  },
+  "summary": null,
+  "experience": [],
+  "howIWork": { "items": [] },
+  "skills": [],
+  "education": [],
+  "certifications": [],
+  "volunteer": [],
+  "snippets": [],
+  "application_only": []
+}

@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "about": "Rules every public line must pass. The build holds any file that breaks one.",
+  "framing": {
+    "about": "Positive framing: describe decisions and outcomes. Add your own patterns (regular expressions).",
+    "banned_phrases": [
+      { "pattern": "\\b(fired|laid off|let go)\\b", "why": "Negative framing; describe what you moved on to", "flags": "i" },
+      { "pattern": "\\b(rock ?star|ninja|guru|10x)\\b", "why": "Empty superlative; say what you did", "flags": "i" }
+    ]
+  },
+  "disclosure_denylist": [],
+  "denylist_about": "Names that must never appear publicly: private repos, internal project or client names, tools you don't want named, file paths. Matching ignores case, spaces, dashes, underscores, and line breaks.",
+  "denylist_allow": [],
+  "privacy": {
+    "phone_pattern": "\\(?\\b\\d{3}\\)?[ .-]?\\d{3}[ .-]?\\d{4}\\b",
+    "email_allowed": []
+  },
+  "voice": { "plain": true, "about": "plain = no colons, semicolons, or arrows in public lines (they read as machine-written). Set false to turn off." },
+  "limits": {
+    "pdf_max_pages": 2,
+    "linkedin": { "headline": 220, "about": 2600, "position_description": 2000, "position_title": 100 }
+  }
+}

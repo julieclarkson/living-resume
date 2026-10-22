@@ -1,0 +1,10 @@
+{
+  "about": "Living Résumé settings. Paths are relative to this workspace folder.",
+  "projectsRoot": null,
+  "projectsRoot_about": "Optional. The folder that holds your projects. The scout (Pro) reads case-study-maker build logs (<project>/.case-study/events.json) one or two folders deep.",
+  "recording": { "paused": false, "exclude": [] },
+  "scout": { "cadence": "monthly", "signalWords": [] },
+  "publish": null,
+  "publish_about": "Where `publish --write` copies your files. Example: { \"repo\": \"../my-site\" } puts index.html, resume.json and the PDF in my-site/resume/. It never commits.",
+  "linkedin": { "openToWork": null, "oneTimeFixes": [] }
+}

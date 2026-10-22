@@ -1,0 +1,31 @@
+Sam Rivera
+Product Designer and Front-End Developer
+sam.rivera@example.com · linkedin.com/in/sam-rivera-example · Portland, OR
+
+Summary
+I design and build web products for small teams, from research and prototypes to shipped features.
+
+Experience
+Senior Product Designer, Northwind Studio
+Mar 2021 – Present
+Portland, OR
+• Led design for a scheduling app used by 40 clinics, from discovery interviews to launch
+• Built a shared component library in React that cut new-screen build time in half
+• Ran monthly usability sessions and turned findings into a prioritized backlog
+
+Front-End Developer, Bluebird Media
+Jun 2017 – Feb 2021
+• Shipped 30+ marketing sites and landing pages with accessible, responsive layouts
+• Introduced automated accessibility checks to the release process
+
+Education
+B.F.A. Graphic Design, Portland State University
+
+Skills
+Figma, React, TypeScript, Accessibility, User research, Design systems
+
+Certifications
+Certified Professional in Accessibility Core Competencies (CPACC)
+
+Volunteer
+Mentor, Code for Portland

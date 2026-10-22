@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "name": "io.github.julieclarkson/living-resume",
+  "title": "Living Résumé",
+  "description": "Evidence-backed résumé you approve line by line: import LinkedIn, review, build PDF/DOCX/web/JSON Resume.",
+  "version": "1.0.0",
+  "websiteUrl": "https://living-resume.julieclarkson.com",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "living-resume",
+      "version": "1.0.0",
+      "transport": { "type": "stdio" },
+      "runtimeHint": "npx",
+      "packageArguments": [],
+      "environmentVariables": [
+        { "name": "LIVING_RESUME_DIR", "description": "Your résumé workspace folder (default ~/Living-Resume)", "isRequired": false, "isSecret": false, "format": "filepath" }
+      ]
+    }
+  ]
+}
