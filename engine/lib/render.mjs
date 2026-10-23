@@ -40,12 +40,12 @@ export function printHtml(L, { surface = 'pdf', title } = {}) {
 @page{size:Letter;margin:.55in .65in}*{box-sizing:border-box}
 body{font-family:'Instrument Sans',Arial,sans-serif;color:#3A3733;font-size:10pt;line-height:1.42;margin:0}
 a{color:inherit;text-decoration:none}b,h1,h3{color:#1A1917}
-h1{font-size:22pt;font-weight:600;letter-spacing:-.01em;margin:0 0 2px}
-.title{font-size:12pt;font-weight:500;color:#1A1917;margin:0}.sub{color:#635E56;margin:0 0 6px}
-.avail{color:#1A1917;font-weight:500;margin:0 0 6px}
+h1{font-size:22pt;font-weight:600;letter-spacing:-.01em;margin:0 0 6px}
+.title{font-size:12pt;font-weight:500;color:#1A1917;margin:0}.sub{color:#635E56;margin:3px 0 0}
+.avail{color:#1A1917;font-weight:500;margin:12px 0 8px}
 .contact{display:flex;flex-wrap:wrap;gap:2px 16px;font-size:9.4pt;color:#635E56;margin:0}
-.summary{margin:8px 0 0}
-h2{break-after:avoid;font-size:10.5pt;font-weight:600;color:#1A1917;border-top:1px solid #D6D1C8;padding-top:7px;margin:14px 0 6px}
+.summary{margin:16px 0 0}.summary+.summary{margin-top:9px}
+h2{break-after:avoid;font-size:10.5pt;font-weight:600;color:#1A1917;border-top:1px solid #D6D1C8;padding-top:8px;margin:18px 0 7px}
 .job{margin:0 0 8px}.role{display:flex;justify-content:space-between;gap:12px;margin:0;font-size:10.5pt;font-weight:600;break-after:avoid}
 .when{white-space:nowrap;font-weight:400;color:#635E56;font-size:9.6pt}.org{margin:0 0 2px;color:#635E56;font-size:9.6pt}
 ul{margin:2px 0 0;padding-left:15px}li{margin:0 0 4px}p{margin:0}
