@@ -10,7 +10,7 @@
 //   { id, kind: "add"|"edit"|"remove", target, section, text, surfaces, reason, evidence, fields, status: "proposed" }
 import fs from 'node:fs';
 import path from 'node:path';
-import { P, readJSON, writeJSON, loadLedger, ledgerPath, findItem, today, mdPlain, confined, requireWorkspace, safeId } from '../lib/util.mjs';
+import { P, readJSON, writeJSON, loadLedger, ledgerPath, rulesPath, findItem, today, mdPlain, confined, requireWorkspace, safeId } from '../lib/util.mjs';
 
 requireWorkspace();
 const dir = confined(P('proposals'));
@@ -27,6 +27,17 @@ function apply(L, p, text) {
     f.item.history = [...(f.item.history || []), { text: f.item.text, until: now }];
     f.item.text = text; f.item.updated = now; f.item.status = 'verified';
     if (p.evidence) f.item.evidence = [f.item.evidence, p.evidence].filter(Boolean).join(' | ');
+    return;
+  }
+  if (p.kind === 'basics') {
+    // Contact details: fill only empty fields; approving an email also allows it in public files.
+    const f = p.fields || {}; const P = L.person = L.person || {};
+    const str = (v) => (typeof v === 'string' ? v.trim().slice(0, 200) : '');
+    for (const k of ['name', 'email', 'url']) if (str(f[k]) && !P[k]) P[k] = str(f[k]);
+    if (P.url && !/^https?:\/\//.test(P.url)) delete P.url;
+    if ((str(f.city) || str(f.region)) && !P.location?.city) P.location = { ...(P.location || {}), city: str(f.city), region: str(f.region) };
+    if (/^https:\/\/(www\.)?linkedin\.com\/in\//.test(str(f.linkedin)) && !(P.profiles || []).some((x) => x.network === 'LinkedIn')) P.profiles = [...(P.profiles || []), { network: 'LinkedIn', url: str(f.linkedin) }];
+    if (P.email) { const R = readJSON(rulesPath()); R.privacy = R.privacy || {}; const e = P.email.toLowerCase(); if (!(R.privacy.email_allowed || []).includes(e)) { R.privacy.email_allowed = [...(R.privacy.email_allowed || []), e]; writeJSON(rulesPath(), R); } }
     return;
   }
   // add

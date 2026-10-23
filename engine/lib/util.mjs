@@ -42,7 +42,7 @@ export function readJSON(p, fallback) {
 export function writeJSON(p, data) {
   confined(p);
   fs.mkdirSync(path.dirname(p), { recursive: true });
-  const tmp = `${p}.tmp`;
+  const tmp = confined(`${p}.${process.pid}.${Math.random().toString(36).slice(2, 8)}.tmp`);
   fs.writeFileSync(tmp, JSON.stringify(data, null, 2) + '\n');
   fs.renameSync(tmp, p);
 }
@@ -61,7 +61,8 @@ export function loadRules() {
   const R = readJSON(rulesPath());
   R.limits = { pdf_max_pages: 2, ...(R.limits || {}), linkedin: { headline: 220, about: 2600, position_description: 2000, position_title: 100, ...(R.limits?.linkedin || {}) } };
   R.disclosure_denylist = R.disclosure_denylist || [];
-  if (!R.pdf_filename) R.pdf_filename = pdfFilename(readJSON(ledgerPath(), {}).person?.name);
+  // The PDF name becomes a file name in dist/ and on the site: only a plain "Name_Resume.pdf" shape is accepted.
+  if (typeof R.pdf_filename !== 'string' || !/^[A-Za-z0-9][\w.-]{0,100}\.pdf$/.test(R.pdf_filename) || R.pdf_filename.includes('..')) R.pdf_filename = pdfFilename(readJSON(ledgerPath(), {}).person?.name);
   return R;
 }
 export const pdfFilename = (name = 'Resume') => `${String(name).normalize('NFKD').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_') || 'My'}_Resume.pdf`;
@@ -171,4 +172,23 @@ export function projectEventFiles(root, exclude = new Set()) {
     for (const b of dirs(path.join(root, a))) { const g = events(path.join(root, a, b)); if (g) out.push({ project: `${a}/${b}`, file: g }); }
   }
   return out.sort((x, y) => x.project.localeCompare(y.project));
+}
+
+// One writer at a time per workspace (CLI runs, MCP tool calls, two terminals).
+// A lock older than 10 minutes is treated as left behind by a crash.
+export function lockWorkspace(root = ROOT, waitMs = 60_000) {
+  const lock = path.join(root, '.living-resume.lock');
+  const until = Date.now() + waitMs;
+  for (;;) {
+    try { const fd = fs.openSync(lock, 'wx'); fs.writeSync(fd, String(process.pid)); fs.closeSync(fd); break; }
+    catch (e) {
+      if (e.code !== 'EEXIST') throw e;
+      try { if (Date.now() - fs.statSync(lock).mtimeMs > 600_000) { fs.rmSync(lock, { force: true }); continue; } } catch { continue; }
+      if (Date.now() > until) throw new Error('Another Living Résumé command is still running in this workspace. Try again in a moment.');
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 150);
+    }
+  }
+  const release = () => { try { if (fs.readFileSync(lock, 'utf8') === String(process.pid)) fs.rmSync(lock, { force: true }); } catch {} };
+  process.on('exit', release);
+  return release;
 }

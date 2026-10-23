@@ -25,28 +25,53 @@ test('import makes proposals only; nothing is public until approved', () => {
   assert.deepEqual(L.experience.map((x) => [x.title, x.org]), [['Senior Product Designer', 'Northwind Studio'], ['Front-End Developer', 'Bluebird Media']]);
   assert.ok(L.experience.every((x) => x.visibility === 'auto' && x.groups[0].items.length === 0));
   const props = fs.readdirSync(path.join(dir, 'proposals'));
-  assert.equal(props.length, 11);
-  const one = JSON.parse(fs.readFileSync(path.join(dir, 'proposals', props.find((f) => f.endsWith('-003.json'))), 'utf8'));
+  assert.equal(props.length, 12);
+  const one = JSON.parse(fs.readFileSync(path.join(dir, 'proposals', props.find((f) => f.endsWith('-004.json'))), 'utf8'));
   assert.equal(one.status, 'proposed'); assert.match(one.text, /scheduling app used by 40 clinics/);
-  const s = cli(['status'], { dir }); assert.match(s.out, /waiting for review: 11/); assert.match(s.out, /web {7}0 lines/);
+  const s = cli(['status'], { dir }); assert.match(s.out, /waiting for review: 12/); assert.match(s.out, /web {7}0 lines/);
 });
 
 test('review: approve, edit, reject, later', () => {
   const dir = workspace('review');
   cli(['import', SAMPLE], { dir });
   const ids = fs.readdirSync(path.join(dir, 'proposals')).map((f) => f.replace('.json', '')).sort();
-  assert.equal(cli(['review', 'approve', ids[2]], { dir }).code, 0);
-  assert.equal(cli(['review', 'edit', ids[3], 'Built a React component library that halved new-screen build time'], { dir }).code, 0);
-  assert.equal(cli(['review', 'reject', ids[4], 'too old'], { dir }).code, 0);
-  assert.equal(cli(['review', 'later', ids[5]], { dir }).code, 0);
+  assert.equal(cli(['review', 'approve', ids[3]], { dir }).code, 0);
+  assert.equal(cli(['review', 'edit', ids[4], 'Built a React component library that halved new-screen build time'], { dir }).code, 0);
+  assert.equal(cli(['review', 'reject', ids[5], 'too old'], { dir }).code, 0);
+  assert.equal(cli(['review', 'later', ids[6]], { dir }).code, 0);
   const L = JSON.parse(fs.readFileSync(path.join(dir, 'resume', 'ledger.json'), 'utf8'));
   const items = L.experience.flatMap((r) => r.groups.flatMap((g) => g.items));
   assert.equal(items.length, 2);
   assert.ok(items.every((i) => i.visibility === 'public' && i.status === 'verified'));
   assert.ok(items.some((i) => /halved/.test(i.text)));
   const st = (id) => JSON.parse(fs.readFileSync(path.join(dir, 'proposals', `${id}.json`), 'utf8')).status;
-  assert.deepEqual([st(ids[2]), st(ids[3]), st(ids[4]), st(ids[5])], ['approved', 'edited', 'rejected', 'later']);
+  assert.deepEqual([st(ids[3]), st(ids[4]), st(ids[5]), st(ids[6])], ['approved', 'edited', 'rejected', 'later']);
   assert.notEqual(cli(['review', 'approve', 'no-such-id'], { dir }).code, 0);
+});
+
+test('contact details from an import wait for approval, then fill only empty fields', () => {
+  const dir = workspace('basics');
+  cli(['import', SAMPLE], { dir });
+  const led = () => JSON.parse(fs.readFileSync(path.join(dir, 'resume', 'ledger.json'), 'utf8'));
+  assert.equal((led().person.profiles || []).length, 0);
+  const id = fs.readdirSync(path.join(dir, 'proposals')).find((f) => f.endsWith('-001.json')).replace('.json', '');
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'proposals', `${id}.json`), 'utf8')).kind, 'basics');
+  assert.equal(cli(['review', 'approve', id], { dir }).code, 0);
+  assert.equal(led().person.profiles[0].url, 'https://linkedin.com/in/sam-rivera-example');
+  assert.equal(led().person.name, 'Sam Rivera');
+});
+
+test('build refuses to leave a stale PDF behind, and check refuses a stale dist/', { skip: !chrome && 'no Chrome/Chromium' }, () => {
+  const dir = workspace('stale');
+  cli(['import', SAMPLE], { dir });
+  const prefix = fs.readdirSync(path.join(dir, 'proposals'))[0].replace(/-\d{3}\.json$/, '');
+  cli(['review', 'approve-all', prefix], { dir }); assert.equal(cli(['build'], { dir }).code, 0);
+  const b = cli(['build'], { dir, env: { CHROME_PATH: '/bin/false', PATH: '/nonexistent' } });
+  // With no browser the build fails loudly and leaves no PDF to publish.
+  if (b.code !== 0) assert.ok(!fs.existsSync(path.join(dir, 'dist', 'Sam_Rivera_Resume.pdf')));
+  cli(['build'], { dir });
+  const lp = path.join(dir, 'resume', 'ledger.json'); const L = JSON.parse(fs.readFileSync(lp, 'utf8')); L.summary.visibility = 'private'; fs.writeFileSync(lp, JSON.stringify(L));
+  const c = cli(['check'], { dir }); assert.notEqual(c.code, 0); assert.match(c.out, /✗ dist\/ was built from the current ledger/);
 });
 
 test('a proposal cannot smuggle visibility or private fields through "fields"', () => {

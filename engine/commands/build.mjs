@@ -2,6 +2,7 @@
 //   dist/<Name>_Resume.pdf · .docx · index.html · resume.json · linkedin-packet.md
 //   dist/public-report.md (private review copy) · dist/capability-statement.pdf (Pro)
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import { P, loadLedger, loadRules, loadSettings, readJSON, writeText, confined, requireWorkspace } from '../lib/util.mjs';
 import { printHtml, jsonResume, webPage, linkedinPacket, publicReport, capabilityHtml } from '../lib/render.mjs';
 import { releaseOut } from '../lib/quarantine.mjs';
@@ -11,6 +12,9 @@ import { licenseState, productConfig } from '../lib/license.mjs';
 
 requireWorkspace();
 const L = loadLedger(); const R = loadRules(); const S = loadSettings();
+// Start clean: an output that fails to build must never leave last time's copy behind.
+const docxName0 = R.pdf_filename.replace(/\.pdf$/, '.docx');
+for (const f of [R.pdf_filename, docxName0, 'resume-print.html', 'resume.json', 'index.html', 'linkedin-packet.md', 'public-report.md', 'capability-statement.pdf', '.build.json']) fs.rmSync(confined(P('dist', f)), { force: true });
 const pro = licenseState().tier === 'pro'; const cfg = productConfig();
 const work = confined(P('quarantine', 'out', '.work'));
 fs.mkdirSync(work, { recursive: true });
@@ -63,6 +67,10 @@ if (vendor?.company && pro) {
 } else if (vendor?.company) report.push('· capability statement skipped (Pro)');
 
 fs.rmSync(work, { recursive: true, force: true });
+// Stamp: check refuses a dist/ that was built from a different ledger or rules.
+const hash = (f) => crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
+if (!held.length && pdfOk) writeText(P('dist', '.build.json'), JSON.stringify({ ledger: hash(P('resume', 'ledger.json')), rules: hash(P('resume', 'rules.json')), builtAt: new Date().toISOString() }) + '\n');
 console.log(report.join('\n'));
+if (!pdfOk) { console.error('\n✗ The PDF could not be built, so nothing in dist/ is ready to publish.'); process.exit(1); }
 if (held.length) { console.error(`\n${held.length} file(s) held in quarantine/out. Fix the ledger and rebuild.`); process.exit(1); }
 console.log(`\nBuild complete → ${P('dist')}`);

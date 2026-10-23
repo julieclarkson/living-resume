@@ -1,5 +1,6 @@
 // check: every check must pass before anything can be published.
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import { P, loadLedger, loadRules, allItems, mdPlain, requireWorkspace, roleShows } from '../lib/util.mjs';
 import { scanOut, scanIn } from '../lib/quarantine.mjs';
 import { pdfPageCount, pdfText } from '../lib/print.mjs';
@@ -35,6 +36,11 @@ if (R.voice?.plain !== false) {
 
 // 3. Built outputs (run build first)
 const dist = (f) => P('dist', f);
+{
+  const stamp = (() => { try { return JSON.parse(fs.readFileSync(dist('.build.json'), 'utf8')); } catch { return null; } })();
+  const hash = (f) => crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
+  check('dist/ was built from the current ledger and rules (run build after every change)', stamp && stamp.ledger === hash(P('resume', 'ledger.json')) && stamp.rules === hash(P('resume', 'rules.json')));
+}
 if (fs.existsSync(dist(R.pdf_filename))) {
   const pages = pdfPageCount(dist(R.pdf_filename));
   check(`PDF: ≤ ${R.limits.pdf_max_pages} pages`, pages > 0 && pages <= R.limits.pdf_max_pages, `${pages} page(s)`);

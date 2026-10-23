@@ -19,20 +19,27 @@ export function readZip(buf, want = () => true) {
   if (eocd < 0) throw new Error('Not a zip file');
   const count = buf.readUInt16LE(eocd + 10); let p = buf.readUInt32LE(eocd + 16);
   if (count > 5000) throw new Error('Zip has too many entries');
-  let total = 0;
+  let total = 0; const seen = new Set();
+  const need = (end) => { if (end > buf.length) throw new Error('Damaged zip'); };
   for (let n = 0; n < count; n++) {
-    if (buf.readUInt32LE(p) !== 0x02014b50) throw new Error('Damaged zip');
+    need(p + 46); if (buf.readUInt32LE(p) !== 0x02014b50) throw new Error('Damaged zip');
     const method = buf.readUInt16LE(p + 10), csize = buf.readUInt32LE(p + 20), usize = buf.readUInt32LE(p + 24);
     const nlen = buf.readUInt16LE(p + 28), xlen = buf.readUInt16LE(p + 30), clen = buf.readUInt16LE(p + 32), lho = buf.readUInt32LE(p + 42);
     const name = buf.toString('utf8', p + 46, p + 46 + nlen);
     p += 46 + nlen + xlen + clen;
     if (name.endsWith('/') || !want(name)) continue;
-    if (usize > MAX_ENTRY_BYTES || (total += usize) > MAX_TOTAL_BYTES) throw new Error(`Zip entry too large: ${name}`);
-    const lnl = buf.readUInt16LE(lho + 26), lxl = buf.readUInt16LE(lho + 28);
-    const data = buf.subarray(lho + 30 + lnl + lxl, lho + 30 + lnl + lxl + csize);
-    if (method === 0) out.set(name, Buffer.from(data));
-    else if (method === 8) out.set(name, zlib.inflateRawSync(data, { maxOutputLength: MAX_ENTRY_BYTES }));
+    if (usize > MAX_ENTRY_BYTES) throw new Error(`Zip entry too large: ${name}`);
+    // Each entry must own its data (no two entries sharing one block) and stay inside the file.
+    if (seen.has(lho)) throw new Error('Damaged zip (entries share data)'); seen.add(lho);
+    need(lho + 30); const lnl = buf.readUInt16LE(lho + 26), lxl = buf.readUInt16LE(lho + 28);
+    const start = lho + 30 + lnl + lxl; need(start + csize);
+    const data = buf.subarray(start, start + csize);
+    let body;
+    if (method === 0) body = Buffer.from(data);
+    else if (method === 8) { try { body = zlib.inflateRawSync(data, { maxOutputLength: MAX_ENTRY_BYTES }); } catch { throw new Error(`Zip entry too large or damaged: ${name}`); } }
     else throw new Error(`Unsupported zip compression in ${name}`);
+    if ((total += body.length) > MAX_TOTAL_BYTES) throw new Error('Zip contents too large');
+    out.set(name, body);
   }
   return out;
 }
@@ -109,7 +116,8 @@ const HEAD = [
   ['skills', /^(skills|top skills|core skills|technical skills|skills and tools|competencies|core competencies)$/],
   ['certifications', /^(certifications|licenses (?:&|and) certifications|certificates|licenses)$/],
   ['volunteer', /^(volunteer|volunteering|volunteer experience|community|community involvement)$/],
-  ['other', /^(projects|languages|honors|honors (?:&|and) awards|awards|publications|interests|references|contact|page \d+ of \d+)$/],
+  ['contact', /^(contact|contact information|contact info)$/],
+  ['other', /^(projects|languages|honors|honors (?:&|and) awards|awards|publications|interests|references|page \d+ of \d+)$/],
 ];
 export function fromText(text, source = 'résumé') {
   const lines = String(text).replace(/\r/g, '').split('\n').map((l) => l.replace(/\s+$/, '')).filter((l) => !/^\s*page \d+ of \d+\s*$/i.test(l));
@@ -123,8 +131,10 @@ export function fromText(text, source = 'résumé') {
     (sections[cur] = sections[cur] || []).push(l);
   }
   const all = String(text);
-  const email = all.match(/[\w.+-]+@[\w-]+(?:\.[\w-]+)*\.[a-z]{2,}/i); if (email) draft.person.email = email[0];
-  const li = all.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/[\w-]+/i); if (li) draft.person.linkedin = li[0].startsWith('http') ? li[0] : `https://${li[0]}`;
+  // Contact details only from the header block (above the first section), never from the body.
+  const header = [...(sections.top || []), ...(sections.contact || [])].join('\n');
+  const email = header.match(/[\w.+-]{1,64}@[\w-]{1,63}(?:\.[\w-]{1,63}){0,8}\.[a-z]{2,24}\b/i); if (email) draft.person.email = email[0];
+  const li = header.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/[\w-]+/i); if (li) draft.person.linkedin = li[0].startsWith('http') ? li[0] : `https://${li[0]}`;
   const top = (sections.top || []).map((l) => l.trim()).filter(Boolean).filter((l) => !/@|linkedin\.com|^\(?\+?\d[\d\s().-]{7,}$/.test(l));
   if (top[0] && top[0].split(/\s+/).length <= 5) draft.person.name = top[0];
   if (top[1] && top[1].length <= 140) draft.headline = top[1];
@@ -171,34 +181,37 @@ export function fromText(text, source = 'résumé') {
 }
 
 // ── Extract text from a document file. Returns { text, files? } ──
+// The only LinkedIn export files ever read. Messages, connections, phone numbers, addresses, etc. are never opened.
+export const LINKEDIN_FILES = ['profile.csv', 'positions.csv', 'education.csv', 'skills.csv', 'certifications.csv', 'volunteering.csv', 'email addresses.csv'];
+const wanted = (n) => LINKEDIN_FILES.includes(path.basename(n).toLowerCase());
 export function extract(file) {
   const ext = path.extname(file).toLowerCase();
   const stat = fs.statSync(file);
   if (stat.isDirectory()) {
     const files = new Map();
-    for (const n of fs.readdirSync(file)) if (n.toLowerCase().endsWith('.csv')) { const p = path.join(file, n); if (fs.lstatSync(p).isFile() && fs.statSync(p).size < MAX_ENTRY_BYTES) files.set(n, fs.readFileSync(p)); }
-    if (!files.size) throw new Error('That folder has no .csv files (expected a LinkedIn data export).');
-    return { kind: 'linkedin', files, text: [...files.values()].map((b) => b.toString('utf8')).join('\n') };
+    for (const n of fs.readdirSync(file)) if (wanted(n)) { const p = path.join(file, n); if (fs.lstatSync(p).isFile() && fs.statSync(p).size < MAX_ENTRY_BYTES) files.set(n, fs.readFileSync(p)); }
+    if (!files.size) throw new Error('That folder has no LinkedIn profile files (expected a LinkedIn data export).');
+    return { kind: 'linkedin', files, parts: [...files].map(([n, b]) => ({ name: n, text: b.toString('utf8') })) };
   }
   if (stat.size > MAX_IMPORT_BYTES) throw new Error('File is larger than 20 MB.');
   const buf = fs.readFileSync(file);
   if (ext === '.zip') {
-    const files = readZip(buf, (n) => n.toLowerCase().endsWith('.csv'));
-    if (!files.size) throw new Error('That zip has no .csv files (expected a LinkedIn data export).');
-    return { kind: 'linkedin', files, text: [...files.values()].map((b) => b.toString('utf8')).join('\n') };
+    const files = readZip(buf, wanted);
+    if (!files.size) throw new Error('That zip has no LinkedIn profile files (expected a LinkedIn data export).');
+    return { kind: 'linkedin', files, parts: [...files].map(([n, b]) => ({ name: n, text: b.toString('utf8') })) };
   }
   if (ext === '.docx') {
     const xml = readZip(buf, (n) => n === 'word/document.xml').get('word/document.xml');
     if (!xml) throw new Error('No document text found in that .docx.');
     const text = xml.toString('utf8').replace(/<w:tab\/>/g, '\t').replace(/<\/w:p>/g, '\n').replace(/<w:br\/>/g, '\n').replace(/<[^>]+>/g, '')
       .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'");
-    return { kind: 'text', text };
+    return { kind: 'text', parts: [{ name: path.basename(file), text }] };
   }
   if (ext === '.pdf') {
-    try { return { kind: 'text', text: execFileSync('pdftotext', ['-layout', '-enc', 'UTF-8', file, '-'], { stdio: ['ignore', 'pipe', 'pipe'], timeout: 60_000, maxBuffer: 20 * 1024 * 1024 }).toString('utf8').replace(/ {3,}/g, '\n') }; }
+    try { return { kind: 'text', parts: [{ name: path.basename(file), text: execFileSync('pdftotext', ['-layout', '-enc', 'UTF-8', file, '-'], { stdio: ['ignore', 'pipe', 'pipe'], timeout: 60_000, maxBuffer: 20 * 1024 * 1024 }).toString('utf8').replace(/ {3,}/g, '\n') }] }; }
     catch { throw new Error('Reading PDFs needs poppler (macOS: brew install poppler). Or save the PDF as text and import the .txt.'); }
   }
-  if (['.txt', '.md', '.text'].includes(ext)) return { kind: 'text', text: buf.toString('utf8') };
+  if (['.txt', '.md', '.text'].includes(ext)) return { kind: 'text', parts: [{ name: path.basename(file), text: buf.toString('utf8') }] };
   throw new Error(`Can't import ${ext || 'that file'}. Use a LinkedIn export (.zip or folder), .pdf, .docx, .txt, or .md.`);
 }
 
@@ -208,6 +221,11 @@ export function toProposals(draft, { ledger, prefix, evidence }) {
   let n = 0; const pid = () => `${prefix}-${String(++n).padStart(3, '0')}`;
   const add = (section, text, fields = {}, reason = `From your ${draft.source}`) => { if (text && String(text).trim()) proposals.push({ id: pid(), kind: 'add', section, text: String(text).trim(), fields, surfaces: ['web', 'pdf', 'linkedin', 'json'], reason, evidence, status: 'proposed' }); };
   const P = ledger.person || {};
+  // Contact basics are a proposal too: nothing about the person changes until the user approves.
+  const basics = {};
+  for (const k of ['name', 'email', 'url', 'linkedin']) if (draft.person[k] && !(k === 'linkedin' ? (P.profiles || []).some((x) => x.network === 'LinkedIn') : P[k])) basics[k] = draft.person[k];
+  if (draft.person.location && !P.location?.city) { basics.city = draft.person.location.city || ''; basics.region = draft.person.location.region || ''; }
+  if (Object.keys(basics).length) proposals.push({ id: pid(), kind: 'basics', text: Object.entries(basics).map(([k, v]) => `${k}: ${v}`).join(' · '), fields: basics, reason: `Contact details found in your ${draft.source}. Approve only what you want shown.`, evidence, status: 'proposed' });
   if (draft.headline && !P.headline) add('person.headline', draft.headline);
   if (draft.summary && !ledger.summary) add('summary', draft.summary);
   const used = new Set((ledger.experience || []).map((r) => r.id));

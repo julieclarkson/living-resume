@@ -1,0 +1,14 @@
+# Living Résumé
+
+> Living Résumé keeps a résumé current from the user's real build history. One evidence-backed ledger builds a PDF, DOCX, web page, JSON Resume, and a LinkedIn update packet. The user approves every line. It runs inside Claude Code, Codex, and Cursor, and as a local MCP server. Zero dependencies, no account, no server.
+
+## Answers
+- How do I keep my résumé updated automatically? Install Living Résumé in your AI tool, import LinkedIn or your résumé, and run "check my résumé" monthly. It proposes updates from tagged build moments; you approve them; every format rebuilds.
+- Does it invent claims? No. Every public line needs evidence and the user's approval.
+- Can it edit LinkedIn? No automated edits (LinkedIn doesn't allow them). It produces a paste-ready packet within LinkedIn's limits.
+- Pricing: Free (import, review, every format, publish, small credit link on the web page). Pro, yearly via Polar (monthly scout, tailoring, capability statement, no credit link).
+
+## Links
+- Home: https://living-resume.julieclarkson.com/
+- Install (Claude Code): /plugin install living-resume
+- MCP: npx -y -p living-resume living-resume-mcp

@@ -79,10 +79,10 @@ export function jsonResume(L, { site } = {}) {
     basics: {
       name: p.name,
       label: shows(p.headline, S) ? p.headline.text : undefined,
-      email: p.email, url: p.url,
+      email: p.email, url: safeUrl(p.url) || undefined,
       summary: shows(L.summary, S) ? L.summary.text : undefined,
       location: { city: p.location?.city, region: p.location?.regionName || p.location?.region, countryCode: p.location?.countryCode },
-      profiles: p.profiles || [],
+      profiles: (p.profiles || []).filter((x) => safeUrl(x.url)),
       'x-headline': shows(p.headline, S) ? p.headline.text : undefined,
       'x-subline': shows(p.subline, S) ? p.subline.text : undefined,
       'x-availability': shows(p.availability, S) ? p.availability.text : undefined,
@@ -98,7 +98,7 @@ export function jsonResume(L, { site } = {}) {
     interests: shows(L.interests, S) ? [{ name: 'Outside of work', keywords: L.interests.text.replace(/\.$/, '').replace(', and ', ', ').split(', ') }] : [],
     'x-interests-text': shows(L.interests, S) ? L.interests.text : undefined,
     'x-skills-text': pub(L.skills).map((s) => ({ name: s.name, text: s.text })),
-    'x-how-i-work': { items: pub(L.howIWork?.items).map((i) => i.text), note: L.howIWork?.note, noteLink: L.howIWork?.noteLink },
+    'x-how-i-work': { items: pub(L.howIWork?.items).map((i) => i.text), note: L.howIWork?.note, noteLink: safeUrl(L.howIWork?.noteLink) || undefined },
     meta: { ...(links(L).resumeJson ? { canonical: links(L).resumeJson } : {}), version: '3.0.0', lastModified: new Date().toISOString().slice(0, 10) },
   };
 }
@@ -119,7 +119,7 @@ export function linkedinPacket(L, rules, changes = [], settings = {}) {
   const p = L.person;
   out.push(`# LinkedIn update packet · ${new Date().toISOString().slice(0, 10)}\n\nPaste each block into the matching LinkedIn field. LinkedIn doesn't allow automated edits, so this is copy-and-paste by design.\n`);
   if (changes.length) out.push(`## What changed since the last publish\n\n${changes.map((c) => `- ${c}`).join('\n')}\n`);
-  const hl = shows(p.linkedinHeadline, S) ? p.linkedinHeadline.text : (p.headline?.text || p.name);
+  const hl = shows(p.linkedinHeadline, S) ? p.linkedinHeadline.text : shows(p.headline, S) ? p.headline.text : p.name;
   sec('Headline', hl, lim.headline);
   const how = (L.howIWork?.items || []).filter((i) => shows(i, S)).map((i) => `• ${i.text}`).join('\n');
   const about = [shows(L.summary, S) ? L.summary.text : '', how ? `How I work\n${how}` : '', shows(p.availability, S) ? p.availability.text + '.' : ''].filter(Boolean).join('\n\n');

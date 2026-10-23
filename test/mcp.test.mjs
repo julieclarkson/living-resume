@@ -46,6 +46,17 @@ test('rejects paths outside the workspace, symlinks, and bad ids', async () => {
   s.close();
 });
 
+test('parallel review decisions all land in the ledger', async () => {
+  const dir = workspace('mcp4');
+  for (let i = 0; i < 8; i++) fs.writeFileSync(path.join(dir, 'proposals', `p-${i}.json`), JSON.stringify({ id: `p-${i}`, kind: 'add', section: 'certifications', text: `Cert ${i}`, status: 'proposed' }));
+  const s = session(dir);
+  try {
+    const rs = await Promise.all([...Array(8).keys()].map((i) => s.req('tools/call', { name: 'resume_review_decide', arguments: { id: `p-${i}`, action: 'approve' } })));
+    assert.ok(rs.every((r) => !r.result.isError));
+    assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'resume', 'ledger.json'), 'utf8')).certifications.length, 8);
+  } finally { s.close(); }
+});
+
 test('resume_import works for a file inside the workspace', async () => {
   const dir = workspace('mcp3');
   fs.mkdirSync(path.join(dir, 'quarantine', 'in', 'imports'), { recursive: true });
@@ -53,6 +64,6 @@ test('resume_import works for a file inside the workspace', async () => {
   const s = session(dir);
   const r = await s.req('tools/call', { name: 'resume_import', arguments: { path: 'quarantine/in/imports/cv.txt' } });
   assert.equal(r.result.isError, false, r.result.content[0].text);
-  assert.match(r.result.content[0].text, /Lines waiting for your review: 11/);
+  assert.match(r.result.content[0].text, /Lines waiting for your review: 12/);
   s.close();
 });

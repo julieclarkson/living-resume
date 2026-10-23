@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Living Résumé</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Keep your résumé current from your real build history. One evidence-backed ledger builds your PDF, DOCX, web page, JSON Resume, and LinkedIn packet. You approve every line. Runs inside Claude, Codex, and Cursor.">
+<link rel="canonical" href="https://living-resume.julieclarkson.com/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Living Résumé","applicationCategory":"BusinessApplication","operatingSystem":"macOS, Windows, Linux (Node.js 18+)","description":"An evidence-backed résumé you approve line by line. Import LinkedIn or your résumé, review each line, and build a PDF, DOCX, web page, JSON Resume, and LinkedIn packet from one source. Runs inside Claude, Codex, and Cursor, with an MCP server.","url":"https://living-resume.julieclarkson.com/","publisher":{"@type":"Organization","name":"Jacobus Company, LLC"},"offers":[{"@type":"Offer","name":"Free","price":"0","priceCurrency":"USD"}]}</script>
+<style>
+/* Layout: one reading column; the hero is a single ledger line traced to every format it builds. */
+:root{
+  --paper:#F7F8F6; --ink:#15181B; --body:#3B4148; --muted:#69717A; --rule:#D9DDD8;
+  --accent:#1F5E8C; --accent-ink:#FFFFFF; --ok:#2C7A4B; --chip:#E8EEF2; --card:#FFFFFF;
+  --sans:'Instrument Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#111416; --ink:#EEF1F3; --body:#C7CDD3; --muted:#8F98A1; --rule:#2A3036;
+  --accent:#7DB4DE; --accent-ink:#0D1114; --ok:#6CC08E; --chip:#1C2329; --card:#171B1F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111416; --ink:#EEF1F3; --body:#C7CDD3; --muted:#8F98A1; --rule:#2A3036;
+  --accent:#7DB4DE; --accent-ink:#0D1114; --ok:#6CC08E; --chip:#1C2329; --card:#171B1F; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--body);font:17px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+a{color:var(--ink);text-underline-offset:3px;text-decoration-color:var(--rule)}a:hover{text-decoration-color:var(--accent)}
+a:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+h1,h2,h3{color:var(--ink);text-wrap:balance;margin:0}
+h1{font-size:clamp(2.4rem,6vw,4.1rem);line-height:1.02;letter-spacing:-.035em;font-weight:600;max-width:15ch}
+h2{font-size:clamp(1.6rem,3.2vw,2.2rem);line-height:1.12;letter-spacing:-.02em;font-weight:600;max-width:22ch}
+h3{font-size:1.05rem;font-weight:600}
+p{margin:0;max-width:62ch}
+.mono{font-family:var(--mono);font-size:.82rem}
+.label{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+header.top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-block:22px}
+.brand{font-weight:700;color:var(--ink);text-decoration:none;letter-spacing:-.01em}
+nav{display:flex;gap:22px;flex-wrap:wrap}nav a{text-decoration:none;color:var(--muted);font-size:.95rem}nav a:hover{color:var(--ink)}
+
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;padding-block:56px 72px}
+.hero p.lede{font-size:1.2rem;margin-top:22px;color:var(--body)}
+.actions{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;margin-top:30px}
+.btn{display:inline-block;padding:12px 22px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:600;text-decoration:none}
+.works{color:var(--muted);font-size:.92rem}
+
+/* The ledger line: the product's one characteristic object */
+.ledger{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:22px;min-width:0}
+.ledger .row{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.ledger .text{color:var(--ink);font-size:1.08rem;line-height:1.45;margin:12px 0 16px;font-weight:500}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-family:var(--mono);font-size:.78rem;border-top:1px dashed var(--rule);padding-top:14px}
+.kv dt{color:var(--muted)}.kv dd{margin:0;color:var(--body);min-width:0;overflow-wrap:anywhere}
+.ok{color:var(--ok);font-weight:500}.muted{color:var(--muted)}
+.surfaces{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.chip{font-family:var(--mono);font-size:.74rem;background:var(--chip);color:var(--ink);padding:4px 10px;border-radius:999px}
+.decide{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px}
+.decide span{text-align:center;font-size:.85rem;padding:8px 4px;border:1px solid var(--rule);border-radius:8px;color:var(--ink)}
+.decide span:first-child{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+section{padding-block:72px;border-top:1px solid var(--rule)}
+.intro{display:grid;gap:14px;margin-bottom:40px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:28px;counter-reset:s}
+.steps li{list-style:none;display:grid;gap:8px;align-content:start}
+.steps li::before{counter-increment:s;content:counter(s);font-family:var(--mono);font-size:.8rem;color:var(--accent)}
+.steps ol{padding:0;margin:0;display:contents}
+
+.split{display:grid;grid-template-columns:1fr 1fr;gap:40px 56px}
+.split > div{display:grid;gap:10px;align-content:start;min-width:0}
+ul.plain{margin:0;padding-left:18px;display:grid;gap:6px}
+
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.plan{border:1px solid var(--rule);border-radius:14px;padding:26px;display:grid;gap:14px;align-content:start;background:var(--card)}
+.plan.pro{border-color:var(--accent)}
+.plan .price{font-size:1.6rem;color:var(--ink);font-weight:600;letter-spacing:-.01em}
+.plan ul{margin:0;padding-left:18px;display:grid;gap:6px}
+
+pre{margin:0;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.82rem;color:var(--ink);line-height:1.7}
+.faq{display:grid;gap:26px}.faq div{display:grid;gap:6px}
+
+footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--muted);font-size:.9rem;display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
+
+@media (max-width:880px){
+  .hero,.split,.plans{grid-template-columns:1fr}
+  .hero{gap:40px;padding-block:32px 56px}
+  .steps{grid-template-columns:1fr 1fr}
+  nav{display:none}
+}
+@media (max-width:480px){.steps{grid-template-columns:1fr}.decide{grid-template-columns:1fr 1fr}}
+@media (prefers-reduced-motion:no-preference){.ledger{animation:rise .5s ease-out both}@keyframes rise{from{transform:translateY(6px)}to{transform:none}}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#">Living Résumé</a>
+    <nav><a href="#how">How it works</a><a href="#privacy">Privacy</a><a href="#plans">Plans</a><a href="#install">Install</a></nav>
+  </header>
+
+  <div class="hero">
+    <div>
+      <h1>A résumé that keeps up with your work.</h1>
+      <p class="lede">Every line traces to something you actually did. You approve each one, and a single ledger builds your PDF, Word file, web page, JSON Resume, and LinkedIn update.</p>
+      <div class="actions">
+        <a class="btn" href="#install">Start free</a>
+        <span class="works">Runs in Claude, Codex, and Cursor</span>
+      </div>
+    </div>
+
+    <figure class="ledger" aria-label="Example ledger line">
+      <div class="row"><span class="label">ledger line</span><span class="mono">exp-northwind-03</span></div>
+      <p class="text">Led design for a scheduling app used by 40 clinics, from discovery interviews to launch.</p>
+      <dl class="kv">
+        <dt>evidence</dt><dd>launch milestone, build log, Mar 2024 <span class="muted">(private)</span></dd>
+        <dt>status</dt><dd class="ok">verified</dd>
+        <dt>visibility</dt><dd>public</dd>
+      </dl>
+      <div class="surfaces"><span class="chip">PDF</span><span class="chip">DOCX</span><span class="chip">web</span><span class="chip">JSON Resume</span><span class="chip">LinkedIn</span></div>
+      <div class="decide" aria-label="Your decision"><span>Approve</span><span>Edit</span><span>Reject</span><span>Later</span></div>
+    </figure>
+  </div>
+
+  <section id="how">
+    <div class="intro"><span class="label">How it works</span><h2>Five minutes a month, inside the tool you already use.</h2></div>
+    <div class="steps"><ol>
+      <li><h3>Import what you have</h3><p>Your LinkedIn data export or your current résumé. It's scanned before anything reads it.</p></li>
+      <li><h3>Review every line</h3><p>Approve, edit, reject, or save for later. Nothing is public until you say so.</p></li>
+      <li><h3>Build every format</h3><p>A two-page PDF that screening software reads cleanly, a Word file, a web page, JSON Resume, and a paste-ready LinkedIn packet.</p></li>
+      <li><h3>Publish yourself</h3><p>Files land in your site folder. Going live is your own commit, so nothing ships behind your back.</p></li>
+    </ol></div>
+  </section>
+
+  <section>
+    <div class="split">
+      <div><span class="label">Why it stays current</span><h2>Your build history is the evidence.</h2></div>
+      <div>
+        <p>If you capture decisions with Case Study Maker, the monthly scout reads only the moments tagged as launches, milestones, and new techniques. It proposes wording, where the line belongs, and why it helps. It rephrases what's verified and never adds a claim to fit a job post.</p>
+        <p>Saved job postings tell it which words employers use right now, so your real work is described in the language that gets read.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="privacy">
+    <div class="split">
+      <div><span class="label">Privacy and control</span><h2>Nothing leaves your computer until you publish it.</h2></div>
+      <div>
+        <ul class="plain">
+          <li>Private evidence notes are never exported.</li>
+          <li>A private-names list blocks internal project, client, and repo names from every public file.</li>
+          <li>No phone number on public surfaces by default, and stray emails are caught.</li>
+          <li>Imported files and job postings are treated as data, never as instructions to your AI.</li>
+          <li>No account, no server, no tracking. The only network call is the Pro license check.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="plans">
+    <div class="intro"><span class="label">Plans</span><h2>Free for your résumé. Pro for the search.</h2></div>
+    <div class="plans">
+      <div class="plan">
+        <h3>Free</h3>
+        <div class="price">$0</div>
+        <ul>
+          <li>Import from LinkedIn or your résumé</li>
+          <li>Approve, edit, reject, or save every line</li>
+          <li>PDF, DOCX, web page, JSON Resume, LinkedIn packet</li>
+          <li>Privacy checks and publish to your site</li>
+          <li>A small credit link on your web page (never on the PDF)</li>
+        </ul>
+      </div>
+      <div class="plan pro">
+        <h3>Pro</h3>
+        <div class="price">Yearly</div>
+        <ul>
+          <li>Everything in Free, with no credit link</li>
+          <li>Monthly scout from your build history and current job-post language</li>
+          <li>Tailored PDF and DOCX for each application, plus a cover note</li>
+          <li>One-page capability statement and vendor kit for contract work</li>
+        </ul>
+        <p class="works">Sold through Polar. Your license works offline and you manage it in Polar's customer portal.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="install">
+    <div class="split">
+      <div><span class="label">Install</span><h2>Add it to your AI tool, then say "start my résumé".</h2></div>
+      <div style="display:grid;gap:14px;min-width:0">
+        <p>Claude Code</p>
+        <pre>/plugin marketplace add julieclarkson/living-resume
+/plugin install living-resume</pre>
+        <p>Codex, Cursor, or any MCP client</p>
+        <pre>npx -y -p living-resume living-resume-mcp</pre>
+        <p>Or the command line</p>
+        <pre>npx living-resume init
+npx living-resume import ~/Downloads/linkedin.zip</pre>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="intro"><span class="label">Questions</span><h2>Straight answers.</h2></div>
+    <div class="faq">
+      <div><h3>How do I keep my résumé updated automatically?</h3><p>Living Résumé reads the work you already record and proposes updates once a month. You approve them in a few minutes and every format rebuilds from the same source.</p></div>
+      <div><h3>Will it make things up?</h3><p>No. Every public line needs evidence, and new lines are proposals until you approve them.</p></div>
+      <div><h3>Can it update LinkedIn for me?</h3><p>LinkedIn doesn't allow automated profile edits, so you get a paste-ready packet trimmed to LinkedIn's limits, with what changed since last time.</p></div>
+      <div><h3>Do recruiters' AI agents see it?</h3><p>Your web page carries JSON Resume and schema.org Person data at a stable address, which is what search engines and agents read.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Living Résumé by Jacobus Company, LLC</span>
+    <span><a href="/llms.txt">llms.txt</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a></span>
+  </footer>
+</div>
+</body>
+</html>

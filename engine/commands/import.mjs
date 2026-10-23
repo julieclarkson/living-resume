@@ -6,7 +6,7 @@
 // 3. Nothing is public until you approve it:  living-resume review
 import fs from 'node:fs';
 import path from 'node:path';
-import { P, readJSON, writeJSON, loadLedger, ledgerPath, rulesPath, confined, requireWorkspace, today } from '../lib/util.mjs';
+import { P, writeJSON, loadLedger, ledgerPath, confined, requireWorkspace, today } from '../lib/util.mjs';
 import { scanIn } from '../lib/quarantine.mjs';
 import { extract, fromLinkedInFiles, fromText, toProposals } from '../lib/importer.mjs';
 
@@ -23,7 +23,9 @@ try { got = extract(abs); } catch (e) { console.error(`✗ ${e.message}`); proce
 // Quarantine: keep a copy of the original (files only) with the verdict, before any parsing.
 const stamp = `${today()}-${Date.now().toString(36)}`;
 const base = path.basename(abs).replace(/[^\w.-]+/g, '_').slice(0, 80);
-const verdict = scanIn(got.text);
+// Scan each file on its own (a big export is several small files), and keep the worst verdict.
+const threats = []; for (const part of got.parts) for (const t of scanIn(part.text).threats) threats.push({ ...t, file: part.name });
+const verdict = { clean: threats.length === 0, threats };
 const qdir = confined(P('quarantine', verdict.clean ? 'approved' : 'rejected', 'imports'));
 fs.mkdirSync(qdir, { recursive: true });
 if (fs.statSync(abs).isFile()) fs.copyFileSync(abs, confined(path.join(qdir, `${stamp}-${base}`)));
@@ -34,27 +36,21 @@ if (!verdict.clean) {
   process.exit(1);
 }
 
-const draft = got.kind === 'linkedin' ? fromLinkedInFiles(got.files) : fromText(got.text, path.extname(abs).toLowerCase() === '.pdf' ? 'résumé PDF' : 'résumé');
+const draft = got.kind === 'linkedin' ? fromLinkedInFiles(got.files) : fromText(got.parts[0].text, path.extname(abs).toLowerCase() === '.pdf' ? 'résumé PDF' : 'résumé');
 const L = loadLedger();
 const evidence = `imported from ${base} on ${today()}`;
 const prefix = `import-${today()}-${Date.now().toString(36).slice(-4)}`;
 const { proposals, roles } = toProposals(draft, { ledger: L, prefix, evidence });
 
-// Basics fill only empty fields. Never imported: phone, street address, birth date.
-const p = L.person = L.person || {};
-const filled = [];
-for (const k of ['name', 'email', 'url']) if (!p[k] && draft.person[k]) { p[k] = draft.person[k]; filled.push(`${k}: ${draft.person[k]}`); }
-if (draft.person.location && !p.location?.city) { p.location = { ...(p.location || {}), ...draft.person.location }; filled.push(`location: ${Object.values(draft.person.location).filter(Boolean).join(', ')}`); }
-if (draft.person.linkedin && !(p.profiles || []).some((x) => x.network === 'LinkedIn')) { p.profiles = [...(p.profiles || []), { network: 'LinkedIn', url: draft.person.linkedin }]; filled.push(`LinkedIn: ${draft.person.linkedin}`); }
+// Contact basics are a proposal like every other line (never imported: phone, street address, birth date).
 L.experience = [...(L.experience || []), ...roles];
 writeJSON(ledgerPath(), L);
-if (p.email) { const R = readJSON(rulesPath()); R.privacy = R.privacy || {}; const e = p.email.toLowerCase(); if (!(R.privacy.email_allowed || []).includes(e)) { R.privacy.email_allowed = [...(R.privacy.email_allowed || []), e]; writeJSON(rulesPath(), R); } }
 
 for (const pr of proposals) writeJSON(confined(P('proposals', `${pr.id}.json`)), pr);
 writeJSON(confined(P('imports', `${stamp}.draft.json`)), { ...draft, evidence, proposals: proposals.map((x) => x.id), roles: roles.map((r) => r.id) });
 
 console.log(`✓ Imported your ${draft.source} (${got.kind === 'linkedin' ? 'structured' : 'read from text'}).`);
-if (filled.length) console.log(`  Basics filled in: ${filled.join(' · ')}`);
+const basics = proposals.find((x) => x.kind === 'basics'); if (basics) console.log(`  Contact details to confirm: ${basics.text}`);
 console.log(`  Roles outlined: ${roles.length} (hidden until one of their lines is approved)`);
 console.log(`  Lines waiting for your review: ${proposals.length}`);
 if (draft.unplaced?.length) console.log(`  ${draft.unplaced.length} line(s) couldn't be placed; see imports/${stamp}.draft.json`);

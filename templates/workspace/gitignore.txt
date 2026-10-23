@@ -5,3 +5,4 @@ applications/
 imports/
 dist/resume-print.html
 *.tmp
+.living-resume.lock

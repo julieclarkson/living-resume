@@ -12,7 +12,8 @@ import { P, confined, writeJSON, today } from './util.mjs';
 
 export const PROMPT_INJECTION = [
   /\b(ignore|disregard|forget|override)\s+(?:all\s+|any\s+)?(?:of\s+)?(?:the\s+|your\s+|my\s+|these\s+)?(?:previous\s+|prior\s+|above\s+|earlier\s+|original\s+|system\s+)*(instructions|prompts?|messages|rules|guidelines|directions)/i,
-  /\b(you are now|from now on you|act as|pretend to be|new instructions?:|system prompt|developer message)\b/i,
+  /\b(you are now (?:an?|the|in|my)\b|from now on,? you\b|pretend to be (?:an?|the)\b|new instructions?:)/i,
+  /\bact as (?:an?\s+|the\s+|my\s+)?(?:ai|assistant|chatbot|language model|llm|system|admin|administrator|root|developer mode|dan)\b/i,
   /\b(reveal|print|show|send|email|post|upload|exfiltrate) (me |us )?(your|the) (system prompt|instructions|api key|secrets?|credentials|files|ledger|private)/i,
   /\b(run|execute) (this|the following) (command|code|script)\b/i,
   /<\s*\/?\s*(system|assistant|tool|instructions?)\s*>/i,
@@ -23,7 +24,7 @@ export const PROMPT_INJECTION = [
 export function scanIn(text) {
   const threats = [];
   for (const re of PROMPT_INJECTION) { const m = text.match(re); if (m) threats.push({ name: 'prompt_injection', severity: 'critical', match: m[0].slice(0, 100) }); }
-  const inj = scanInjectionPatterns(text).threats.filter((t) => ['script_tag', 'javascript_uri', 'eval_call', 'function_constructor', 'shell_meta', 'path_traversal', 'css_expression'].includes(t.name));
+  const inj = scanInjectionPatterns(text).threats.filter((t) => ['script_tag', 'javascript_uri', 'eval_call', 'shell_meta'].includes(t.name));
   threats.push(...inj, ...scanSecretPatterns(text).threats.map((t) => ({ ...t, severity: 'high' })));
   if (Buffer.byteLength(text, 'utf8') > 512 * 1024) threats.push({ name: 'too_large', severity: 'high', match: '> 512 KB' });
   return { clean: threats.length === 0, threats };
@@ -36,7 +37,7 @@ export function admitInbound(kind = 'postings') {
   const results = [];
   for (const name of fs.readdirSync(inDir)) {
     const src = path.join(inDir, name);
-    if (!fs.statSync(src).isFile() || name.startsWith('.')) continue;
+    if (name.startsWith('.') || !fs.lstatSync(src).isFile()) continue; // lstat: symlinks are never followed
     const text = fs.readFileSync(src, 'utf8');
     const verdict = scanIn(text);
     const dest = confined(P('quarantine', verdict.clean ? 'approved' : 'rejected', kind, name));
@@ -61,7 +62,7 @@ export function scanOut(text, rules) {
   for (const b of rules.framing?.banned_phrases || []) if (new RegExp(b.pattern, b.flags || '').test(flat)) v.push({ rule: 'framing', detail: `${b.pattern} (${b.why})` });
   if (rules.privacy?.phone_pattern && new RegExp(rules.privacy.phone_pattern).test(text)) v.push({ rule: 'privacy', detail: 'phone number' });
   for (const t of scanPiiPatterns(text).threats) if (t.name !== 'phone_us') v.push({ rule: 'privacy', detail: t.name });
-  for (const m of text.match(/[\w.+-]+@[\w-]+(?:\.[\w-]+)*\.[a-z]{2,}\b/gi) || []) if (!(rules.privacy?.email_allowed || []).includes(m.toLowerCase())) v.push({ rule: 'privacy', detail: `unapproved email ${m}` });
+  for (const m of text.match(/[\w.+-]{1,64}@[\w-]{1,63}(?:\.[\w-]{1,63}){0,8}\.[a-z]{2,24}\b/gi) || []) if (!(rules.privacy?.email_allowed || []).includes(m.toLowerCase())) v.push({ rule: 'privacy', detail: `unapproved email ${m}` });
   for (const t of scanSecretPatterns(text).threats) v.push({ rule: 'secret', detail: t.name });
   return v;
 }

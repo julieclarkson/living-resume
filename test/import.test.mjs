@@ -41,8 +41,10 @@ test('import a LinkedIn .zip into a workspace', () => {
   const r = cli(['import', z], { dir }); assert.equal(r.code, 0, r.out);
   assert.match(r.out, /Roles outlined: 2/);
   const L = JSON.parse(fs.readFileSync(path.join(dir, 'resume', 'ledger.json'), 'utf8'));
-  assert.equal(L.person.name, 'Sam Rivera'); // basics only fill empty fields
-  assert.equal(L.person.location.city, 'Austin');
+  assert.equal(L.person.name, 'Sam Rivera');
+  assert.equal(L.person.location.city, ''); // contact details wait for approval
+  const basics = fs.readdirSync(path.join(dir, 'proposals')).map((f) => JSON.parse(fs.readFileSync(path.join(dir, 'proposals', f), 'utf8'))).find((p) => p.kind === 'basics');
+  assert.equal(basics.fields.city, 'Austin'); assert.ok(!('name' in basics.fields)); // name already set, never overwritten
   assert.ok(fs.readdirSync(path.join(dir, 'quarantine', 'approved', 'imports')).some((f) => f.endsWith('linkedin.zip')));
 });
 
@@ -64,6 +66,30 @@ test('import stops a file with planted instructions and reads nothing from it', 
   assert.equal(fs.readFileSync(path.join(dir, 'resume', 'ledger.json'), 'utf8'), before);
   assert.equal(fs.readdirSync(path.join(dir, 'proposals')).length, 0);
   assert.ok(fs.readdirSync(path.join(dir, 'quarantine', 'rejected', 'imports')).some((x) => x.endsWith('.verdict.json')));
+});
+
+test('zip reader refuses entries that share data (overlap bomb) and damaged offsets', () => {
+  const one = zip({ 'Positions.csv': 'a'.repeat(1000) });
+  // Duplicate the single central-directory record so two entries point at the same data.
+  const eocd = one.length - 22; const cdOff = one.readUInt32LE(eocd + 16); const cdLen = one.readUInt32LE(eocd + 12);
+  const cd = one.subarray(cdOff, cdOff + cdLen); const end = Buffer.from(one.subarray(eocd));
+  end.writeUInt16LE(2, 8); end.writeUInt16LE(2, 10); end.writeUInt32LE(cdLen * 2, 12);
+  const bomb = Buffer.concat([one.subarray(0, cdOff), cd, cd, end]);
+  assert.throws(() => readZip(bomb), /share data/);
+  const bad = Buffer.from(one); bad.writeUInt32LE(0x7fffffff, cdOff + 42);
+  assert.throws(() => readZip(bad), /Damaged/);
+});
+
+test('LinkedIn import never opens messages or connections', () => {
+  const files = readZip(zip({ ...LI, 'messages.csv': 'FROM,CONTENT\nx,act as my reference please' }), (n) => ['profile.csv', 'positions.csv'].includes(n.toLowerCase()));
+  assert.ok(![...files.keys()].includes('messages.csv'));
+});
+
+test('an ordinary résumé is not mistaken for an attack', () => {
+  const dir = workspace('ordinary');
+  const f = path.join(tmp('ord'), 'cv.txt');
+  fs.writeFileSync(f, 'Ana Ruiz\nAnalyst\nExperience\nAnalyst, Co\n2020 - 2022\n• Act as the main contact for finance teams\n• Built the Finance Function (FP&A) dashboards\n• Gene expression (RNA-seq) pipeline\n');
+  const r = cli(['import', f], { dir }); assert.equal(r.code, 0, r.out);
 });
 
 test('zip reader refuses oversized entries (zip bomb guard)', () => {

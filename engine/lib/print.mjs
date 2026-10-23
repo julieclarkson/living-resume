@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { execFileSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 
 export function findChrome() {
   const env = process.env.CHROME_PATH;
@@ -30,7 +31,7 @@ export function findChrome() {
 export function htmlToPdf(htmlPath, pdfPath) {
   const chrome = findChrome();
   if (!chrome) throw new Error('No Chrome/Chromium found. Install Google Chrome, or set CHROME_PATH.');
-  const args = ['--headless=new', '--disable-gpu', '--no-sandbox', '--no-pdf-header-footer', '--run-all-compositor-stages-before-draw', '--virtual-time-budget=8000', `--print-to-pdf=${pdfPath}`, `file://${path.resolve(htmlPath)}`];
+  const args = ['--headless=new', '--disable-gpu', '--no-sandbox', '--no-pdf-header-footer', '--run-all-compositor-stages-before-draw', '--virtual-time-budget=8000', `--print-to-pdf=${pdfPath}`, pathToFileURL(path.resolve(htmlPath)).href];
   execFileSync(chrome, args, { stdio: 'pipe', timeout: 90_000 });
   if (!fs.existsSync(pdfPath)) throw new Error('Chrome did not write the PDF.');
   return pdfPath;

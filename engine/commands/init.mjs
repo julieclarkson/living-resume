@@ -21,7 +21,12 @@ const copy = (from, to) => {
   for (const e of fs.readdirSync(from, { withFileTypes: true })) {
     const s = path.join(from, e.name); const d = path.join(to, e.name === 'gitignore.txt' ? '.gitignore' : e.name);
     if (e.isDirectory()) { fs.mkdirSync(d, { recursive: true }); copy(s, d); }
-    else if (!fs.existsSync(d)) fs.copyFileSync(s, d);
+    else if (e.name === 'gitignore.txt' && fs.existsSync(d)) {
+      // Keep private working folders out of git even when the folder already has a .gitignore.
+      const have = new Set(fs.readFileSync(d, 'utf8').split('\n').map((l) => l.trim()));
+      const add = fs.readFileSync(s, 'utf8').split('\n').filter((l) => l.trim() && !l.startsWith('#') && !have.has(l.trim()));
+      if (add.length) fs.appendFileSync(d, `\n# Living Résumé private working files\n${add.join('\n')}\n`);
+    } else if (!fs.existsSync(d)) fs.copyFileSync(s, d);
   }
 };
 fs.mkdirSync(target, { recursive: true });
