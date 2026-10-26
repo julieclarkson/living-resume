@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.3.0 · 2026-10-26 (release build, not yet published)
+- **Workable boards work again** (Workable's old address now redirects; the tool calls its current one). Big boards (500+ listings) keep your title matches before the cap.
 - **Workday boards.** Large employers (energy, health systems, banks, manufacturers) can be watched with `workday:<tenant>.<wdN>/<site>`, from their myworkdayjobs.com careers address. Each run searches the site by your job titles and reads full text only for title matches. Only that company's own myworkdayjobs.com host is contacted.
 - **Scores that never sound like a verdict on you.** "Low confidence" is gone: matches show strong, good, or some overlap, with a plain note that fit compares wording, not people, and that about 35% and up is worth a real look. "Not on your résumé" now reads "listing words your résumé doesn't use". A role version named for the job (Design Engineer for a Design Engineer listing) is suggested on a tie.
 - The skill searches job-search connectors (Indeed, ZipRecruiter, Dice, Upwork) when the user has one, and brings listings in with `jobs add`.

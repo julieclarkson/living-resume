@@ -21,7 +21,8 @@ export const PROVIDERS = {
   greenhouse: { host: 'https://boards-api.greenhouse.io', path: (s) => `/v1/boards/${s}/jobs?content=true` },
   lever: { host: 'https://api.lever.co', path: (s, skip = 0) => `/v0/postings/${s}?mode=json&limit=100&skip=${skip}` },
   ashby: { host: 'https://api.ashbyhq.com', path: (s) => `/posting-api/job-board/${s}?includeCompensation=true` },
-  workable: { host: 'https://www.workable.com', path: (s) => `/api/accounts/${s}?details=true` },
+  // www.workable.com/api/accounts/<slug> now redirects here; redirects are refused, so call the widget API directly.
+  workable: { host: 'https://apply.workable.com', path: (s) => `/api/v1/widget/accounts/${s}?details=true` },
   smartrecruiters: { host: 'https://api.smartrecruiters.com', path: (s, offset = 0) => `/v1/companies/${s}/postings?limit=100&offset=${offset}`, detail: (s, id) => `/v1/companies/${s}/postings/${id}` },
 };
 const WD_BOARD = /^([a-z0-9][a-z0-9-]{0,62})\.(wd\d{1,3})\/([A-Za-z0-9_-]{1,80})$/;
@@ -98,11 +99,12 @@ function norm(provider, slug, company, j) {
     text: [j.descriptionPlain || htmlToText(j.description), ...(Array.isArray(j.lists) ? j.lists : []).map((l) => `${l?.text || ''}\n${htmlToText(l?.content)}`), j.additionalPlain || ''].join('\n'),
   };
   if (provider === 'workable') {
-    const loc = j.location || {}; const where = [j.city || loc.city, j.state || loc.region, j.country || loc.country].filter(Boolean).join(', ');
+    const loc = j.location || {}; const locs = Array.isArray(j.locations) ? j.locations : [];
+    const where = loc.location_str || [j.city || loc.city, j.state || loc.region, j.country || loc.country].filter(Boolean).join(', ') || locs.map((l) => [l.city, l.region || l.state_code, l.country_name || l.country].filter(Boolean).join(', ')).join('; ');
     const url = https(j.url || j.shortlink || (j.shortcode ? `https://apply.workable.com/${slug}/j/${j.shortcode}/` : ''));
     return {
-      id: `wk-${slug}-${j.shortcode || j.id || j.code}`, title: j.title, location: where, remote: (j.telecommuting ?? loc.telecommuting) === true ? true : workplace(j.workplace_type || j.workplace),
-      type: j.employment_type || null, pay: null, url, applyUrl: https(j.application_url) || url, posted: j.published_on || j.created_at || null, text: htmlToText([j.description, j.requirements, j.benefits].filter(Boolean).join('\n')),
+      id: `wk-${slug}-${j.shortcode || j.id || j.code}`, title: j.title, location: where, remote: (j.telecommuting ?? loc.telecommuting) === true || locs.some((l) => l.telecommuting === true || String(l.workplace_type || '').toLowerCase() === 'remote') ? true : workplace(j.workplace_type || loc.workplace_type || j.workplace),
+      type: j.employment_type || null, pay: null, url, applyUrl: https(j.application_url) || url, posted: j.published_on || j.created_at || null, text: htmlToText([j.full_description || j.description, j.requirements, j.benefits].filter(Boolean).join('\n')),
     };
   }
   if (provider === 'smartrecruiters') {
@@ -177,6 +179,9 @@ export async function fetchBoard(board, company, { want = () => true, details = 
     if (!Array.isArray(raw)) throw new Error('unexpected response');
     if (provider === 'ashby') raw = raw.filter((x) => x.isListed !== false);
   }
+  // Big boards (500+ listings): keep title matches first, so the cap never drops the ones you want.
+  const titleOf = (j) => String(j?.title ?? j?.text ?? j?.name ?? j?.jobPostingInfo?.title ?? '');
+  raw = [...raw.filter((j) => want(titleOf(j))), ...raw.filter((j) => !want(titleOf(j)))];
   const out = [];
   for (const j of raw.slice(0, 2000)) {
     if (out.length >= PER_BOARD) break;
