@@ -147,6 +147,8 @@ export async function deactivate() {
 // Before launch (no Polar store in product.config.json) Pro features are unlocked, with a reminder
 // on every use. Filling store.organizationId turns licensing on; `check` warns until then.
 export const preLaunch = (cfg = productConfig()) => !cfg.store?.organizationId;
+// Pro features are available: a valid Pro license, or pre-launch (no store configured yet).
+export const proUnlocked = () => preLaunch() || isPro();
 export async function requirePro(feature) {
   const cfg = productConfig();
   if (preLaunch(cfg)) { console.error('· Pre-launch: Pro features are unlocked because no Polar store is configured in product.config.json. Configure it before release.'); return { ok: true }; }

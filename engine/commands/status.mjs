@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { P, ROOT, readJSON, loadLedger, loadSettings, allItems, shows, projectEventFiles, requireWorkspace } from '../lib/util.mjs';
 import { lastArchive } from '../lib/history.mjs';
-import { licenseState, productConfig } from '../lib/license.mjs';
+import { licenseState, productConfig, preLaunch } from '../lib/license.mjs';
 
 requireWorkspace();
 const S = loadSettings(); const L = loadLedger();
@@ -45,5 +45,5 @@ line(last ? `  last publish: ${path.basename(last)} (archive/${path.basename(las
 if (fs.existsSync(P('CHANGELOG.md'))) line('  ' + fs.readFileSync(P('CHANGELOG.md'), 'utf8').split('\n').filter((l) => l.startsWith('- ')).slice(0, 3).join('\n  '));
 
 const lic = licenseState(); const cfg = productConfig();
-line(`\nPLAN  ${lic.tier === 'pro' ? `Pro (key ${lic.key}${lic.expiresAt ? `, until ${String(lic.expiresAt).slice(0, 10)}` : ''})` : `Free${lic.reason && lic.reason !== 'no-license' ? ` (${lic.reason})` : ''}. Pro adds more role profiles, job-by-job versions, the monthly scout, the capability statement, and removes the credit link: ${cfg.store?.checkoutUrl || cfg.homepage}`}`);
+line(`\nPLAN  ${preLaunch(cfg) && lic.tier !== 'pro' ? 'Pro (pre-launch). Every Pro feature is unlocked until the store opens.' : lic.tier === 'pro' ? `Pro (key ${lic.key}${lic.expiresAt ? `, until ${String(lic.expiresAt).slice(0, 10)}` : ''})` : `Free${lic.reason && lic.reason !== 'no-license' ? ` (${lic.reason})` : ''}. Pro adds more role profiles, job-by-job versions, the monthly scout, the capability statement, and removes the credit link: ${cfg.store?.checkoutUrl || cfg.homepage}`}`);
 line('\nForget something everywhere: tell your AI tool "forget <item>" (it sets the item private, rebuilds, and the next publish removes it).');

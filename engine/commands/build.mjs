@@ -8,7 +8,7 @@ import { printHtml, printModel, jsonResume, webPage, linkedinPacket, publicRepor
 import { releaseOut } from '../lib/quarantine.mjs';
 import { htmlToPdf, htmlToDocx, pdfText, pdfPageCount, renderPdf, findChrome } from '../lib/print.mjs';
 import { changesSinceLastPublish } from '../lib/history.mjs';
-import { licenseState, productConfig } from '../lib/license.mjs';
+import { licenseState, productConfig, preLaunch } from '../lib/license.mjs';
 import { listRoles, applyRole } from '../lib/roles.mjs';
 
 requireWorkspace();
@@ -71,7 +71,7 @@ else if (vendor?.company && pro) {
 // 6. Role versions: dist/roles/<slug>/<Name>_Resume.pdf + .docx (Free builds the first role only)
 fs.rmSync(confined(P('dist', 'roles')), { recursive: true, force: true });
 listRoles().forEach((r, i) => {
-  if (i > 0 && !pro) { report.push(`· role ${r.slug} skipped (more than one role is Pro)`); return; }
+  if (i > 0 && !pro && !preLaunch(cfg)) { report.push(`· role ${r.slug} skipped (more than one role is Pro)`); return; }
   let V; try { V = applyRole(L, r); } catch (e) { held.push({ rel: `roles/${r.slug}` }); report.push(`✗ role ${r.slug}: ${e.message}`); return; }
   const rh = printHtml(V, { title: `${L.person.name} - Résumé` }); const hp = `${work}/role-${r.slug}.html`; writeText(hp, rh);
   try {

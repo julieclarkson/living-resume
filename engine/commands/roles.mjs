@@ -2,10 +2,10 @@
 // roles new <slug> "Role name"   start a role profile (resume/roles/<slug>.json)
 // roles show <slug>              print that role's version, line by line, with ledger ids
 // A role only chooses from approved lines: headline, order, exclude, and approved
-// alternate wordings (variants). See engine/lib/roles.mjs. Free: one role. Pro: unlimited.
+// alternate wordings (variants). See engine/lib/roles.mjs. Free: one role. Pro (and pre-launch): unlimited.
 import { loadLedger, requireWorkspace, mdPlain, roleShows, shows } from '../lib/util.mjs';
 import { listRoles, newRole, validateRole, applyRole } from '../lib/roles.mjs';
-import { isPro, productConfig } from '../lib/license.mjs';
+import { proUnlocked, productConfig } from '../lib/license.mjs';
 
 requireWorkspace();
 const [cmd, slug, ...rest] = process.argv.slice(2);
@@ -16,7 +16,7 @@ if (!cmd || cmd === 'list') {
   if (!roles.length) { console.log('No role profiles yet. Start one:  living-resume roles new ai-product-engineer "AI Product Engineer"'); process.exit(0); }
   roles.forEach((r, i) => {
     const errs = validateRole(L, r);
-    const gated = i > 0 && !isPro();
+    const gated = i > 0 && !proUnlocked();
     console.log(`${errs.length ? '✗' : gated ? '·' : '✓'} ${r.slug.padEnd(28)} ${r.name || ''}${gated ? '  (Pro: built on Pro only)' : ''}`);
     for (const e of errs) console.log(`    ${e}`);
   });
@@ -24,7 +24,7 @@ if (!cmd || cmd === 'list') {
 }
 if (cmd === 'new') {
   if (!slug) { console.error('Usage: living-resume roles new <slug> "Role name"'); process.exit(1); }
-  if (listRoles().length >= 1 && !isPro()) {
+  if (listRoles().length >= 1 && !proUnlocked()) {
     const cfg = productConfig();
     console.error(`Free includes one role profile. More roles are part of Living Résumé Pro.\n  ${cfg.store?.checkoutUrl ? `Upgrade: ${cfg.store.checkoutUrl}` : `Pro opens soon: ${cfg.homepage}`}`);
     process.exit(3);
