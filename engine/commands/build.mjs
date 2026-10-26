@@ -4,9 +4,9 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { P, loadLedger, loadRules, loadSettings, readJSON, writeText, confined, requireWorkspace } from '../lib/util.mjs';
-import { printHtml, jsonResume, webPage, linkedinPacket, publicReport, capabilityHtml } from '../lib/render.mjs';
+import { printHtml, printModel, jsonResume, webPage, linkedinPacket, publicReport, capabilityHtml } from '../lib/render.mjs';
 import { releaseOut } from '../lib/quarantine.mjs';
-import { htmlToPdf, htmlToDocx, pdfText, pdfPageCount } from '../lib/print.mjs';
+import { htmlToPdf, htmlToDocx, pdfText, pdfPageCount, renderPdf, findChrome } from '../lib/print.mjs';
 import { changesSinceLastPublish } from '../lib/history.mjs';
 import { licenseState, productConfig } from '../lib/license.mjs';
 import { listRoles, applyRole } from '../lib/roles.mjs';
@@ -33,7 +33,7 @@ const html = printHtml(L);
 const htmlPath = `${work}/resume-print.html`; writeText(htmlPath, html);
 const pdfTmp = `${work}/${R.pdf_filename}`;
 let pdfOk = false;
-try { htmlToPdf(htmlPath, pdfTmp); pdfOk = true; } catch (e) { report.push(`✗ PDF: ${e.message}`); }
+try { const how = renderPdf(printModel(L), htmlPath, pdfTmp); pdfOk = true; if (how === 'fallback') report.push('· PDF made without Chrome (simplified styling, same content)'); } catch (e) { report.push(`✗ PDF: ${e.message}`); }
 if (pdfOk) {
   const pages = pdfPageCount(pdfTmp);
   if (pages > R.limits.pdf_max_pages) report.push(`! PDF is ${pages} pages (limit ${R.limits.pdf_max_pages})`);
@@ -61,7 +61,8 @@ writeText(P('dist', 'public-report.md'), publicReport(L)); report.push('✓ publ
 
 // 5. Capability statement (Pro vendor kit)
 const vendor = readJSON(P('vendor-kit', 'profile.json'), null);
-if (vendor?.company && pro) {
+if (vendor?.company && pro && !findChrome()) report.push('· capability statement needs Google Chrome; skipped');
+else if (vendor?.company && pro) {
   const ch = capabilityHtml(L, vendor); const chPath = `${work}/capability-statement.html`; writeText(chPath, ch);
   try { const out = `${work}/capability-statement.pdf`; htmlToPdf(chPath, out); release('capability-statement.pdf', fs.readFileSync(out), pdfText(out) ?? stripTags(ch)); }
   catch (e) { report.push(`✗ capability statement: ${e.message}`); }
@@ -74,12 +75,21 @@ listRoles().forEach((r, i) => {
   let V; try { V = applyRole(L, r); } catch (e) { held.push({ rel: `roles/${r.slug}` }); report.push(`✗ role ${r.slug}: ${e.message}`); return; }
   const rh = printHtml(V, { title: `${L.person.name} - Résumé` }); const hp = `${work}/role-${r.slug}.html`; writeText(hp, rh);
   try {
-    const pdf = `${work}/role-${r.slug}.pdf`; htmlToPdf(hp, pdf);
+    const pdf = `${work}/role-${r.slug}.pdf`; renderPdf(printModel(V), hp, pdf);
     const pages = pdfPageCount(pdf); if (pages > R.limits.pdf_max_pages) report.push(`! role ${r.slug} is ${pages} pages (limit ${R.limits.pdf_max_pages}); exclude a line in its profile`);
     release(`roles/${r.slug}/${R.pdf_filename}`, fs.readFileSync(pdf), pdfText(pdf) ?? stripTags(rh));
     const dx = `${work}/role-${r.slug}.docx`; if (htmlToDocx(hp, dx)) release(`roles/${r.slug}/${docxName}`, fs.readFileSync(dx), stripTags(rh));
   } catch (e) { report.push(`✗ role ${r.slug} PDF: ${e.message}`); }
 });
+
+// 7. Ready-to-upload site folder: dist/site/ = the web page, the PDF, and the machine-readable file.
+//    Drag it onto Netlify Drop (no account needed to start), or upload it to any host.
+fs.rmSync(confined(P('dist', 'site')), { recursive: true, force: true });
+if (pdfOk && !held.length) {
+  fs.mkdirSync(confined(P('dist', 'site')), { recursive: true });
+  for (const f of ['index.html', 'resume.json', R.pdf_filename]) if (fs.existsSync(P('dist', f))) fs.copyFileSync(P('dist', f), confined(P('dist', 'site', f)));
+  report.push('✓ site/ (ready to upload: index.html, resume.json, PDF)');
+}
 
 fs.rmSync(work, { recursive: true, force: true });
 // Stamp: check refuses a dist/ that was built from a different ledger or rules.

@@ -1,6 +1,6 @@
 {
   "name": "living-resume",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Keep your résumé current from your real build history. One evidence-backed ledger builds your PDF, DOCX, web page, JSON Resume, and LinkedIn packet. You approve every line. Runs inside Claude, Codex, and Cursor. Zero dependencies.",
   "type": "module",
   "bin": {

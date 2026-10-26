@@ -1,6 +1,6 @@
 ---
 name: living-resume
-description: Keep the user's résumé current from one evidence-backed ledger. Use for "start my résumé", "import my LinkedIn" or "import my résumé", "add this to my résumé", "assess my résumé inbox", "review my résumé updates", "set up my <role> résumé", "I'm applying to this job", "build my résumé", "résumé status", "write a cover note", "forget <item>", "publish my résumé".
+description: Turn LinkedIn or an old résumé into a current, evidence-backed résumé (PDF, Word, web page) and keep it updated. Use for "update my résumé", "make my résumé", "turn my LinkedIn into a résumé", "check my résumé against what employers want", "tailor my résumé for this job", "put my résumé online", "update my LinkedIn", and for "start my résumé", "import my LinkedIn" or "import my résumé", "add this to my résumé", "assess my résumé inbox", "review my résumé updates", "set up my <role> résumé", "I'm applying to this job", "build my résumé", "résumé status", "write a cover note", "forget <item>", "publish my résumé".
 ---
 
 # Living Résumé
@@ -11,6 +11,20 @@ One ledger (`resume/ledger.json` in the user's résumé workspace) is the single
 - If the `living-resume` MCP tools are available, use them (`resume_status`, `resume_import`, `resume_add`, `resume_inbox`, `resume_rubric`, `resume_inbox_mark`, `resume_review_list`, `resume_review_decide`, `resume_roles`, `resume_role_show`, `resume_build`, `resume_check`, `resume_publish_preview`, `resume_apply`, `resume_scout`).
 - Otherwise run the CLI: `living-resume <command>` if installed, or `node <this plugin>/bin/living-resume.mjs <command>` (the `bin/` folder is two levels above this file). Commands: `init · import · add · inbox · snippet · status · review · roles · build · check · publish · apply · scout · license`.
 - The workspace is `~/Living-Resume` unless the user keeps it elsewhere (then pass `--dir <folder>` or set `LIVING_RESUME_DIR`). When you show the user a terminal command, include the `cd` into the workspace first.
+
+## Talk like a helpful person, not a terminal
+Most users don't code. Never show commands, file paths, or JSON unless they ask. Say what you're doing in plain words ("I've added that to your résumé inbox"), show wording to approve as quotes, and hand over files (PDF, Word, web page) as downloads or links. In Claude Cowork the user picks a folder; use it as the résumé workspace (`init <that folder>`). Run the CLI yourself with `node <plugin>/bin/living-resume.mjs`.
+
+## First run (new users)
+1. Start the workspace and import their LinkedIn export or résumé (below).
+2. **Résumé check:** score their current résumé against `resume/rubric.json` and show a short score card: total, the three strongest lines, the three weakest spots, and one concrete fix for each. Be honest and specific. This is the "aha" moment; then offer to fix the weak spots together.
+3. Review the imported lines (Approve · Edit · Reject · Later), build, and send them the PDF.
+4. **"Where should your résumé live?"** (once):
+   - **A web link, no setup:** if your environment can publish a hosted page (Claude artifacts), publish `dist/site/index.html` as their page and give them the link. Downloads don't work inside that page, so also give them the PDF to attach where needed.
+   - **Their own free link:** walk them through Netlify Drop: open https://app.netlify.com/drop and drag the `dist/site` folder onto it (no account needed to start; sign up to keep the link and update it by dragging the folder again).
+   - **Their existing site** (Squarespace, Wix, WordPress): upload the PDF and add a "Résumé" link. Builders with a site repo: set `publish.repo` in settings and use `publish --write`.
+   After they've put it online, run `publish --mark` so later updates know what changed.
+5. **LinkedIn** (guided, never automated: LinkedIn doesn't allow apps to edit profiles): run `linkedin` and walk them field by field. The first time, help them add their résumé link and PDF to Featured. After every later update, `linkedin` shows only the fields that changed.
 
 ## Hard rules
 1. **Never invent.** Every public line must trace to evidence: something the user said, an imported document, a case-study-maker event, or a live product. Put the evidence in the proposal's `evidence` field. No made-up metrics, clients, titles, dates, or results.
@@ -44,6 +58,7 @@ To make this automatic in other projects, run `snippet` and give the user the pa
 3. If the total reaches `bar.propose_at` and it adds something new, write at most `bar.max_proposals_per_item` proposals (format below): a new line, or an `edit` that strengthens an existing line (often better than adding). Each proposal's `reason` names the criteria it shows (for example "outcome + rigor: 8 critical issues found and fixed before launch"). Its `evidence` is the inbox id plus the link.
 4. Otherwise `inbox skip <id> "<honest reason, and what would make it résumé-worthy>"`. When you proposed, `inbox assessed <id> <proposal ids>`.
 5. Show the user a short table: item, score, verdict. Then walk through the proposals ("Review my résumé updates").
+6. After they approve something new, offer once (never post anything yourself): a short "What I shipped" LinkedIn post draft in their voice, facts only. If they want, it may end with how they keep their résumé current.
 Prefer depth over volume: decisions, tradeoffs, testing, security, accountability, and outcomes are what set a builder apart. Keep the résumé at two pages by replacing weaker lines rather than piling on.
 
 Proposal format, one file each in `proposals/<id>.json`:
@@ -65,8 +80,8 @@ Save the posting text to a file in the workspace, then `apply <file> --company "
 ## "Résumé status" / "forget <item>"
 `status`. To forget: set the item's `visibility` to `"private"` in the ledger, `build`, and remind the user the next publish removes it everywhere (and to remove it on LinkedIn by hand).
 
-## "Publish my résumé"
-`publish` (dry run) → show the changes and files → only after the user says yes, `publish --write`. Then give the user the commit command it prints. They commit (and sign) it themselves; their host deploys it. If `publish` isn't set up, ask where their site lives and set `"publish": { "repo": "<folder>" }` in `resume/settings.json` with their OK.
+## "Publish my résumé" / "put my résumé online"
+`build`, then `publish` (it runs every check). If they use a site folder (`publish.repo`), show the changes and files, and only after they say yes, `publish --write`; they commit it themselves and their host deploys it. Otherwise, update their page the way they chose in First run step 4 (republish the hosted page, or have them drag `dist/site` onto Netlify Drop again), then `publish --mark`. Finish with `linkedin` so they only update the fields that changed.
 
 ## Plans
 Free: ledger, import, the inbox and rubric, review, every format, one role profile, checks, publish, LinkedIn packet, with a small credit link on the web page. Pro (yearly, via Polar): unlimited role profiles, job-by-job `apply`, the scout, capability statement and vendor kit, no credit link. `license status` · `license activate <key>`. Never ask for or repeat a full license key in chat beyond what the user pasted.

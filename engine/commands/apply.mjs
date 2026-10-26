@@ -11,8 +11,8 @@ import path from 'node:path';
 import { P, readJSON, writeJSON, writeText, loadLedger, loadRules, confined, mdPlain, today, allItems, requireWorkspace } from '../lib/util.mjs';
 import { requirePro } from '../lib/license.mjs';
 import { scanIn, scanOut } from '../lib/quarantine.mjs';
-import { printHtml } from '../lib/render.mjs';
-import { htmlToPdf, htmlToDocx, pdfPageCount } from '../lib/print.mjs';
+import { printHtml, printModel } from '../lib/render.mjs';
+import { renderPdf, htmlToDocx, pdfPageCount } from '../lib/print.mjs';
 import { listRoles, applyRole, WORDS } from '../lib/roles.mjs';
 
 requireWorkspace();
@@ -56,7 +56,7 @@ const ov = scanOut(html.replace(/<style[\s\S]*?<\/style>/g, ' ').replace(/<[^>]+
 if (ov.length) { console.error(`✗ Held: ${ov.map((v) => v.detail).join('; ')}`); process.exit(1); }
 writeText(path.join(dir, 'resume.html'), html);
 const pdf = path.join(dir, R.pdf_filename); let made = [];
-try { htmlToPdf(path.join(dir, 'resume.html'), pdf); made.push(path.basename(pdf)); const pages = pdfPageCount(pdf); if (pages > R.limits.pdf_max_pages) console.log(`! This version is ${pages} pages. Exclude a line in the role profile to bring it to ${R.limits.pdf_max_pages}.`); }
+try { renderPdf(printModel(pick.V), path.join(dir, 'resume.html'), pdf); made.push(path.basename(pdf)); const pages = pdfPageCount(pdf); if (pages > R.limits.pdf_max_pages) console.log(`! This version is ${pages} pages. Exclude a line in the role profile to bring it to ${R.limits.pdf_max_pages}.`); }
 catch (e) { console.error(`✗ PDF: ${e.message}`); }
 const docx = pdf.replace(/\.pdf$/, '.docx'); if (htmlToDocx(path.join(dir, 'resume.html'), docx)) made.push(path.basename(docx));
 fs.rmSync(path.join(dir, 'resume.html'), { force: true });

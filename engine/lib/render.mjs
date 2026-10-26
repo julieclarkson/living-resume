@@ -29,7 +29,7 @@ export function printHtml(L, { surface = 'pdf', title } = {}) {
   }).join('\n');
   const how = (L.howIWork?.items || []).filter((i) => shows(i, S)).map((i) => `<li>${esc(i.text)}</li>`).join('');
   const skills = (L.skills || []).filter((i) => shows(i, S)).map((s) => `<dt>${esc(s.name)}</dt><dd>${esc(s.text)}</dd>`).join('');
-  const edu = (L.education || []).filter((i) => shows(i, S)).map((e) => `<p><b>${esc(e.text)}</b>, ${esc(e.institution)}${e.note ? `<br><span class="note">${esc(e.note)}</span>` : ''}</p>`).join('');
+  const edu = (L.education || []).filter((i) => shows(i, S)).map((e) => `<p><b>${esc(e.text)}</b>${e.institution ? `, ${esc(e.institution)}` : ''}${e.note ? `<br><span class="note">${esc(e.note)}</span>` : ''}</p>`).join('');
   const certs = (L.certifications || []).filter((i) => shows(i, S)).map((c) => esc(c.text));
   const vol = (L.volunteer || []).filter((i) => shows(i, S)).map((v) => `<li>${esc(v.text)}</li>`).join('');
   const where = place(p); const remote = p.location?.remote !== false;
@@ -64,9 +64,40 @@ ${roles}
 ${how ? `<section><h2>${H(L, 'howIWork', 'How I work')}</h2><ul>${how}</ul>${L.howIWork.note ? `<p class="note" style="margin-top:4px">${linkify(L.howIWork.note, L.howIWork.noteLink)}</p>` : ''}</section>` : ''}
 ${skills ? `<section><h2>${H(L, 'skills', 'Skills')}</h2><dl>${skills}</dl></section>` : ''}
 ${edu || certs.length ? `<section class="edu"><h2>${H(L, 'education', 'Education')}</h2>${edu}${certs.length ? `<p class="note">Certificates in ${andList(certs)}</p>` : ''}</section>` : ''}
-${vol ? `<section><h2>${H(L, 'community', 'Community')}</h2><ul class="vol">${vol}</ul></section>` : ''}
+${vol ? `<section><h2>${H(L, 'community', 'Community and volunteer')}</h2><ul class="vol">${vol}</ul></section>` : ''}
 ${S === 'web' && shows(L.interests, S) ? `<section><h2>${H(L, 'interests', 'Outside of work')}</h2><p>${esc(L.interests.text)}</p></section>` : ''}
 </body></html>`;
+}
+
+// ── Print model: the same content and order as printHtml, as plain data ──
+// Used by the PDF fallback when no Chrome is available (Claude Cowork, ChatGPT workspaces).
+export function printModel(L, { surface = 'pdf' } = {}) {
+  const p = L.person || {}; const S = surface;
+  const where = place(p); const remote = p.location?.remote !== false;
+  const sections = [];
+  const jobs = (L.experience || []).filter((r) => roleShows(r, S)).map((r) => ({
+    title: r.title || '', when: fmtYears(r.start, r.end), org: [r.org, r.location].filter(Boolean).join(', '),
+    bullets: (r.groups || []).flatMap((g) => (g.items || []).filter((i) => shows(i, S))).map((i) => mdPlain(i.text)),
+  }));
+  sections.push({ title: (L.headings?.experience) || 'Experience', kind: 'jobs', jobs });
+  const how = (L.howIWork?.items || []).filter((i) => shows(i, S)).map((i) => mdPlain(i.text));
+  if (how.length) sections.push({ title: L.headings?.howIWork || 'How I work', kind: 'list', items: how, note: L.howIWork?.note || '' });
+  const skills = (L.skills || []).filter((i) => shows(i, S)).map((x) => ({ term: x.name || '', text: mdPlain(x.text) }));
+  if (skills.length) sections.push({ title: L.headings?.skills || 'Skills', kind: 'dl', rows: skills });
+  const edu = (L.education || []).filter((i) => shows(i, S)).map((e) => ({ strong: mdPlain(e.text), rest: e.institution ? `, ${e.institution}` : '', note: e.note || '' }));
+  const certs = (L.certifications || []).filter((i) => shows(i, S)).map((c) => mdPlain(c.text));
+  if (edu.length || certs.length) sections.push({ title: L.headings?.education || 'Education', kind: 'edu', rows: edu, certs: certs.length ? `Certificates in ${andList(certs)}` : '' });
+  const vol = (L.volunteer || []).filter((i) => shows(i, S)).map((v) => mdPlain(v.text));
+  if (vol.length) sections.push({ title: L.headings?.community || 'Community and volunteer', kind: 'cols', items: vol });
+  return {
+    name: p.name || '', title: `${p.name || ''} - Résumé`,
+    headline: shows(p.headline, S) ? p.headline.text : '', subline: shows(p.subline, S) ? p.subline.text : '',
+    availability: shows(p.availability, S) ? p.availability.text : '',
+    contact: [where ? `${where}${remote ? ' and remote' : ''}` : (remote ? 'Remote' : ''), p.email || '', safeUrl(p.url) ? p.url.replace(/^https?:\/\//, '') : '',
+      ...(p.profiles || []).filter((x) => ['LinkedIn', 'GitHub'].includes(x.network) && safeUrl(x.url)).map((x) => x.url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''))].filter(Boolean),
+    summary: shows(L.summary, S) ? L.summary.text.split(/\n\n/) : [],
+    sections,
+  };
 }
 
 // ── JSON Resume (what the website's content/resume.json reads) ───────────
@@ -249,7 +280,7 @@ ${roles ? `<h2>${H(L, 'experience', 'Experience')}</h2>\n${roles}` : ''}
 ${how ? `<h2>${H(L, 'howIWork', 'How I work')}</h2><ul>${how}</ul>${L.howIWork.note ? `<p class="muted" style="margin-top:10px">${linkify(L.howIWork.note, L.howIWork.noteLink)}</p>` : ''}` : ''}
 ${skills ? `<h2>${H(L, 'skills', 'Skills')}</h2><dl>${skills}</dl>` : ''}
 ${edu || certs.length ? `<h2>${H(L, 'education', 'Education')}</h2><div class="edu">${edu}${certs.length ? `<p class="muted">Certificates in ${andList(certs)}</p>` : ''}</div>` : ''}
-${vol ? `<h2>${H(L, 'community', 'Community')}</h2><ul class="vol">${vol}</ul>` : ''}
+${vol ? `<h2>${H(L, 'community', 'Community and volunteer')}</h2><ul class="vol">${vol}</ul>` : ''}
 ${shows(L.interests, S) ? `<h2>${H(L, 'interests', 'Outside of work')}</h2><p>${esc(L.interests.text)}</p>` : ''}
 </main>
 ${credit ? `<footer><a href="${esc(credit.url)}">${esc(credit.text)}</a></footer>` : ''}

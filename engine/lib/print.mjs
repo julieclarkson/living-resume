@@ -7,6 +7,7 @@ import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 
 export function findChrome() {
+  if (process.env.LIVING_RESUME_NO_CHROME) return null;
   const env = process.env.CHROME_PATH;
   const candidates = [
     env,
@@ -35,6 +36,23 @@ export function htmlToPdf(htmlPath, pdfPath) {
   execFileSync(chrome, args, { stdio: 'pipe', timeout: 90_000 });
   if (!fs.existsSync(pdfPath)) throw new Error('Chrome did not write the PDF.');
   return pdfPath;
+}
+
+// The résumé PDF: Chrome when it's available (exact design), otherwise the Python fallback
+// (engine/pdf/fallback.py, reportlab), which Claude Cowork and ChatGPT workspaces can run.
+// Returns 'chrome' or 'fallback'; throws with a plain explanation when neither works.
+export function renderPdf(model, htmlPath, pdfPath) {
+  if (findChrome()) { htmlToPdf(htmlPath, pdfPath); return 'chrome'; }
+  const script = new URL('../pdf/fallback.py', import.meta.url).pathname;
+  for (const py of ['python3', 'python']) {
+    try {
+      execFileSync(py, [script, pdfPath], { input: JSON.stringify(model), stdio: ['pipe', 'pipe', 'pipe'], timeout: 60_000 });
+      if (fs.existsSync(pdfPath)) return 'fallback';
+    } catch (e) {
+      if (/No module named .?reportlab/.test(String(e.stderr || ''))) throw new Error('No Chrome found, and the PDF fallback needs reportlab: pip install reportlab (or install Google Chrome).');
+    }
+  }
+  throw new Error('No Chrome or Python found to make the PDF. Install Google Chrome, or Python 3 with reportlab.');
 }
 
 export function htmlToDocx(htmlPath, docxPath) {

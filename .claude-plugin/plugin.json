@@ -1,8 +1,8 @@
 {
   "name": "living-resume",
   "displayName": "Living Résumé",
-  "description": "Keep your résumé current from your real build history. One evidence-backed ledger builds your PDF, DOCX, web page, JSON Resume, and LinkedIn packet, and you approve every line.",
-  "version": "1.1.0",
+  "description": "Turn your LinkedIn or old résumé into a current résumé (PDF, Word, web page) and keep it updated. Say \"add this to my résumé\" and it decides what belongs, makes a true version for each kind of job, and walks you through LinkedIn. No coding needed; your data stays on your computer.",
+  "version": "1.2.0",
   "author": {
     "name": "Jacobus Company, LLC",
     "url": "https://julieclarkson.com"
@@ -11,10 +11,13 @@
   "license": "SEE LICENSE IN LICENSE",
   "keywords": [
     "resume",
+    "update my resume",
+    "resume builder",
+    "linkedin",
+    "job application",
+    "tailor resume",
     "cv",
     "career",
-    "linkedin",
-    "json-resume",
-    "job-search"
+    "cowork"
   ]
 }

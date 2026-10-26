@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0 · 2026-10-25 (unreleased)
+- Works without Chrome: PDF fallback (Python reportlab) for Claude Cowork and ChatGPT workspaces, same content and two-page check.
+- `dist/site/`: a ready-to-upload folder (web page, PDF, machine-readable file). `publish` explains Netlify Drop, site builders, and site folders; `publish --mark` records a version you uploaded yourself.
+- `linkedin`: only the LinkedIn fields that changed, with the text to paste.
+- Skill: plain-language first run for non-coders, résumé score card, "where should your résumé live" onboarding, guided LinkedIn, optional "What I shipped" post draft. Discovery-friendly plugin description.
+
 ## 1.1.0 · 2026-10-25 (unreleased)
 - Résumé inbox: `add` work in one sentence; your AI tool scores it against `resume/rubric.json` and proposes a line only when it clears the bar. `snippet` lets the agents in your other projects nominate wins.
 - Role profiles: one ledger, a version per kind of role (`roles`), built to `dist/roles/<slug>/`. Alternate wordings are approved like any line (`variant` proposals). Free includes one role.

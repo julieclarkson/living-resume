@@ -1,4 +1,5 @@
 // publish            dry run: runs every check, then shows exactly what would change on your site
+// publish --mark     you uploaded dist/site/ yourself: record this version as published
 // publish --write    copies the built files into your site folder, archives this version,
 //                    and updates CHANGELOG.md. It NEVER commits or pushes: going live is your
 //                    own commit (signed, if you use commit signing), and your host deploys it.
@@ -29,7 +30,21 @@ const pub = S.publish || (legacy ? {
   files: [{ from: 'resume.json', to: 'content/resume.json' }, { from: '<pdf>', to: 'public/media/resume/<pdf>' }],
   siteJson: { path: 'content/site.json', key: 'resume', value: '/media/resume/<pdf>' },
 } : null);
-if (!pub?.repo) { console.error('✗ No publish target. Set "publish": { "repo": "<your site folder>" } in resume/settings.json.'); process.exit(1); }
+// --mark: you put dist/site/ online yourself (Netlify Drop, a Claude page, your site builder).
+// Records this version as published, so the archive and "what changed on LinkedIn" stay right.
+if (process.argv.includes('--mark')) {
+  const { dir } = archive(L, 'published (uploaded by you)');
+  console.log(`✓ Recorded as published (${path.relative(ROOT, dir)}). Next: living-resume linkedin`);
+  process.exit(0);
+}
+if (!pub?.repo) {
+  console.log(`Your files are ready in dist/site/ (web page, PDF, machine-readable file). Put them online one of these ways:
+  1. Netlify Drop: open https://app.netlify.com/drop and drag the dist/site folder onto the page. No account needed to start; sign up to keep the link and update it later by dragging the folder again.
+  2. Your own site (Squarespace, Wix, WordPress): upload the PDF and add a "Résumé" link to it.
+  3. A site folder you deploy (GitHub Pages, Vercel): set "publish": { "repo": "<folder>" } in resume/settings.json, then run publish --write.
+Then run: living-resume publish --mark   (records this version, so LinkedIn updates show only what changed)`);
+  process.exit(0);
+}
 const site = path.resolve(ROOT, pub.repo);
 if (!fs.existsSync(site) || !fs.statSync(site).isDirectory()) { console.error(`✗ Publish folder not found: ${site}`); process.exit(1); }
 const files = pub.files || [{ from: 'index.html', to: 'resume/index.html' }, { from: 'resume.json', to: 'resume/resume.json' }, { from: '<pdf>', to: 'resume/<pdf>' }];

@@ -12,6 +12,7 @@ npx living-resume build && npx living-resume check       # every format → ~/Li
 In an AI tool, just say "start my résumé", "add this to my résumé", "assess my résumé inbox", "set up my design engineer résumé", "I'm applying to this job", or "publish my résumé".
 
 ## Install in your AI tool
+- **Claude Cowork (no coding):** install the plugin, pick a folder for your résumé, and say "make my résumé from my LinkedIn". Claude runs everything and hands you the files. PDFs work without Chrome (a built-in fallback).
 - **Claude Code:** `/plugin marketplace add julieclarkson/living-resume` then `/plugin install living-resume` (skill, slash commands, and MCP server).
 - **Codex:** `codex mcp add living-resume -- npx -y -p living-resume living-resume-mcp`, and copy `AGENTS.md` guidance or the `.codex/prompts/`.
 - **Cursor / any MCP client:** add `{"mcpServers":{"living-resume":{"command":"npx","args":["-y","-p","living-resume","living-resume-mcp"]}}}`.
@@ -24,7 +25,8 @@ In an AI tool, just say "start my résumé", "add this to my résumé", "assess 
 | `review [approve\|edit\|reject\|later <id>]` | Decide each proposal. `approve-all <prefix>` only when you ask for it. |
 | `build` | PDF, DOCX, `index.html`, `resume.json`, LinkedIn packet, public report. |
 | `check` | Privacy, private names, framing, plain voice, PDF pages and text, stale-build guard, quarantine. |
-| `publish [--write]` | Dry run, or copy files into your site folder. Never commits or pushes. |
+| `publish [--write \| --mark]` | Dry run (and how to put `dist/site/` online), copy into your site folder, or record a version you uploaded yourself. Never commits or pushes. |
+| `linkedin` | Which LinkedIn fields changed since your last publish, with the text to paste. |
 | `status` | Recording, queue, public lines, history, plan. |
 | `add "what you did" [--link …]` | Put new work in your résumé inbox. Nothing changes until your AI tool assesses it and you approve. |
 | `inbox [all \| assessed <id> … \| skip <id> "why"]` | What's waiting, and each verdict. |
