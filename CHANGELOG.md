@@ -1,6 +1,8 @@
 # Changelog
 
 ## 1.3.0 · 2026-10-26 (release build, not yet published)
+- **Activate Pro from Claude or ChatGPT.** New `license_activate` tool: say "activate my license" and paste the key from your email (it used to need the command line).
+- **Guide, start to finish, with pictures.** Check it works ("what's next?"), make it stronger, versions for each kind of job, job matches, upgrading to Pro, a "what to say" list, and quick fixes when something goes wrong. Real pictures of the PDF, web page, and job matches page, made by the product for a fictional person.
 - **Lines keep their order.** Imported lines stay in the order they appeared, whatever order you approve them in. Volunteer dates read like roles ("2022 to present").
 - **Role versions from any AI tool.** `resume_role_new` and `resume_role_set` (CLI: `roles set <slug> '<json>'`) create a role version and choose its order and exclusions without a shell. Proposing wording for a role version that doesn't exist is refused, so nothing is left orphaned.
 - **Private names stay private.** Matching ignores case, spaces, dashes, underscores, and invisible (zero-width) characters, including one inserted inside a word. Invisible characters are removed before the injection scan.

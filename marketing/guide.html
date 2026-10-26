@@ -111,6 +111,25 @@ pre{margin:0;background:var(--paper);border:1px solid var(--rule);border-radius:
 .faq{display:grid;grid-template-columns:1fr 1fr;gap:26px 40px}.faq div{display:grid;gap:6px}
 footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--muted);font-size:.9rem;display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
 
+.pic{margin:0;display:grid;gap:8px}
+.pic img{width:100%;height:auto;display:block;border:1px solid var(--rule);border-radius:12px;background:#fff}
+.pic figcaption{font-size:.8rem;color:var(--muted)}
+.path{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:.8rem}
+.path span{background:var(--chip);color:var(--ink);padding:3px 10px;border-radius:999px}
+.path i{font-style:normal;color:var(--muted)}
+.nextcard{border:1px solid var(--accent);border-radius:10px;padding:10px 12px;background:var(--paper);display:grid;gap:4px;font-size:.86rem}
+.nextcard b{color:var(--ink)}
+.nextcard .s{font-family:var(--mono);font-size:.76rem;color:var(--accent)}
+.says{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.says div{border:1px solid var(--rule);border-radius:12px;padding:14px 16px;background:var(--card);display:grid;gap:6px;align-content:start}
+.says .q{font-family:var(--mono);font-size:.8rem;color:var(--ink)}
+.says p{font-size:.88rem;color:var(--muted)}
+.fixes{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.fixes div{border-left:3px solid var(--warn);padding:4px 0 4px 14px;display:grid;gap:6px}
+.fixes h3{font-size:1rem}
+.fixes p{font-size:.92rem}
+.steps{margin:0;padding-left:20px;display:grid;gap:6px}
+@media (max-width:880px){.says,.fixes{grid-template-columns:1fr}}
 @media (max-width:880px){
   .ways,.ways.more,.loop,.faq{grid-template-columns:1fr}
   .stop{grid-template-columns:44px 1fr;gap:16px 14px}
@@ -131,7 +150,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
     <span class="label">Guide · about 30 minutes the first time</span>
     <h1>Never update your résumé again. Here's how.</h1>
     <p>From your LinkedIn to a finished résumé, then kept current as you work. You talk to your AI (Claude or ChatGPT) in plain words; Living Résumé does the work in a folder on your computer and hands you the files. No coding, no account to create.</p>
-    <div class="toc"><a href="#install">Install</a><a href="#first">First résumé</a><a href="#online">Put it online</a><a href="#linkedin">LinkedIn</a><a href="#current">Keep it current</a><a href="#jobs">Job matches</a></div>
+    <div class="toc"><a href="#install">Install</a><a href="#check">Check it works</a><a href="#first">First résumé</a><a href="#stronger">Make it stronger</a><a href="#online">Put it online</a><a href="#linkedin">LinkedIn</a><a href="#current">Keep it current</a><a href="#versions">Versions</a><a href="#jobs">Job matches</a><a href="#pro">Pro</a><a href="#say">What to say</a><a href="#help">If something goes wrong</a></div>
   </div>
 
   <section id="install">
@@ -141,7 +160,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
         <span class="tag">No coding · Claude Cowork</span>
         <h3>Claude desktop app</h3>
         <ol>
-          <li>Open <b>Customize</b>, then <b>Plugins</b>, then <b>Add marketplace</b>.</li>
+          <li>Open <b>Customize</b>, then <b>Plugins</b>, then <b>Add marketplace</b>.<div class="path" aria-hidden="true" style="margin-top:6px"><span>Customize</span><i>›</i><span>Plugins</span><i>›</i><span>Add marketplace</span></div></li>
           <li>Enter <span class="mono">julieclarkson/living-resume</span> and install <b>Living Résumé</b>.</li>
           <li>Then pick a folder (<span class="mono">Documents/Résumé</span>) when asked.</li>
           <li>Put your LinkedIn .zip (or old résumé) in that folder.</li>
@@ -160,7 +179,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
         <h3>ChatGPT desktop app</h3>
         <ol>
           <li>Add the marketplace <span class="mono">julieclarkson/living-resume</span>.</li>
-          <li>Open the <b>Plugins Directory</b> and install <b>Living Résumé</b>.</li>
+          <li>Open the <b>Plugins Directory</b> and install <b>Living Résumé</b>.<div class="path" aria-hidden="true" style="margin-top:6px"><span>Add marketplace</span><i>›</i><span>Plugins Directory</span><i>›</i><span>Install</span></div></li>
           <li>Then pick a folder (<span class="mono">Documents/Résumé</span>) when asked.</li>
           <li>Put your LinkedIn .zip (or old résumé) in that folder.</li>
           <!-- TODO (fix 10): once the display-name field the app reads is verified, set it in plugin.json and use "mention @Living Résumé". -->
@@ -193,6 +212,24 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
         <p style="font-size:.9rem;color:var(--muted)">After the npm package is published. Needs Node.js 18 or newer.</p>
       </div>
     </div>
+    </div>
+  </section>
+
+  <section id="check">
+    <div class="intro"><span class="label">Check it works · 1 minute</span><h2>Ask "what's next?"</h2><p>In a new conversation, say <span class="mono">what's next?</span> Living Résumé answers with one step, why it matters, and exactly what to say. You can ask this any time you're not sure what to do.</p></div>
+    <div class="route">
+      <div class="stop">
+        <span class="num" aria-hidden="true" style="visibility:hidden"></span>
+        <div class="words">
+          <p class="say">Say <b>what's next?</b></p>
+          <p>If your AI says it can't find Living Résumé, the install didn't finish: go back to the install steps above, then start a new conversation.</p>
+          <p class="note">The first time, it asks which folder to use. Pick or make one, like <span class="mono">Documents/Résumé</span>. Everything stays there.</p>
+        </div>
+        <div class="shot">
+          <div class="you">What's next?</div>
+          <div class="nextcard"><b>Bring in your LinkedIn or your current résumé</b><span>Everything starts from what you already have. Only your profile data is read.</span><span class="s">Say: "Make my résumé from my LinkedIn"</span></div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -229,7 +266,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
       <div class="stop">
         <span class="num" aria-hidden="true"></span>
         <div class="words">
-          <h3>See your score</h3>
+          <h3 id="stronger">See your score</h3>
           <p>Your AI grades your résumé against what employers look for, for the job you want next: results, scope, judgment, and how current it is. You get your strongest lines and the three weakest spots, each with a concrete fix.</p><p>Then say "make it stronger." Your AI asks a few honest questions, you answer, and it rewrites only from your answers. It never invents.</p>
         </div>
         <div class="shot">
@@ -259,12 +296,28 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
       <div class="stop">
         <span class="num" aria-hidden="true"></span>
         <div class="words">
+          <h3>Make it stronger, honestly</h3>
+          <p class="say">Say <b>make my résumé stronger</b></p>
+          <p>Your AI asks a few short questions about the weakest lines: what changed because of your work, who used it, roughly how many. Don't know an exact number? Give a safe floor you'd stand behind, like "10+". Rather not use numbers at all? Say <span class="mono">no numbers on my résumé</span>.</p>
+          <p class="note">It also never suggests cutting your recent leadership or community work to fit two pages. Older roles and long bullets go first.</p>
+        </div>
+        <div class="shot">
+          <div class="cl"><p>"Ran monthly usability sessions" doesn't say what changed. What happened because of those sessions?</p></div>
+          <div class="you">We found the 3 biggest drop-off points and fixed them before launch.</div>
+          <div class="line"><q>Ran monthly usability sessions that found and fixed the 3 biggest drop-off points before launch</q><div class="btns"><span class="on">Approve</span><span>Edit</span><span>Reject</span><span>Later</span></div></div>
+        </div>
+      </div>
+
+      <div class="stop">
+        <span class="num" aria-hidden="true"></span>
+        <div class="words">
           <h3>Get your files</h3>
           <p>A two-page PDF that hiring software reads cleanly, a Word file, and a web page. They're in your résumé folder, under dist.</p>
         </div>
         <div class="shot">
           <div class="cl"><p>Your résumé is ready. All checks passed.</p></div>
           <div class="files"><span class="file"><i>PDF</i>Sam_Rivera_Resume.pdf</span><span class="file"><i>DOCX</i>Sam_Rivera_Resume.docx</span><span class="file"><i>WEB</i>site/index.html</span></div>
+          <figure class="pic"><img src="img/resume-page.png" width="1224" height="1050" loading="lazy" alt="Page one of a finished résumé PDF for Sam Rivera, a fictional product designer: name, headline, contact line, summary, two roles with bullets, skills, education, certificates, and community."><figcaption>A real PDF made by Living Résumé, for a fictional person.</figcaption></figure>
         </div>
       </div>
 
@@ -281,6 +334,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
         </div>
         <div class="shot">
           <div class="drop">Drag the <b>site</b> folder here<br>app.netlify.com/drop</div>
+          <figure class="pic"><img src="img/resume-web.png" width="1650" height="1050" loading="lazy" alt="The résumé web page for Sam Rivera: large name, headline, summary, a Download résumé (PDF) button, contact links, and the experience section."><figcaption>Your résumé web page, with a download button for the PDF.</figcaption></figure>
           <div class="cl"><p>Done? Tell me and I'll remember this version, so next time only the changes need updating.</p></div>
         </div>
       </div>
@@ -324,6 +378,25 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
     </div>
   </section>
 
+  <section id="versions">
+    <div class="intro"><span class="label">Versions · one free, more with Pro</span><h2>A version of your résumé for each kind of job.</h2><p>Applying to design engineer and product designer roles? Keep one version for each. A version reorders your approved lines and can use a headline and summary in that job's words. It never adds anything new, so every version stays true.</p></div>
+    <div class="route">
+      <div class="stop">
+        <span class="num" aria-hidden="true" style="visibility:hidden"></span>
+        <div class="words">
+          <p class="say">Say <b>set up my design engineer résumé</b></p>
+          <p>Your AI suggests which lines go first and proposes a headline and summary for you to approve. Each version builds its own PDF and Word file, checked like your main résumé.</p>
+          <p class="note">Job matches tell you which version to send for each job.</p>
+        </div>
+        <div class="shot">
+          <div class="you">Set up my design engineer résumé</div>
+          <div class="cl"><p>I put your component library and accessibility work first, and wrote a headline in design engineering words. Approve it?</p></div>
+          <div class="line"><q>Design Engineer</q><div class="btns"><span class="on">Approve</span><span>Edit</span><span>Reject</span><span>Later</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section id="jobs">
     <div class="intro"><span class="label">Job matches · Pro</span><h2>A short list of jobs that fit, every week.</h2><p>Say <span class="mono">set up my job search</span>. Your AI asks nine quick questions: titles, contract or full-time, remote, pay, dealbreakers, which companies to watch, and how often. Then you get a page of the jobs that fit your approved résumé best, with an Apply button on each.</p></div>
     <div class="route">
@@ -333,18 +406,68 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
           <p>The search runs on your computer and reads only the public job listings of companies you choose. It never reads your email and never applies for you.</p>
           <p class="say">Say <b>prepare</b> on a match <span style="color:var(--muted)">for a version tailored to that job</span></p>
           <p class="say">Say <b>help me reach someone there</b> <span style="color:var(--muted)">for the posting, the likely person, and a short note you send</span></p>
+          <p class="say">Say <b>find me jobs</b> <span style="color:var(--muted)">any time, or let it run on the days you chose</span></p>
+          <p>Fit compares the listing's wording with your résumé's wording. It's never a judgment of you: every listing uses its own product words, so anything from about 35% is worth a real look.</p>
+          <p>Companies on Greenhouse, Lever, Ashby, Workable, SmartRecruiters, and Workday can be watched. If your AI has a job-search connector (Upwork, Indeed, ZipRecruiter, Dice), it can search there too and add what fits. Saw a job somewhere else? Paste it and say <b>add this job</b>.</p>
           <p class="note">Running it on your computer's own timer uses no AI at all. Your AI's optional one-line review of each match uses a small amount.</p>
         </div>
         <div class="shot">
-          <div class="match">
-            <b>Senior Front-End Developer, Design Systems</b>
-            <span style="color:var(--muted);font-size:.82rem">Northstar · Remote (US) · Contract</span>
-            <div class="pills"><span class="pill">82% fit</span><span class="pill hi">Strong overlap</span><span class="pill">Send your main résumé</span></div>
-            <span style="font-size:.8rem;color:var(--muted)">Not on your résumé: GraphQL, Next.js</span>
-            <span class="apply">Apply</span>
-          </div>
+          <figure class="pic"><img src="img/job-matches.png" width="1350" height="900" loading="lazy" alt="A job matches page: the top match, Design Engineer, Design Systems at Fernwood Labs, remote, 88% fit, strong overlap, send your Design Engineer version, with the words the résumé already covers, an Apply button, and a Résumé PDF button."><figcaption>Your job matches page, for a fictional person.</figcaption></figure>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section id="pro">
+    <div class="intro"><span class="label">Pro</span><h2>Upgrade when you're ready to search.</h2><p>Your résumé, every format, LinkedIn updates, and one version are free. Pro adds job matches, unlimited versions, job-by-job tailoring, and removes the small credit link on your web page.</p></div>
+    <div class="route">
+      <div class="stop">
+        <span class="num" aria-hidden="true" style="visibility:hidden"></span>
+        <div class="words">
+          <ol class="steps">
+            <li>Buy Pro on the <a href="./#plans">Plans</a> section of the main page.</li>
+            <li>Your license key arrives by email.</li>
+            <li>Say <span class="mono">activate my license</span> and paste the key when asked.</li>
+            <li>Say <span class="mono">what's next?</span> to start your job search.</li>
+          </ol>
+          <p class="note">Your key is checked with the store, and that's the only time Living Résumé contacts anyone. Say <span class="mono">license status</span> to see your plan.</p>
+        </div>
+        <div class="shot">
+          <div class="you">Activate my license</div>
+          <div class="cl"><p>Paste your license key and I'll activate it.</p></div>
+          <div class="nextcard"><b>Pro is active</b><span>Job matches, unlimited versions, and job-by-job tailoring are on.</span><span class="s">Say: "Set up my job search"</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="say">
+    <div class="intro"><span class="label">What to say</span><h2>Plain words. Here are the ones that matter.</h2></div>
+    <div class="says">
+      <div><span class="q">what's next?</span><p>One step, why it matters, and what to say. Use it any time.</p></div>
+      <div><span class="q">make my résumé from my LinkedIn</span><p>Start from your LinkedIn .zip or an old résumé in your folder.</p></div>
+      <div><span class="q">review my résumé updates</span><p>Approve, edit, reject, or save for later, one line at a time.</p></div>
+      <div><span class="q">make my résumé stronger</span><p>A score, the three biggest lifts, and a few honest questions.</p></div>
+      <div><span class="q">build my résumé</span><p>PDF, Word, web page, and the LinkedIn update, all checked.</p></div>
+      <div><span class="q">put my résumé online</span><p>A free link, your own site, or a site you publish.</p></div>
+      <div><span class="q">update my LinkedIn</span><p>Only the fields that changed, with the text to paste.</p></div>
+      <div><span class="q">add this to my résumé</span><p>When you finish something worth showing.</p></div>
+      <div><span class="q">set up my &lt;job&gt; résumé</span><p>A version for each kind of job.</p></div>
+      <div><span class="q">set up my job search</span><p>Nine quick questions, then matches on the days you choose.</p></div>
+      <div><span class="q">help me reach someone at &lt;company&gt;</span><p>The posting, the likely person, and a short note you send.</p></div>
+      <div><span class="q">what have I applied to?</span><p>Your applications, newest first, with a follow-up when it's time.</p></div>
+    </div>
+  </section>
+
+  <section id="help">
+    <div class="intro"><span class="label">If something goes wrong</span><h2>Quick fixes.</h2></div>
+    <div class="fixes">
+      <div><h3>"The PDF wasn't made here."</h3><p>Open <span class="mono">dist/resume-print.html</span> in your browser, choose <b>Print</b>, then <b>Save as PDF</b>. Same content.</p></div>
+      <div><h3>"The Word file wasn't made here."</h3><p>Ask your AI to make the Word file from <span class="mono">dist/resume-print.html</span> with its own document tool, or send the PDF.</p></div>
+      <div><h3>"Some characters can't be drawn."</h3><p>Without Chrome, a few letters (like Japanese or emoji) can't go in the PDF. Reword those lines, or build on a computer with Google Chrome installed.</p></div>
+      <div><h3>"Couldn't connect" to job boards.</h3><p>Some apps can't reach the internet. Run the search from your computer's own timer (say <span class="mono">schedule my job search</span>), or paste listings and say <b>add this job</b>.</p></div>
+      <div><h3>Your AI can't find your files.</h3><p>Say <span class="mono">what's next?</span>. It tells you which folder it's using. Put your LinkedIn .zip or résumé in that folder and try again.</p></div>
+      <div><h3>"Nothing is approved yet."</h3><p>Nothing goes on your résumé until you approve it. Say <span class="mono">review my résumé updates</span> first, then build.</p></div>
     </div>
   </section>
 
@@ -371,7 +494,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
 
   <footer>
     <span>Living Résumé · Jacobus Company, LLC</span>
-    <span><a href="./">Back to the main page</a></span>
+    <span><a href="./">Back to the main page</a> · <a href="./privacy.html">Privacy</a> · <a href="./terms.html">Terms</a></span>
   </footer>
 </div>
 </body>

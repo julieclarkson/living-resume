@@ -158,6 +158,8 @@ const TOOLS = [
   { name: 'resume_style', description: "The user's own style choices, only on their word: dates (years, months, or auto), certs (list, or line for 'Certificates in A and B'), counts (off: the coach never asks for numbers). No arguments: show the current choices.", inputSchema: S({ dates: { type: 'string', enum: ['years', 'months', 'auto'] }, certs: { type: 'string', enum: ['list', 'line'] }, counts: { type: 'string', enum: ['on', 'off'] } }),
     args: (a) => { const set = ['dates', 'certs', 'counts'].filter((k) => a[k] !== undefined); if (set.length > 1) throw new Error('Set one choice at a time.'); return set.length ? ['style', set[0], a[set[0]]] : ['style']; } },
   { name: 'license_status', description: 'Show Free or Pro, and what Pro adds.', inputSchema: S(), args: () => ['license', 'status'] },
+  { name: 'license_activate', description: "Activate Pro with the license key the user pasted (it arrives by email after they buy Pro). Never ask them to paste it again if they already did, and never repeat the full key back.", inputSchema: S({ key: { type: 'string' } }, ['key']),
+    args: (a) => { const k = String(a.key || '').trim(); if (!/^[A-Za-z0-9_-]{8,128}$/.test(k)) throw new Error("That doesn't look like a license key. Copy it from the email you got after buying Pro."); return ['license', 'activate', k]; } },
 ];
 
 async function callTool(name, a = {}) {

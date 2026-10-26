@@ -93,3 +93,21 @@ function require_spawn(code, envx) {
   const r = spawnSync(process.execPath, ['--input-type=module', '-e', code], { encoding: 'utf8', env: { ...process.env, ...envx } });
   return r.stdout + r.stderr;
 }
+
+
+test('MCP license_activate: a pasted key activates Pro without a shell; a malformed one is refused', async () => {
+  const { spawn } = await import('node:child_process'); const { ROOT } = await import('./helpers.mjs');
+  const dir = workspace('lic-mcp'); const e = env({ s: 'mcp' });
+  const p = spawn(process.execPath, [path.join(ROOT, 'mcp', 'server.mjs')], { env: { ...process.env, LIVING_RESUME_DIR: dir, ...e } });
+  let buf = ''; const wait = new Map(); let n = 0;
+  p.stdout.on('data', (d) => { buf += d; let i; while ((i = buf.indexOf('\n')) >= 0) { const m = JSON.parse(buf.slice(0, i)); buf = buf.slice(i + 1); wait.get(m.id)?.(m); } });
+  const req = (method, params) => new Promise((r) => { const id = ++n; wait.set(id, r); p.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n'); });
+  await req('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '1' } });
+  const bad = await req('tools/call', { name: 'license_activate', arguments: { key: 'not a key; rm -rf' } });
+  assert.equal(bad.result.isError, true); assert.match(bad.result.content[0].text, /doesn't look like a license key/);
+  const ok = await req('tools/call', { name: 'license_activate', arguments: { key: 'LRPRO_GOOD_KEY_1234' } });
+  assert.equal(ok.result.isError, false, ok.result.content[0].text);
+  const st = await req('tools/call', { name: 'license_status', arguments: {} });
+  assert.match(st.result.content[0].text, /Pro/); assert.doesNotMatch(st.result.content[0].text, /LRPRO_GOOD_KEY_1234/);
+  p.kill();
+});
