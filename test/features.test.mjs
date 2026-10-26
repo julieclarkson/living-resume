@@ -123,3 +123,14 @@ test('pre-launch (no store configured): extra roles are unlocked and status says
   assert.match(cli(['roles'], { dir, env: store }).out, /Pro: built on Pro only/);
   assert.match(cli(['status'], { dir, env: store }).out, /PLAN {2}Free/);
 });
+
+test('heading: a section heading is the person\'s own choice, shown in every format', () => {
+  const dir = ready();
+  assert.equal(cli(['heading', 'community', 'Community over the years'], { dir }).code, 0);
+  assert.notEqual(cli(['heading', 'community', 'Bad: colon'], { dir }).code, 0);
+  assert.notEqual(cli(['heading', 'nope', 'X'], { dir }).code, 0);
+  assert.match(cli(['heading'], { dir }).out, /community\s+Community over the years/);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'resume', 'ledger.json'), 'utf8')).headings.community, 'Community over the years');
+  assert.equal(cli(['heading', 'community', '--reset'], { dir }).code, 0);
+  assert.match(cli(['heading'], { dir }).out, /community\s+Community and volunteer\s+\(default\)/);
+});

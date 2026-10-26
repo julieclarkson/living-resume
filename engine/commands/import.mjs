@@ -28,7 +28,9 @@ const threats = []; for (const part of got.parts) for (const t of scanIn(part.te
 const verdict = { clean: threats.length === 0, threats };
 const qdir = confined(P('quarantine', verdict.clean ? 'approved' : 'rejected', 'imports'));
 fs.mkdirSync(qdir, { recursive: true });
-if (fs.statSync(abs).isFile()) fs.copyFileSync(abs, confined(path.join(qdir, `${stamp}-${base}`)));
+// A LinkedIn export keeps only the profile files that were read (never connections, messages or contacts).
+if (got.kind === 'linkedin') { const kd = confined(path.join(qdir, `${stamp}-${base}.profile`)); fs.mkdirSync(kd, { recursive: true }); for (const part of got.parts) fs.writeFileSync(confined(path.join(kd, path.basename(part.name).replace(/[^\w. -]+/g, '_'))), part.text); }
+else if (fs.statSync(abs).isFile()) fs.copyFileSync(abs, confined(path.join(qdir, `${stamp}-${base}`)));
 writeJSON(confined(path.join(qdir, `${stamp}-${base}.verdict.json`)), { file: base, scannedAt: new Date().toISOString(), ...verdict });
 if (!verdict.clean) {
   console.error(`✗ Import stopped. The file contains text that looks like instructions to an AI or code (${[...new Set(verdict.threats.map((t) => t.name))].join(', ')}).`);

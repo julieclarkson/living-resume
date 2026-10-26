@@ -150,6 +150,8 @@ const TOOLS = [
   { name: 'resume_jobs_prep', description: '(Pro) Make the best-fit résumé version for one match (PDF and Word, private) and show the coverage report.', inputSchema: S({ id: { type: 'string' } }, ['id']), args: (a) => ['jobs', 'prep', needId(a.id, 'listing id')] },
   { name: 'resume_applications', description: "What the user has applied to and prepared, newest first.", inputSchema: S(), args: () => ['jobs', 'applied'] },
   { name: 'resume_jobs_schedule', description: "How to run the search on a schedule: a no-AI timer line for the user's computer (no tokens), or scheduled-task text with the AI tool's review.", inputSchema: S(), args: () => ['jobs', 'schedule'] },
+  { name: 'resume_heading', description: "Rename a section heading for this person only (section: experience, howIWork, skills, education, community, publications). Only after the user chose the wording. reset=true goes back to the default. No section: lists the current headings.", inputSchema: S({ section: { type: 'string', enum: ['experience', 'howIWork', 'skills', 'education', 'community', 'publications'] }, text: { type: 'string' }, reset: { type: 'boolean' } }),
+    args: (a) => !a.section ? ['heading'] : a.reset === true ? ['heading', a.section, '--reset'] : ['heading', a.section, needText(a.text, 'heading', 40)] },
   { name: 'license_status', description: 'Show Free or Pro, and what Pro adds.', inputSchema: S(), args: () => ['license', 'status'] },
 ];
 

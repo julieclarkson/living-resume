@@ -15,6 +15,7 @@
 //   check                                    every check (run before publishing)
 //   coach [--json]                           read-only: strength score, 3 biggest lifts, questions to ask
 //   publish [--write]                        dry run, or copy files to your site (never commits)
+//   heading [<section> "Text" | --reset]  rename a section heading for this person only
 //   linkedin                                 which LinkedIn fields changed, with the text to paste
 //   roles [new <slug> "Name" | show <slug>]  a version of your résumé per kind of role (Free: one)
 //   apply <posting> [--role …] [--company …] (Pro)  best-fit role version for one job, logged privately
@@ -33,7 +34,7 @@ const di = argv.indexOf('--dir');
 if (di >= 0) { if (!argv[di + 1]) { console.error('--dir needs a folder'); process.exit(2); } process.env.LIVING_RESUME_DIR = path.resolve(argv[di + 1]); argv.splice(di, 2); }
 
 const ALIASES = { 'gate:test': 'check', test: 'check', tailor: 'apply' };
-const COMMANDS = ['init', 'import', 'add', 'inbox', 'snippet', 'status', 'review', 'propose', 'fix-role', 'target', 'roles', 'build', 'check', 'coach', 'publish', 'linkedin', 'apply', 'jobs', 'scout', 'license'];
+const COMMANDS = ['init', 'import', 'add', 'inbox', 'snippet', 'status', 'review', 'propose', 'fix-role', 'target', 'roles', 'build', 'check', 'coach', 'publish', 'linkedin', 'heading', 'apply', 'jobs', 'scout', 'license'];
 const cmd = ALIASES[argv[0]] || argv[0];
 
 if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h') {

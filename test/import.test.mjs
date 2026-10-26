@@ -45,7 +45,12 @@ test('import a LinkedIn .zip into a workspace', () => {
   assert.equal(L.person.location.city, ''); // contact details wait for approval
   const basics = fs.readdirSync(path.join(dir, 'proposals')).map((f) => JSON.parse(fs.readFileSync(path.join(dir, 'proposals', f), 'utf8'))).find((p) => p.kind === 'basics');
   assert.equal(basics.fields.city, 'Austin'); assert.ok(!('name' in basics.fields)); // name already set, never overwritten
-  assert.ok(fs.readdirSync(path.join(dir, 'quarantine', 'approved', 'imports')).some((f) => f.endsWith('linkedin.zip')));
+  // Only the profile files that were read are kept; never the whole export (connections, messages).
+  const q = path.join(dir, 'quarantine', 'approved', 'imports');
+  assert.ok(!fs.readdirSync(q).some((f) => f.endsWith('linkedin.zip')));
+  const kept = fs.readdirSync(q).find((f) => f.endsWith('linkedin.zip.profile'));
+  assert.ok(kept); const files = fs.readdirSync(path.join(q, kept));
+  assert.ok(files.length > 0 && files.every((f) => !/connections|messages|phone/i.test(f)), files.join(','));
 });
 
 test('import a .docx', () => {
