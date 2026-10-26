@@ -1,6 +1,11 @@
 # Changelog
 
 ## 1.3.0 · 2026-10-26 (unreleased)
+- **Make it stronger: an honest coach, not a formatter.** `coach` (MCP `resume_coach`, read-only) scores the approved, public lines out of 100 and lists the 3 biggest lifts, then line-by-line suggestions: duty phrasing, bullets with no number or result, size without an outcome, vague words, long bullets, a first-person summary, shorthand headlines, thin recent roles, a volunteer role above paid roles, year-only dates, a missing target. Each has the ledger id, why, and 1-3 questions to ask you. It never writes wording: your AI rewrites only from your answers, as proposals you approve. `check` shows the lifts as Suggestions that never fail. The skill asks the target first, interviews 5 questions at a time, and does a hiring-manager review before handing over.
+- **Proof links:** an optional public https `link` on a line (proposals and ledger) shows on the web page and in JSON Resume, never in the PDF body; evidence stays private; anything but https is refused.
+- **Publications and talks:** a `publications` section in every format; import places "Publications", "Speaking", "Talks" headings there.
+- A role marked `volunteer` (resume_fix_role, on the user's word) lists after paid roles. Dates show months ("Mar 2021 to present") when every role has them.
+- No-Chrome PDF: clearer name and title block, a thin accent rule under section heads, dates right-aligned on the role line, steadier spacing.
 - **Experience is newest first** in the PDF, web page, JSON Resume, and LinkedIn packet (end date, present first, then start date), whatever order the roles were imported in. A role profile's `order` may list role ids to put a role first; `exclude` may leave a role out.
 - **Import never drops a line silently.** PDF text read in reading order (dates after the bullets) gives the dates to the role header above; any line that lands in no role is listed under "Not placed (check these lines)". Re-importing says when an earlier import still has lines waiting; `review reject-all <import-prefix>` (MCP: `resume_review_decide` with the prefix and `reject`) clears them. LinkedIn education keeps the graduation year.
 - MCP replies use plain words (no CLI commands, no "Terminal", no developer notes); `resume_propose` basics can be fields only. `jobs schedule` says "with your AI's review".
