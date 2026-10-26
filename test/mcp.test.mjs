@@ -67,3 +67,19 @@ test('resume_import works for a file inside the workspace', async () => {
   assert.match(r.result.content[0].text, /Lines waiting for your review: 12/);
   s.close();
 });
+
+test('job criteria from the AI tool: an object becomes validated settings; bad values are refused', async () => {
+  const dir = workspace('mcp-jobs');
+  const s = session(dir);
+  try {
+    await s.req('initialize', {});
+    const ok = await s.req('tools/call', { name: 'resume_jobs_criteria', arguments: { set: { looking_for: 'Remote contract design engineering', remote: 'required', work_type: ['contract'], companies: [{ name: 'Linear', board: 'ashby:linear' }] } } });
+    assert.equal(ok.result.isError, false, ok.result.content[0].text);
+    const c = JSON.parse(fs.readFileSync(path.join(dir, 'resume', 'job-search.json'), 'utf8'));
+    assert.equal(c.remote, 'required'); assert.equal(c.companies[0].board, 'ashby:linear');
+    const bad = await s.req('tools/call', { name: 'resume_jobs_criteria', arguments: { set: { companies: [{ name: 'X', board: 'greenhouse:../x' }] } } });
+    assert.equal(bad.result.isError, true);
+    const badId = await s.req('tools/call', { name: 'resume_jobs_mark', arguments: { id: '../state', action: 'note', text: 'x' } });
+    assert.equal(badId.result.isError, true);
+  } finally { s.close(); }
+});

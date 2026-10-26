@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0 · 2026-10-26 (unreleased)
+- **Daily job matches (Pro).** Say what you're looking for in your own words; your AI saves it as `resume/job-search.json` (titles, contract or full-time, remote, locations, must-haves, words and companies to avoid, companies to check). `jobs find` reads those companies' public Greenhouse, Lever, and Ashby listings, screens them, scores each against every version of your approved résumé, and writes `jobs/today.html`: fit, confidence, the gaps, which version to send, and an Apply button. Listings from alert emails or the web come in with `jobs add`. `jobs schedule` gives the text for a daily scheduled task. `jobs prep <id>` makes the best-fit version; `note`, `dismiss`, and `applied` keep the list honest. Never applies for you, never changes your résumé.
+- Fit scoring is shared by `apply` and `jobs`, ignores job-posting boilerplate, and matches word forms ("systems" and "system"). `apply` now works without a role profile (it uses your main résumé).
+- Fix: the safety scan flagged the ordinary phrase "JavaScript:" (as in a skills line) as an attack. Only real `javascript:` links are flagged now.
+
 ## 1.2.0 · 2026-10-25 (unreleased)
 - Works without Chrome: PDF fallback (Python reportlab) for Claude Cowork and ChatGPT workspaces, same content and two-page check.
 - `dist/site/`: a ready-to-upload folder (web page, PDF, machine-readable file). `publish` explains Netlify Drop, site builders, and site folders; `publish --mark` records a version you uploaded yourself.

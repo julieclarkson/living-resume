@@ -2,6 +2,7 @@
 quarantine/
 scout/
 applications/
+jobs/
 inbox/
 imports/
 dist/resume-print.html

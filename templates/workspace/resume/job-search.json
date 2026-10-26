@@ -1,0 +1,21 @@
+{
+  "about": "What you're looking for. Tell your AI tool in your own words (\"I want remote contract work as a design engineer, nothing in crypto\") and it fills this in. Private: never published.",
+  "looking_for": "",
+  "titles": [],
+  "titles_about": "Job titles to match, e.g. \"product engineer\", \"design engineer\". A listing's title must contain one of them. Empty matches every title.",
+  "work_type": [],
+  "work_type_about": "Any of \"contract\", \"full-time\", \"part-time\". Empty means any.",
+  "remote": "preferred",
+  "remote_about": "\"required\" (remote only), \"preferred\" (remote, or on-site in your locations), or \"any\".",
+  "locations": [],
+  "min_pay": "",
+  "must_have": [],
+  "must_have_about": "Words a listing must mention (any one of them), e.g. \"accessibility\".",
+  "avoid": [],
+  "avoid_about": "Words that rule a listing out, e.g. \"crypto\", \"senior director\".",
+  "avoid_companies": [],
+  "companies": [],
+  "companies_about": "Companies to check every day. Each is { \"name\": \"Vercel\", \"board\": \"greenhouse:vercel\" }. The board is the provider and the last part of their careers page address: boards.greenhouse.io/<slug>, jobs.lever.co/<slug>, or jobs.ashbyhq.com/<slug>.",
+  "daily_limit": 10,
+  "min_fit": 40
+}

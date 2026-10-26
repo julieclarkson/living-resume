@@ -14,6 +14,8 @@
 //   linkedin                                 which LinkedIn fields changed, with the text to paste
 //   roles [new <slug> "Name" | show <slug>]  a version of your résumé per kind of role (Free: one)
 //   apply <posting> [--role …] [--company …] (Pro)  best-fit role version for one job, logged privately
+//   jobs [criteria | find | add | today | note | dismiss | applied | prep | schedule]
+//                                 (Pro)      daily job matches against your approved résumé, with Apply links
 //   scout [--all]                 (Pro)      new résumé-worthy moments from case-study-maker logs
 //   license <status|activate <key>|validate|deactivate>
 //
@@ -27,7 +29,7 @@ const di = argv.indexOf('--dir');
 if (di >= 0) { if (!argv[di + 1]) { console.error('--dir needs a folder'); process.exit(2); } process.env.LIVING_RESUME_DIR = path.resolve(argv[di + 1]); argv.splice(di, 2); }
 
 const ALIASES = { 'gate:test': 'check', test: 'check', tailor: 'apply' };
-const COMMANDS = ['init', 'import', 'add', 'inbox', 'snippet', 'status', 'review', 'roles', 'build', 'check', 'publish', 'linkedin', 'apply', 'scout', 'license'];
+const COMMANDS = ['init', 'import', 'add', 'inbox', 'snippet', 'status', 'review', 'roles', 'build', 'check', 'publish', 'linkedin', 'apply', 'jobs', 'scout', 'license'];
 const cmd = ALIASES[argv[0]] || argv[0];
 
 if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h') {
@@ -43,7 +45,7 @@ if (cmd === '--version' || cmd === 'version') {
 if (!COMMANDS.includes(cmd)) { console.error(`Unknown command "${argv[0]}". Run: living-resume help`); process.exit(2); }
 
 // Commands that change the workspace run one at a time.
-if (['import', 'add', 'inbox', 'review', 'roles', 'build', 'publish', 'apply', 'scout'].includes(cmd) && !(['review', 'inbox', 'roles'].includes(cmd) && (!argv[1] || ['all', 'list', 'show'].includes(argv[1])))) {
+if (['import', 'add', 'inbox', 'review', 'roles', 'build', 'publish', 'apply', 'jobs', 'scout'].includes(cmd) && !(['review', 'inbox', 'roles', 'jobs'].includes(cmd) && (!argv[1] || ['all', 'list', 'show', 'schedule', 'read'].includes(argv[1]) || (cmd === 'jobs' && argv[1] === 'criteria' && !argv.includes('--set'))))) {
   const { lockWorkspace, isWorkspace } = await import('../engine/lib/util.mjs');
   if (isWorkspace()) { try { lockWorkspace(); } catch (e) { console.error(`✗ ${e.message}`); process.exit(4); } }
 }

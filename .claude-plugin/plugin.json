@@ -1,8 +1,8 @@
 {
   "name": "living-resume",
   "displayName": "Living Résumé",
-  "description": "Turn your LinkedIn or old résumé into a current résumé (PDF, Word, web page) and keep it updated. Say \"add this to my résumé\" and it decides what belongs, makes a true version for each kind of job, and walks you through LinkedIn. No coding needed; your data stays on your computer.",
-  "version": "1.2.0",
+  "description": "Turn your LinkedIn or old résumé into a current résumé (PDF, Word, web page) and keep it updated. Say \"add this to my résumé\" and it decides what belongs, makes a true version for each kind of job, finds the jobs that fit you best every morning, and walks you through LinkedIn. No coding needed; your data stays on your computer.",
+  "version": "1.3.0",
   "author": {
     "name": "Jacobus Company, LLC",
     "url": "https://julieclarkson.com"
@@ -18,6 +18,9 @@
     "tailor resume",
     "cv",
     "career",
-    "cowork"
+    "cowork",
+    "job search",
+    "find jobs",
+    "job matches"
   ]
 }

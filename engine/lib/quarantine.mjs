@@ -24,7 +24,10 @@ export const PROMPT_INJECTION = [
 export function scanIn(text) {
   const threats = [];
   for (const re of PROMPT_INJECTION) { const m = text.match(re); if (m) threats.push({ name: 'prompt_injection', severity: 'critical', match: m[0].slice(0, 100) }); }
-  const inj = scanInjectionPatterns(text).threats.filter((t) => ['script_tag', 'javascript_uri', 'eval_call', 'shell_meta'].includes(t.name));
+  // "JavaScript: React, Node" is a normal skills line; only an actual javascript: URI counts.
+  const inj = scanInjectionPatterns(text).threats.filter((t) => ['script_tag', 'eval_call', 'shell_meta'].includes(t.name));
+  const js = text.match(/(?:href|src|action)\s*=\s*["']?\s*javascript:|javascript:\s*(?:alert|void|eval|fetch|document|window|location|top|self|parent|import|atob|\/\/)/i);
+  if (js) inj.push({ name: 'javascript_uri', severity: 'critical', match: js[0].slice(0, 100) });
   threats.push(...inj, ...scanSecretPatterns(text).threats.map((t) => ({ ...t, severity: 'high' })));
   if (Buffer.byteLength(text, 'utf8') > 512 * 1024) threats.push({ name: 'too_large', severity: 'high', match: '> 512 KB' });
   return { clean: threats.length === 0, threats };

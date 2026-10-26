@@ -25,6 +25,7 @@
   "proFeatures": {
     "scout": "The monthly scout that reads your case-study-maker build history",
     "apply": "Best-fit résumé version for each job application, with a coverage report",
+    "jobs": "Daily job matches from the companies you choose, ranked against your approved résumé",
     "roles": "More than one role profile",
     "capability": "One-page capability statement and vendor kit",
     "no-credit": "No credit link on your web page"

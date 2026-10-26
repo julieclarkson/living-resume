@@ -33,6 +33,7 @@ In an AI tool, just say "start my résumé", "add this to my résumé", "assess 
 | `snippet` | A paragraph to paste into your projects so the agents you work with nominate wins. |
 | `roles [new <slug> "Name" \| show <slug>]` | A version of your résumé per kind of role, built from approved lines only (Free: one). |
 | `apply <posting> [--role …] [--company …]` (Pro) | Best-fit role version for one job, coverage report, private PDF/DOCX, logged. |
+| `jobs [criteria \| find \| add \| today \| read \| note \| dismiss \| applied \| prep \| schedule]` (Pro) | Daily job matches: what you're looking for (`resume/job-search.json`), the public boards (Greenhouse, Lever, Ashby) of companies you choose plus listings your AI adds, scored against your approved résumé. Writes `jobs/today.html` with Apply buttons. Never applies for you. |
 | `scout` (Pro) | New résumé-worthy moments from case-study-maker logs. |
 | `license status\|activate <key>\|validate\|deactivate` | Free or Pro (Polar). |
 

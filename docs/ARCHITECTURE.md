@@ -37,3 +37,8 @@ The product code (`PRODUCT`) and the user's résumé workspace (`ROOT`) are sepa
 - `build` writes `dist/site/` (index.html, PDF, resume.json) as a ready-to-upload folder.
 - `publish` with no `publish.repo` explains the three ways online; `publish --mark` archives a version the user uploaded themselves, so `linkedin` can diff against it.
 - `linkedin` compares the current LinkedIn packet with the last archived one and prints only changed fields.
+
+## 1.3: daily job matches
+- `engine/lib/boards.mjs` reads public listing feeds only (Greenhouse, Lever, Ashby), https to those three hosts, 20 s timeout, 12 MB cap, no redirects, validated board slugs. `LIVING_RESUME_BOARDS_ORIGIN` (local http only) points them at a test server.
+- `engine/lib/fit.mjs` scores a posting against the main résumé and every role profile: the posting's 25 most repeated key terms (boilerplate removed, light stemming), split into covered (in that version's PDF lines), elsewhere (on the résumé, not in this version), and missing. Shared by `apply` and `jobs`.
+- `engine/commands/jobs.mjs`: criteria (validated), screening (titles, work type, remote and locations, must-haves, avoid words and companies), storage in `jobs/postings.json` (only listings that pass the screen, every one scanned; held ones are never ranked), state in `jobs/state.json`, and the page `jobs/today.html` (strict CSP, everything escaped, https links only). Confidence is high at 55%+ fit with at most 30% of key terms missing and nothing unconfirmed; medium at the user's `min_fit` with at most half missing and one unknown.
