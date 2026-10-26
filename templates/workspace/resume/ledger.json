@@ -5,7 +5,7 @@
     "name": "",
     "email": "",
     "url": "",
-    "location": { "city": "", "region": "", "regionName": "", "countryCode": "", "remote": true },
+    "location": { "city": "", "region": "", "regionName": "", "countryCode": "", "remote": false },
     "profiles": []
   },
   "summary": null,

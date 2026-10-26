@@ -26,7 +26,7 @@ In an AI tool, just say "start my résumé", "add this to my résumé", "assess 
 | `build` | PDF, DOCX, `index.html`, `resume.json`, LinkedIn packet, public report. |
 | `check` | Privacy, private names, framing, plain voice, PDF pages and text, stale-build guard, quarantine. |
 | `publish [--write \| --mark]` | Dry run (and how to put `dist/site/` online), copy into your site folder, or record a version you uploaded yourself. Never commits or pushes. |
-| `linkedin` | Which LinkedIn fields changed since your last publish, with the text to paste. |
+| `linkedin [--done]` | Which LinkedIn fields changed since you last updated LinkedIn, with the text to paste. `--done` once you've pasted them. |
 | `status` | Recording, queue, public lines, history, plan. |
 | `add "what you did" [--link …]` | Put new work in your résumé inbox. Nothing changes until your AI tool assesses it and you approve. |
 | `inbox [all \| assessed <id> … \| skip <id> "why"]` | What's waiting, and each verdict. |

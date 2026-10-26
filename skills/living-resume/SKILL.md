@@ -8,8 +8,8 @@ description: Turn LinkedIn or an old résumé into a current, evidence-backed r�
 One ledger (`resume/ledger.json` in the user's résumé workspace) is the single source of truth. Every format (PDF, DOCX, web page, JSON Resume, LinkedIn packet) is built from it. The user approves every public line.
 
 ## How to run it
-- If the `living-resume` MCP tools are available, use them (`resume_status`, `resume_import`, `resume_add`, `resume_inbox`, `resume_rubric`, `resume_inbox_mark`, `resume_review_list`, `resume_review_decide`, `resume_roles`, `resume_role_show`, `resume_build`, `resume_check`, `resume_publish_preview`, `resume_apply`, `resume_scout`).
-- Otherwise run the CLI: `living-resume <command>` if installed, or `node <this plugin>/bin/living-resume.mjs <command>` (the `bin/` folder is two levels above this file). Commands: `init · import · add · inbox · snippet · status · review · roles · build · check · publish · apply · scout · license`.
+- If the `living-resume` MCP tools are available, use them (`resume_status`, `resume_import`, `resume_add`, `resume_inbox`, `resume_rubric`, `resume_inbox_mark`, `resume_review_list`, `resume_review_decide`, `resume_roles`, `resume_role_show`, `resume_build`, `resume_check`, `resume_publish_preview`, `resume_publish_mark`, `resume_linkedin`, `resume_apply`, `resume_scout`).
+- Otherwise run the CLI: `living-resume <command>` if installed, or `node <this plugin>/bin/living-resume.mjs <command>` (the `bin/` folder is two levels above this file). Commands: `init · import · add · inbox · snippet · status · review · roles · build · check · publish · linkedin · apply · scout · license`.
 - The workspace is `~/Living-Resume` unless the user keeps it elsewhere (then pass `--dir <folder>` or set `LIVING_RESUME_DIR`). When you show the user a terminal command, include the `cd` into the workspace first.
 
 ## Talk like a helpful person, not a terminal
@@ -23,8 +23,8 @@ Most users don't code. Never show commands, file paths, or JSON unless they ask.
    - **A web link, no setup:** if your environment can publish a hosted page (Claude artifacts), publish `dist/site/index.html` as their page and give them the link. Downloads don't work inside that page, so also give them the PDF to attach where needed.
    - **Their own free link:** walk them through Netlify Drop: open https://app.netlify.com/drop and drag the `dist/site` folder onto it (no account needed to start; sign up to keep the link and update it by dragging the folder again).
    - **Their existing site** (Squarespace, Wix, WordPress): upload the PDF and add a "Résumé" link. Builders with a site repo: set `publish.repo` in settings and use `publish --write`.
-   After they've put it online, run `publish --mark` so later updates know what changed.
-5. **LinkedIn** (guided, never automated: LinkedIn doesn't allow apps to edit profiles): run `linkedin` and walk them field by field. The first time, help them add their résumé link and PDF to Featured. After every later update, `linkedin` shows only the fields that changed.
+   After they've put it online, run `publish --mark` to archive the version.
+5. **LinkedIn** (guided, never automated: LinkedIn doesn't allow apps to edit profiles): run `linkedin` and walk them field by field. The first time, help them add their résumé link and PDF to Featured. When they say they've pasted everything, run `linkedin --done`; after that, `linkedin` shows only the fields that changed.
 
 ## Hard rules
 1. **Never invent.** Every public line must trace to evidence: something the user said, an imported document, a case-study-maker event, or a live product. Put the evidence in the proposal's `evidence` field. No made-up metrics, clients, titles, dates, or results.
@@ -81,7 +81,7 @@ Save the posting text to a file in the workspace, then `apply <file> --company "
 `status`. To forget: set the item's `visibility` to `"private"` in the ledger, `build`, and remind the user the next publish removes it everywhere (and to remove it on LinkedIn by hand).
 
 ## "Publish my résumé" / "put my résumé online"
-`build`, then `publish` (it runs every check). If they use a site folder (`publish.repo`), show the changes and files, and only after they say yes, `publish --write`; they commit it themselves and their host deploys it. Otherwise, update their page the way they chose in First run step 4 (republish the hosted page, or have them drag `dist/site` onto Netlify Drop again), then `publish --mark`. Finish with `linkedin` so they only update the fields that changed.
+`build`, then `publish` (it runs every check). If they use a site folder (`publish.repo`), show the changes and files, and only after they say yes, `publish --write`; they commit it themselves and their host deploys it. Otherwise, update their page the way they chose in First run step 4 (republish the hosted page, or have them drag `dist/site` onto Netlify Drop again), then `publish --mark`. Finish with `linkedin` so they only update the fields that changed, then `linkedin --done` once they've pasted them.
 
 ## Plans
 Free: ledger, import, the inbox and rubric, review, every format, one role profile, checks, publish, LinkedIn packet, with a small credit link on the web page. Pro (yearly, via Polar): unlimited role profiles, job-by-job `apply`, the scout, capability statement and vendor kit, no credit link. `license status` · `license activate <key>`. Never ask for or repeat a full license key in chat beyond what the user pasted.

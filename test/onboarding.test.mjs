@@ -31,12 +31,14 @@ test('build makes dist/site/ ready to upload; publish with no target explains th
   assert.match(p.out, /app\.netlify\.com\/drop/); assert.match(p.out, /publish --mark/);
 });
 
-test('publish --mark records the version; linkedin then shows only what changed', { skip: !hasReportlab && 'reportlab not installed' }, () => {
+test('publish --mark archives; linkedin shows only what changed since linkedin --done', { skip: !hasReportlab && 'reportlab not installed' }, () => {
   const dir = ready();
   cli(['build'], { dir, env: noChrome });
   assert.match(cli(['linkedin'], { dir }).out, /First time/);
   const m = cli(['publish', '--mark'], { dir, env: noChrome }); assert.equal(m.code, 0, m.out);
   assert.equal(fs.readdirSync(path.join(dir, 'archive')).length, 1);
+  assert.match(cli(['linkedin'], { dir }).out, /First time/);
+  assert.equal(cli(['linkedin', '--done'], { dir }).code, 0);
   assert.match(cli(['linkedin'], { dir }).out, /Nothing on LinkedIn needs to change/);
   const lp = path.join(dir, 'resume', 'ledger.json'); const L = JSON.parse(fs.readFileSync(lp, 'utf8'));
   L.person.headline.text = 'Senior Product Designer and Front-End Developer'; fs.writeFileSync(lp, JSON.stringify(L));

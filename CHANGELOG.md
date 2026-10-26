@@ -3,7 +3,8 @@
 ## 1.2.0 · 2026-10-25 (unreleased)
 - Works without Chrome: PDF fallback (Python reportlab) for Claude Cowork and ChatGPT workspaces, same content and two-page check.
 - `dist/site/`: a ready-to-upload folder (web page, PDF, machine-readable file). `publish` explains Netlify Drop, site builders, and site folders; `publish --mark` records a version you uploaded yourself.
-- `linkedin`: only the LinkedIn fields that changed, with the text to paste.
+- `linkedin`: only the LinkedIn fields that changed since you last updated it, with the text to paste (`linkedin --done` records that you did).
+- New workspaces no longer default to "Remote" as a location.
 - Skill: plain-language first run for non-coders, résumé score card, "where should your résumé live" onboarding, guided LinkedIn, optional "What I shipped" post draft. Discovery-friendly plugin description.
 
 ## 1.1.0 · 2026-10-25 (unreleased)
