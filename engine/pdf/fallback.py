@@ -72,8 +72,11 @@ def main():
             body = [bullets(sec['items'])] + ([Paragraph(e(sec['note']), st['note'])] if sec.get('note') else [])
             s.append(KeepTogether(head + body))
         elif k == 'dl':
-            t = Table([[Paragraph(e(r['term']), st['term']), Paragraph(e(r['text']), st['body'])] for r in sec['rows']], colWidths=[W * 0.27, W * 0.73])
-            t.setStyle(TableStyle([('LEFTPADDING', (0, 0), (-1, -1), 0), ('RIGHTPADDING', (0, 0), (-1, -1), 6), ('TOPPADDING', (0, 0), (-1, -1), 0), ('BOTTOMPADDING', (0, 0), (-1, -1), 4), ('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+            # A row without a label spans both columns.
+            rows = [[Paragraph(e(r['term']), st['term']), Paragraph(e(r['text']), st['body'])] if r['term'] else [Paragraph(e(r['text']), st['body']), ''] for r in sec['rows']]
+            spans = [('SPAN', (0, i), (1, i)) for i, r in enumerate(sec['rows']) if not r['term']]
+            t = Table(rows, colWidths=[W * 0.27, W * 0.73])
+            t.setStyle(TableStyle([('LEFTPADDING', (0, 0), (-1, -1), 0), ('RIGHTPADDING', (0, 0), (-1, -1), 6), ('TOPPADDING', (0, 0), (-1, -1), 0), ('BOTTOMPADDING', (0, 0), (-1, -1), 4), ('VALIGN', (0, 0), (-1, -1), 'TOP')] + spans))
             s.append(KeepTogether(head + [t]))
         elif k == 'edu':
             body = []
@@ -81,7 +84,8 @@ def main():
                 body.append(Paragraph(f"<b>{e(r['strong'])}</b>{e(r['rest'])}", st['body']))
                 if r.get('note'): body.append(Paragraph(e(r['note']), st['note']))
                 body.append(Spacer(1, 3))
-            if sec.get('certs'): body.append(Paragraph(e(sec['certs']), st['note']))
+            if sec.get('certsLabel'): body.append(Paragraph(f"<b>{e(sec['certsLabel'])}</b>", st['body']))
+            if sec.get('certList'): body.append(bullets(sec['certList']))
             s.append(KeepTogether(head + body))
         elif k == 'cols':
             items = sec['items']; half = (len(items) + 1) // 2

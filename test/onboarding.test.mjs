@@ -39,12 +39,14 @@ test('publish --mark archives; linkedin shows only what changed since linkedin -
   assert.equal(fs.readdirSync(path.join(dir, 'archive')).length, 1);
   assert.match(cli(['linkedin'], { dir }).out, /First time/);
   assert.equal(cli(['linkedin', '--done'], { dir }).code, 0);
-  assert.match(cli(['linkedin'], { dir }).out, /Nothing on LinkedIn needs to change/);
+  const same = cli(['linkedin'], { dir }).out;
+  assert.match(same, /Nothing on LinkedIn needs to change/); assert.doesNotMatch(same, /linkedin --done/);
   const lp = path.join(dir, 'resume', 'ledger.json'); const L = JSON.parse(fs.readFileSync(lp, 'utf8'));
   L.person.headline.text = 'Senior Product Designer and Front-End Developer'; fs.writeFileSync(lp, JSON.stringify(L));
   cli(['build'], { dir, env: noChrome });
   const out = cli(['linkedin'], { dir }).out;
   assert.match(out, /1 LinkedIn field\(s\) changed/); assert.match(out, /Headline/); assert.match(out, /Senior Product Designer and Front-End Developer/);
+  assert.match(out, /linkedin --done/);
 });
 
 test('publish --mark refuses when checks fail', () => {
