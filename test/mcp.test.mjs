@@ -83,3 +83,33 @@ test('job criteria from the AI tool: an object becomes validated settings; bad v
     assert.equal(badId.result.isError, true);
   } finally { s.close(); }
 });
+
+test('resume_init honors LIVING_RESUME_DIR (even before the folder exists), then status works there', async () => {
+  const dir = path.join(tmp('mcp-init'), 'My Résumé');
+  const s = session(dir);
+  try {
+    await s.req('initialize', {});
+    const r = await s.req('tools/call', { name: 'resume_init', arguments: { name: 'Sam Rivera' } });
+    assert.equal(r.result.isError, false, r.result.content[0].text);
+    assert.ok(fs.existsSync(path.join(dir, 'resume', 'ledger.json')));
+    const st = await s.req('tools/call', { name: 'resume_status', arguments: {} });
+    assert.equal(st.result.isError, false, st.result.content[0].text); assert.match(st.result.content[0].text, /QUEUE/);
+  } finally { s.close(); }
+});
+
+test('resume_init with the folder the user picked: later tools use that folder; relative paths and ".." are refused', async () => {
+  const base = tmp('mcp-pick'); const elsewhere = path.join(base, 'unused'); const picked = path.join(base, 'Documents', 'Résumé');
+  const s = session(elsewhere);
+  try {
+    await s.req('initialize', {});
+    for (const folder of ['Documents/Résumé', `${base}/../x`, '-rf']) {
+      const bad = await s.req('tools/call', { name: 'resume_init', arguments: { folder } });
+      assert.equal(bad.result.isError, true, folder);
+    }
+    const r = await s.req('tools/call', { name: 'resume_init', arguments: { folder: picked } });
+    assert.equal(r.result.isError, false, r.result.content[0].text);
+    assert.ok(fs.existsSync(path.join(picked, 'resume', 'ledger.json'))); assert.ok(!fs.existsSync(elsewhere));
+    const st = await s.req('tools/call', { name: 'resume_status', arguments: {} });
+    assert.equal(st.result.isError, false); assert.ok(st.result.content[0].text.includes(picked));
+  } finally { s.close(); }
+});
