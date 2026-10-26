@@ -1,6 +1,9 @@
 # Changelog
 
 ## 1.3.0 · 2026-10-26 (unreleased)
+- **Experience is newest first** in the PDF, web page, JSON Resume, and LinkedIn packet (end date, present first, then start date), whatever order the roles were imported in. A role profile's `order` may list role ids to put a role first; `exclude` may leave a role out.
+- **Import never drops a line silently.** PDF text read in reading order (dates after the bullets) gives the dates to the role header above; any line that lands in no role is listed under "Not placed (check these lines)". Re-importing says when an earlier import still has lines waiting; `review reject-all <import-prefix>` (MCP: `resume_review_decide` with the prefix and `reject`) clears them. LinkedIn education keeps the graduation year.
+- MCP replies use plain words (no CLI commands, no "Terminal", no developer notes); `resume_propose` basics can be fields only. `jobs schedule` says "with your AI's review".
 - **Claude and ChatGPT, equal footing.** OpenAI plugin packaging (root `plugin.json`, `mcp.json`, `.agents/plugins/marketplace.json`) for the ChatGPT desktop app and Codex. Marketing page, guide, README, and llms.txt show Claude Cowork and ChatGPT desktop side by side.
 - MCP `resume_init` keeps the workspace in the folder the user picked (`folder`), or `LIVING_RESUME_DIR`.
 - Import splits one-line role headers that hold the dates ("Title, Org 2017 - 2021"). LinkedIn packet fields are unique per role (promotions, blank orgs). Certificates render as a list; the school isn't repeated; a "Skills" group under "Skills" has no label.
@@ -12,7 +15,7 @@
 - **What have I applied to:** `jobs applied` lists applications, newest first.
 - Marketing page and visual guide (`marketing/guide.html`) updated.
 - **Daily job matches (Pro).** Say what you're looking for in your own words; your AI saves it as `resume/job-search.json` (titles, contract or full-time, remote, locations, must-haves, words and companies to avoid, companies to check). `jobs find` reads those companies' public Greenhouse, Lever, and Ashby listings, screens them, scores each against every version of your approved résumé, and writes `jobs/today.html`: fit, confidence, the gaps, which version to send, and an Apply button. Listings from alert emails or the web come in with `jobs add`. Setup asks nine questions before any search. `jobs schedule` gives a no-AI timer line (no tokens) or scheduled-task text with Claude's review, on the days you choose (Wednesday suggested). Never reads email. `jobs prep <id>` makes the best-fit version; `note`, `dismiss`, and `applied` keep the list honest. Never applies for you, never changes your résumé.
-- **Pre-launch:** until `product.config.json` has a Polar store, Pro features are unlocked, with a reminder on every Pro use, in `license status`, and in `check`. Configure the store before release.
+- **Pre-launch:** until `product.config.json` has a Polar store, Pro features are unlocked, with a reminder on each Pro use (once per reply) and in `license status`. Configure the store before release.
 - `jobs boards` checks every company board after setup.
 - Two more job systems: Workable (`workable:<slug>`) and SmartRecruiters (`smartrecruiters:<slug>`, full text fetched only for listings whose title matches).
 - Fit scoring is shared by `apply` and `jobs`, ignores job-posting boilerplate, and matches word forms ("systems" and "system"). `apply` now works without a role profile (it uses your main résumé).
