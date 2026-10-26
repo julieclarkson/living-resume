@@ -24,7 +24,7 @@ Most users don't code. Never show commands, file paths, or JSON unless they ask.
 ## First run (new users)
 1. Start the workspace and import their LinkedIn export or résumé (below).
 2. **Résumé check:** score their current résumé against `resume/rubric.json` and show a short score card: total, the three strongest lines, the three weakest spots, and one concrete fix for each. Be honest and specific. This is the "aha" moment; then offer to fix the weak spots together.
-3. Review the imported lines (Approve · Edit · Reject · Later), build, and send them the PDF.
+3. Review the imported lines (Approve · Edit · Reject · Later), build, and send them the PDF. If `build` says the Word file wasn't made (no pandoc here, common in Claude Cowork and ChatGPT), make the .docx with your own document tool from `dist/resume-print.html` (same approved content, nothing added), or send the PDF.
 4. **"Where should your résumé live?"** (once):
    - **A web link, no setup:** if your environment can publish a hosted page (Claude artifacts), publish `dist/site/index.html` as their page and give them the link. Downloads don't work inside that page, so also give them the PDF to attach where needed.
    - **Their own free link:** walk them through Netlify Drop: open https://app.netlify.com/drop and drag the `dist/site` folder onto it (no account needed to start; sign up to keep the link and update it by dragging the folder again).

@@ -54,3 +54,11 @@ test('publish --mark refuses when checks fail', () => {
   assert.notEqual(cli(['publish', '--mark'], { dir }).code, 0);
   assert.ok(!fs.existsSync(path.join(dir, 'archive')) || fs.readdirSync(path.join(dir, 'archive')).length === 0);
 });
+
+test('without pandoc: build says how to get the Word file instead of a bare skip', { skip: !hasReportlab && 'reportlab not installed' }, () => {
+  const dir = ready(); const bin = path.join(dir, '..', 'bin'); fs.mkdirSync(bin);
+  fs.symlinkSync(execFileSync('sh', ['-c', 'command -v python3'], { encoding: 'utf8' }).trim(), path.join(bin, 'python3'));
+  const b = cli(['build'], { dir, env: { ...noChrome, PATH: bin } }); assert.equal(b.code, 0, b.out);
+  assert.match(b.out, /Word file \(DOCX\) not made here: it needs pandoc/); assert.match(b.out, /dist\/resume-print\.html/);
+  assert.ok(fs.existsSync(path.join(dir, 'dist', 'resume-print.html')));
+});

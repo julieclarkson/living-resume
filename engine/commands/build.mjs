@@ -45,7 +45,7 @@ release('resume-print.html', html, stripTags(html));
 const docxName = R.pdf_filename.replace(/\.pdf$/, '.docx');
 const docxTmp = `${work}/${docxName}`;
 if (htmlToDocx(htmlPath, docxTmp)) release(docxName, fs.readFileSync(docxTmp), stripTags(html));
-else report.push('! DOCX skipped (needs macOS textutil or pandoc)');
+else report.push('! Word file (DOCX) not made here: it needs pandoc (or textutil on a Mac). Make it with your AI tool\'s own document tool from dist/resume-print.html (same content), or send the PDF.');
 
 // 3. JSON Resume for websites + machine readers
 release('resume.json', JSON.stringify(jsonResume(L), null, 2) + '\n');
