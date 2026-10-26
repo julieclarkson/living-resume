@@ -120,3 +120,11 @@ test('commands outside a workspace explain how to start', () => {
   const r = cli(['status'], { env: { LIVING_RESUME_DIR: path.join(ROOT, 'no-such-dir'), HOME: path.join(ROOT, 'no-such-home') } });
   assert.equal(r.code, 2); assert.match(r.out, /living-resume init/);
 });
+
+test('plain voice: check names the lines and says how to reword them', () => {
+  const dir = workspace('voice');
+  fs.writeFileSync(path.join(dir, 'proposals', 'p-voice.json'), JSON.stringify({ id: 'p-voice', kind: 'add', section: 'certifications', text: 'Tools: Excel; Canva', status: 'proposed' }));
+  cli(['review', 'approve', 'p-voice'], { dir });
+  const c = cli(['check'], { dir }); assert.notEqual(c.code, 0);
+  assert.match(c.out, /✗ plain voice.*p-voice: reword without ; : →/);
+});

@@ -32,7 +32,7 @@ check('outbound scan: public lines', !v.length, v.map((x) => `${x.rule}: ${x.det
 // 2b. Plain voice (on by default): no colons, semicolons, or arrows in public wording; they read as machine-written.
 if (R.voice?.plain !== false) {
   const plain = items.filter((i) => i.visibility === 'public' && i.surfaces.length && /[;→]|[^\s/]:\s/.test(mdPlain(i.text)));
-  check('plain voice: no colons, semicolons, or arrows in public lines', !plain.length, plain.map((i) => i.id).join(', '));
+  check('plain voice: no colons, semicolons, or arrows in public lines', !plain.length, plain.length ? `${plain.map((i) => i.id).join(', ')}: reword without ; : → (use commas or "and", same meaning)` : '');
 }
 
 // 2c. Approved alternate wordings (used by role profiles) pass the same rules as public lines.
