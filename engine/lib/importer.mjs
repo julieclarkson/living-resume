@@ -151,11 +151,19 @@ export function splitHeader(s) {
   return { parts, location };
 }
 const MARK = /^(?:[•▪●◦]|[-*](?=\s))\s*/;
+// A role header with no dates of its own: "Title — Org, City, ST" (a strong separator or a location),
+// not a bullet, not a sentence. Returns the index of the last such line that is followed by a bullet.
+const looksLikeHeader = (l) => !!l && !MARK.test(l) && /^[A-Z]/.test(l) && !/[.;:]$/.test(l) && l.length <= 120 && (STRONG.test(l) || !!cutLocation(l)[1]);
+const looksLikeTitle = (l, before) => !!l && !MARK.test(l) && /^[A-Z]/.test(l) && !/[.;:]$/.test(l) && l.length <= 80 && (before === undefined || MARK.test(before) || /[.!?]$/.test(before));
+function headerAbove(pending) {
+  for (let i = pending.length - 2; i >= 0; i--) if (MARK.test(pending[i + 1]) && looksLikeHeader(pending[i])) return i;
+  return -1;
+}
 const titleCase = (s) => s.toLowerCase().replace(/(^|[\s'-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase());
 export function fromText(text, source = 'résumé') {
   const lines = String(text).replace(/\r/g, '').split('\n').map((l) => l.replace(/\s+$/, '')).filter((l) => !/^\s*page \d+ of \d+\s*$/i.test(l));
   const linkedinPdf = /linkedin\.com\/in\//i.test(text) && /\bTop Skills\b/.test(text);
-  const draft = { source, person: {}, roles: [], education: [], skills: [], certifications: [], volunteer: [], unplaced: [], unplacedHeadings: [] };
+  const draft = { source, person: {}, roles: [], education: [], skills: [], certifications: [], volunteer: [], unplaced: [], unplacedHeadings: [], unplacedLines: [] };
   const sections = { top: [] }; let cur = 'top';
   // An ALL-CAPS line that matches no known heading starts an "other" section (not placed, reported),
   // unless a date range follows right below it (then it is an employer name).
@@ -198,8 +206,16 @@ export function fromText(text, source = 'résumé') {
       // holds both title and org ("Title, Org 2017 - 2021").
       const maxHead = parts.length >= 2 ? 0 : parts.length === 1 ? 1 : 2;
       let k = pending.length; while (k > 0 && pending.length - k < maxHead && !MARK.test(pending[k - 1])) k--;
-      const head = pending.slice(k);
-      if (role) role.bullets.push(...pending.slice(0, k));
+      let head = pending.slice(k); let after = [];
+      // Dates after the bullets (PDF text in reading order): "Title — Org, City, ST", its bullets, then
+      // "2013 – 2017". The dates belong to the header line above those bullets, which has none.
+      if (!parts.length && (!head.length || /^[a-z(]/.test(head[0]))) {
+        const h = headerAbove(pending);
+        if (h >= 0) { const two = h > 0 && looksLikeTitle(pending[h - 1], pending[h - 2]); k = two ? h - 1 : h; head = pending.slice(k, h + 1); after = pending.slice(h + 1); if (role) role.bullets.push(...pending.slice(0, k)); else draft.unplacedLines.push(...pending.slice(0, k)); }
+        else if (role && !role.start) { role.start = parseDate(m[1]); role.end = parseDate(m[2]); continue; }
+        else { draft.unplacedLines.push(l); continue; }
+      } else if (role) role.bullets.push(...pending.slice(0, k));
+      else draft.unplacedLines.push(...pending.slice(0, k));
       let title = '', org = '', loc = location;
       if (parts.length >= 2) [title, org] = [parts[0], parts.slice(1).join(', ')];
       else if (parts.length === 1) { title = head[0] || parts[0]; org = head[0] ? parts[0] : ''; }
@@ -208,7 +224,7 @@ export function fromText(text, source = 'résumé') {
         const [ob, lb] = cutLocation(b); if (ob && lb && !loc) { b = ob; loc = lb; }
         [title, org] = [a, b];
       } else if (head.length === 1) { const h = splitHeader(head[0]); [title, org] = [h.parts[0] || head[0], h.parts.slice(1).join(', ')]; loc = loc || h.location; }
-      role = { title, org, location: loc, start: parseDate(m[1]), end: parseDate(m[2]), bullets: [] };
+      role = { title, org, location: loc, start: parseDate(m[1]), end: parseDate(m[2]), bullets: after };
       draft.roles.push(role); pending = [];
       continue;
     }
@@ -227,7 +243,12 @@ export function fromText(text, source = 'résumé') {
     }
     r.bullets = joined.filter((b) => b.length > 2);
   }
-  if (!draft.roles.length && ex.length) draft.unplaced.push(...ex.map((l) => l.trim()).filter(Boolean));
+  // Nothing is dropped silently: a role with neither title nor company can't be proposed, so its lines
+  // are listed as not placed (with its dates), like any line that landed in no role.
+  for (const r of draft.roles.filter((x) => !x.title && !x.org)) draft.unplacedLines.push([r.start, r.end || 'Present'].filter(Boolean).join(' – '), ...r.bullets);
+  draft.roles = draft.roles.filter((x) => x.title || x.org);
+  if (!draft.roles.length && ex.length) draft.unplacedLines = ex.map((l) => l.trim()).filter(Boolean);
+  draft.unplaced.push(...draft.unplacedLines);
   draft.unplaced.push(...(sections.other || []).map((l) => l.trim()).filter(Boolean));
   for (const l of (sections.education || []).map((x) => x.trim()).filter(Boolean)) draft.education.push({ text: l });
   for (const l of (sections.skills || []).map((x) => x.trim()).filter(Boolean)) for (const s of l.split(/\s*[,;•·|]\s*/)) if (s.length > 1 && s.length < 60) draft.skills.push(s.replace(/^[-*]\s*/, ''));
@@ -295,7 +316,7 @@ export function toProposals(draft, { ledger, prefix, evidence }) {
     }
     for (const b of r.bullets) add(`experience.${id}`, b, {}, `From your ${draft.source}: ${r.title}${r.org ? ` at ${r.org}` : ''}`);
   }
-  for (const e of draft.education) add('education', e.text || [e.degree, e.institution].filter(Boolean).join(', '), { institution: e.institution || '', area: e.area || '', note: e.note || '' });
+  for (const e of draft.education) add('education', e.text || [e.degree, e.institution, String(e.end || '').slice(0, 4)].filter(Boolean).join(', '), { institution: e.institution || '', area: e.area || '', note: e.note || '' });
   if (draft.skills.length) add('skills', [...new Set(draft.skills)].join(', '), { name: 'Skills' }, `From your ${draft.source}. Split into groups as you like.`);
   for (const c of draft.certifications) add('certifications', [c.name, c.issuer, c.year].filter(Boolean).join(', '), { issuer: c.issuer || '' });
   for (const v of draft.volunteer) add('volunteer', v.text || [v.role, v.org].filter(Boolean).join(', '), { role: v.role || '', org: v.org || '', start: v.start || '', end: v.end || '' });

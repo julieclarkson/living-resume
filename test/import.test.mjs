@@ -169,3 +169,46 @@ test('LinkedIn certifications read "Name, Issuer, Year"', async () => {
   const { proposals } = toProposals(d, { ledger: { person: {} }, prefix: 't', evidence: 'x' });
   assert.ok(proposals.some((p) => p.section === 'certifications' && p.text === 'Project Management Professional (PMP), Project Management Institute, 2016'));
 });
+
+test('PDF text in reading order (dates after the bullets): all 8 roles, nothing dropped silently', () => {
+  const d = fromText(fs.readFileSync(path.join(ROOT, 'test', 'fixtures', 'elena-reading-order.txt'), 'utf8'));
+  assert.equal(d.roles.length, 8);
+  assert.deepEqual(d.roles.map((r) => [r.title, r.org, r.start, r.end]), [
+    ['Chief Operating Officer', 'Carolina Outpatient Partners', '2021-01', null], ['Senior Vice President, Operations', 'Carolina Outpatient Partners', '2017-03', '2020-12'],
+    ['Vice President, Regional Operations', 'Atrium Ridge Health Services', '2013', '2017'], ['Regional Director', 'Atrium Ridge Health Services', '2010', '2013'],
+    ['Director of Operations, Physical Therapy Division', 'Bluestone Rehab Group', '2006', '2010'], ['Operations Manager', 'Bluestone Rehab Group', '2004', '2006'],
+    ['Practice Manager', 'Peachtree Orthopedic Associates', '2001', '2004'], ['Patient Services Coordinator', 'Grady Health System', '1999', '2001']]);
+  assert.deepEqual(d.roles.map((r) => r.bullets.length), [4, 3, 2, 2, 2, 1, 1, 0]);
+  assert.deepEqual(d.unplacedLines, []);
+});
+
+test('lines that land in no role are listed as not placed, never dropped', () => {
+  const d = fromText('Pat Lee\nOps\n\nExperience\n- Stray line before any role\nAnalyst, Acme  2017 – 2019\n- Built reports\n2015 – 2016\n');
+  assert.deepEqual(d.roles.map((r) => [r.title, r.org, r.bullets]), [['Analyst', 'Acme', ['Built reports']]]);
+  for (const l of ['- Stray line before any role', '2015 – 2016']) assert.ok(d.unplaced.includes(l), l);
+  const dir = workspace('unplaced-lines'); const f = path.join(dir, 'cv.txt');
+  fs.writeFileSync(f, 'Pat Lee\nOps\n\nExperience\n- Stray line before any role\nAnalyst, Acme  2017 – 2019\n- Built reports\n');
+  const r = cli(['import', f], { dir }); assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /Not placed \(check these lines\):\n {4}- Stray line before any role/);
+});
+
+test('re-import: the earlier import still waiting is named, and reject-all clears only it', () => {
+  const dir = workspace('reimport'); const f = path.join(dir, 'cv.txt');
+  fs.writeFileSync(f, 'Pat Lee\nOps\n\nExperience\nAnalyst, Acme  2017 – 2019\n- Built reports\n- Ran the close\n');
+  assert.equal(cli(['import', f], { dir }).code, 0);
+  const first = fs.readdirSync(path.join(dir, 'proposals')).map((x) => x.split('-').slice(0, 5).join('-'))[0];
+  const r = cli(['import', f], { dir }); assert.equal(r.code, 0, r.out);
+  assert.match(r.out, new RegExp(`An earlier import \\(${first}\\) still has \\d+ lines waiting\\. Reject them first if this import replaces it`));
+  const rj = cli(['review', 'reject-all', first], { dir }); assert.equal(rj.code, 0, rj.out); assert.match(rj.out, /^Rejected \d+ waiting lines from /);
+  const all = fs.readdirSync(path.join(dir, 'proposals')).map((x) => JSON.parse(fs.readFileSync(path.join(dir, 'proposals', x), 'utf8')));
+  assert.ok(all.filter((p) => p.id.startsWith(first)).every((p) => p.status === 'rejected'));
+  assert.ok(all.filter((p) => !p.id.startsWith(first)).every((p) => p.status === 'proposed'));
+  assert.equal(cli(['review', 'reject-all', 'i'], { dir }).code, 1); // too short a prefix: refused
+});
+
+test('LinkedIn education keeps the end year', async () => {
+  const { toProposals } = await import('../engine/lib/importer.mjs');
+  const d = fromLinkedInFiles(readZip(zip(LI)));
+  const { proposals } = toProposals(d, { ledger: { person: {} }, prefix: 't', evidence: 'x' });
+  assert.ok(proposals.some((p) => p.section === 'education' && p.text === 'BS Computer Science, UT Austin, 2018'));
+});

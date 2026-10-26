@@ -54,5 +54,11 @@ const basics = proposals.find((x) => x.kind === 'basics'); if (basics) console.l
 console.log(`  Roles outlined: ${roles.length} (hidden until one of their lines is approved)`);
 console.log(`  Lines waiting for your review: ${proposals.length}`);
 if (draft.unplacedHeadings?.length) console.log(`  Not placed (check these): ${draft.unplacedHeadings.join(', ')}`);
-else if (draft.unplaced?.length) console.log(`  ${draft.unplaced.length} line(s) couldn't be placed; see imports/${stamp}.draft.json`);
-console.log(`\nNothing is public yet. Next: living-resume review   (or ask your AI tool: "review my résumé updates")`);
+if (draft.unplacedLines?.length) console.log(`  Not placed (check these lines):\n${draft.unplacedLines.slice(0, 40).map((l) => `    ${l}`).join('\n')}${draft.unplacedLines.length > 40 ? `\n    … and ${draft.unplacedLines.length - 40} more in imports/${stamp}.draft.json` : ''}`);
+// An earlier import whose lines are still waiting: this one may replace it.
+const earlier = new Map();
+for (const f of fs.readdirSync(confined(P('proposals'))).filter((x) => x.startsWith('import-') && x.endsWith('.json') && !x.startsWith(prefix))) {
+  try { const pr = JSON.parse(fs.readFileSync(confined(P('proposals', f)), 'utf8')); const pre = String(pr.id || '').split('-').slice(0, 5).join('-'); if (pr.status === 'proposed' && pre.startsWith('import-')) earlier.set(pre, (earlier.get(pre) || 0) + 1); } catch {}
+}
+for (const [pre, n] of earlier) console.log(`  An earlier import (${pre}) still has ${n} line${n === 1 ? '' : 's'} waiting. Reject them first if this import replaces it${process.env.LIVING_RESUME_VIA === 'mcp' ? ' (only if the user says so)' : `: living-resume review reject-all ${pre}`}.`);
+console.log(process.env.LIVING_RESUME_VIA === 'mcp' ? '\nNothing is public yet. Next: review the lines.' : `\nNothing is public yet. Next: living-resume review   (or ask your AI tool: "review my résumé updates")`);

@@ -5,6 +5,8 @@
 //   living-resume review reject <id> [reason]
 //   living-resume review later <id>
 //   living-resume review approve-all <prefix>  approve every waiting proposal whose id starts with <prefix>
+//   living-resume review reject-all <prefix>   reject every waiting proposal whose id starts with <prefix>
+//                                              (an earlier import that a new one replaces)
 // Approved/edited proposals are applied to the ledger (old wording kept in history).
 // A proposal is a JSON file in proposals/ (written by the scout skill, by import, or by hand):
 //   { id, kind: "add"|"edit"|"remove", target, section, text, surfaces, reason, evidence, fields, status: "proposed" }
@@ -78,6 +80,15 @@ function apply(L, p, text) {
 }
 
 const [cmd, id, ...rest] = process.argv.slice(2);
+const MCP = process.env.LIVING_RESUME_VIA === 'mcp';
+const NEXT = MCP ? 'Next: build and check.' : 'Run: living-resume build && living-resume check';
+if (cmd === 'reject-all') {
+  if (!id || !/^[a-z0-9][a-z0-9._-]{5,79}$/i.test(id)) { console.error('Give the id prefix of one import, e.g. reject-all import-2026-11-01-ab12'); process.exit(1); }
+  let n = 0;
+  for (const p of load().filter((x) => x.status === 'proposed' && x.id.startsWith(id))) { p.status = 'rejected'; p.reason_rejected = rest.join(' ') || 'replaced by a later import'; p.decided = today(); save(p); n++; }
+  console.log(n ? `Rejected ${n} waiting line${n === 1 ? '' : 's'} from ${id}. They won't be suggested again.` : `Nothing waiting starts with ${id}. Nothing changed.`);
+  process.exit(0);
+}
 if (cmd === 'approve-all') {
   if (!id) { console.error('Give an id prefix, e.g. approve-all import-2026-11-01'); process.exit(1); }
   const L = loadLedger(); let n = 0; const errs = [];
@@ -85,7 +96,7 @@ if (cmd === 'approve-all') {
     try { apply(L, p, p.text); p.status = 'approved'; p.final_text = p.text; p.decided = today(); save(p); n++; } catch (e) { errs.push(`${p.id}: ${e.message}`); }
   }
   writeJSON(ledgerPath(), L);
-  console.log(`Approved ${n} proposal(s).${errs.length ? `\nSkipped:\n  ${errs.join('\n  ')}` : ''} Run: living-resume build && living-resume check`);
+  console.log(`Approved ${n} proposal(s).${errs.length ? `\nSkipped:\n  ${errs.join('\n  ')}` : ''} ${NEXT}`);
   process.exit(errs.length ? 1 : 0);
 }
 const all = load();
@@ -95,7 +106,9 @@ if (!cmd || cmd === 'list') {
   if (!groups.proposed.length) console.log('Nothing waiting for review.');
   for (const p of groups.proposed) {
     console.log(`\n● ${p.id}  [${p.kind}${p.target ? ' ' + p.target : ''}${p.section ? ' → ' + p.section : ''}]  surfaces: ${(p.surfaces || ['web', 'pdf', 'linkedin', 'json']).join(', ')}`);
-    console.log(`  ${mdPlain(p.text || '(remove)')}`);
+    // Contact basics show their fields, like an import's basics line ("city: Charlotte · region: NC").
+    const fieldsLine = p.kind === 'basics' && p.fields && typeof p.fields === 'object' ? Object.entries(p.fields).filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join(' · ') : '';
+    console.log(`  ${mdPlain(fieldsLine || p.text || '(remove)')}`);
     console.log(`  why: ${p.reason || '-'}`);
   }
   if (groups.later.length) console.log(`\nIncubating (later): ${groups.later.map((p) => p.id).join(', ')}`);
@@ -118,5 +131,5 @@ else if (cmd === 'approve' || cmd === 'edit') {
   try { apply(L, p, text); } catch (e) { console.error(`Couldn't apply ${id}: ${e.message}. Nothing changed.`); process.exit(1); }
   writeJSON(ledgerPath(), L);
   p.status = cmd === 'edit' ? 'edited' : 'approved'; p.final_text = text; p.decided = today(); save(p);
-  console.log(`${cmd === 'edit' ? 'Edited and approved' : 'Approved'} ${id}. Ledger updated. Run: living-resume build && living-resume check`);
+  console.log(`${cmd === 'edit' ? 'Edited and approved' : 'Approved'} ${id}. Ledger updated. ${NEXT}`);
 } else { console.error(`Unknown action "${cmd}"`); process.exit(1); }
