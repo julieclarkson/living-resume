@@ -56,7 +56,8 @@ section{padding-block:56px;border-top:1px solid var(--rule)}
 
 /* Install: Claude Cowork and ChatGPT desktop side by side (same size, same tag), then the technical ways */
 .ways{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.ways.more{grid-template-columns:repeat(3,1fr);margin-top:18px}
+.ways.more{grid-template-columns:repeat(3,1fr);margin-top:10px}
+.devs{margin-top:40px;padding-top:24px;border-top:1px solid var(--rule);display:grid;gap:8px}
 .way{border:1px solid var(--rule);border-radius:14px;padding:22px;background:var(--card);display:grid;gap:12px;align-content:start;min-width:0}
 .way.main{border-color:var(--accent)}
 .way ol{margin:0;padding-left:20px;display:grid;gap:6px}
@@ -143,11 +144,17 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
           <li>Open <b>Customize</b>, then <b>Plugins</b>, then <b>Add marketplace</b>.</li>
           <li>Enter <span class="mono">julieclarkson/living-resume</span> and install <b>Living Résumé</b>.</li>
           <li>Then pick a folder (<span class="mono">Documents/Résumé</span>) when asked.</li>
+          <li>Put your LinkedIn .zip (or old résumé) in that folder.</li>
           <li>Say <span class="mono">make my résumé from my LinkedIn</span>.</li>
         </ol>
-        <p class="note" style="font-size:.9rem;color:var(--muted)">Everything stays in that folder on your computer.</p>
+        <p class="note" style="font-size:.9rem;color:var(--muted)">Everything stays in that folder on your computer. Your finished files land there too, under <span class="mono">dist</span>.</p>
       </div>
-      <!-- ChatGPT desktop wording follows OpenAI's plugin docs (2026-10-26): verify each step in the app before launch. -->
+      <!-- LAUNCH CHECKLIST (Julie): verify in the ChatGPT desktop app before launch, then fix this card from what you see:
+           1. Is Node.js needed? If yes, add step 0 "Install Node.js from nodejs.org" (and to the Cowork card only if Cowork needs it too).
+           2. The marketplace.json shape and its "./" source (.agents/plugins/marketplace.json) install the plugin.
+           3. The name to mention: does "@Living Résumé" work? (plugin.json has no verified display-name field yet; see README.)
+           4. Does the app ask for a folder? Does a file attached in the chat reach that folder?
+           Wording follows OpenAI's plugin docs (2026-10-26). Keep this comment until checked. -->
       <div class="way main">
         <span class="tag">No coding · ChatGPT desktop</span>
         <h3>ChatGPT desktop app</h3>
@@ -155,11 +162,16 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
           <li>Add the marketplace <span class="mono">julieclarkson/living-resume</span>.</li>
           <li>Open the <b>Plugins Directory</b> and install <b>Living Résumé</b>.</li>
           <li>Then pick a folder (<span class="mono">Documents/Résumé</span>) when asked.</li>
-          <li>In a local thread, mention <span class="mono">@Living Résumé</span> and say <span class="mono">make my résumé from my LinkedIn</span>.</li>
+          <li>Put your LinkedIn .zip (or old résumé) in that folder.</li>
+          <!-- TODO (fix 10): once the display-name field the app reads is verified, set it in plugin.json and use "mention @Living Résumé". -->
+          <li>In a local thread, mention <b>Living Résumé</b> and say <span class="mono">make my résumé from my LinkedIn</span>.</li>
         </ol>
-        <p class="note" style="font-size:.9rem;color:var(--muted)">Everything stays in that folder on your computer.</p>
+        <p class="note" style="font-size:.9rem;color:var(--muted)">Everything stays in that folder on your computer. Your finished files land there too, under <span class="mono">dist</span>.</p>
       </div>
     </div>
+    <div class="devs">
+    <h3>For developers</h3>
+    <p style="font-size:.95rem;color:var(--muted)">Claude Code, Codex, Cursor, VS Code, or any MCP client. Same engine, same files, same checks.</p>
     <div class="ways more">
       <div class="way">
         <span class="tag">Claude Code</span>
@@ -181,6 +193,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
         <p style="font-size:.9rem;color:var(--muted)">After the npm package is published. Needs Node.js 18 or newer.</p>
       </div>
     </div>
+    </div>
   </section>
 
   <section id="first">
@@ -196,7 +209,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
         </div>
         <div class="shot" aria-label="Example">
           <div class="files"><span class="file"><i>ZIP</i>Basic_LinkedInDataExport.zip</span></div>
-          <p class="note" style="color:var(--muted);font-size:.85rem">Drag it into the chat, or put it in your résumé folder.</p>
+          <p class="note" style="color:var(--muted);font-size:.85rem">Put it in your résumé folder.</p>
         </div>
       </div>
 
@@ -221,7 +234,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
         </div>
         <div class="shot">
           <dl class="score">
-            <dt>Score</dt><dd><span class="big">62</span> / 100</dd>
+            <dt>Score</dt><dd><span class="big">64</span> / 100</dd>
             <dt>Strongest</dt><dd>Led the redesign that cut support calls by a third</dd>
             <dt>Fix first</dt><dd>3 bullets list duties, not results</dd>
           </dl>

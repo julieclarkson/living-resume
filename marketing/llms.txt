@@ -14,7 +14,7 @@
 ## Links
 - Home: https://living-resume.julieclarkson.com/
 - Install (Claude Cowork): Customize → Plugins → Add marketplace → julieclarkson/living-resume → Install, pick a folder, say "make my résumé from my LinkedIn"
-- Install (ChatGPT desktop app): add the marketplace julieclarkson/living-resume, install from the Plugins Directory, mention @Living Résumé in a local thread
+- Install (ChatGPT desktop app): add the marketplace julieclarkson/living-resume, install from the Plugins Directory, put your LinkedIn .zip in your résumé folder, mention Living Résumé in a local thread
 - Install (Claude Code): /plugin marketplace add julieclarkson/living-resume, then /plugin install living-resume
 - Install (Codex): codex plugin marketplace add julieclarkson/living-resume
 - MCP (Cursor, VS Code, any client): npx -y -p living-resume living-resume-mcp

@@ -86,7 +86,8 @@ pre{margin:0;background:var(--card);border:1px solid var(--rule);border-radius:1
 .way{border:1px solid var(--accent);border-radius:14px;padding:26px;background:var(--card);display:grid;gap:12px;align-content:start;min-width:0}
 .way ol{margin:0;padding-left:20px;display:grid;gap:6px}
 .tag{justify-self:start;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:var(--accent);color:var(--accent-ink)}
-.more{display:grid;grid-template-columns:repeat(2,1fr);gap:20px 28px;margin-top:36px}
+.devs{margin-top:44px;padding-top:28px;border-top:1px solid var(--rule);display:grid;gap:8px}
+.more{display:grid;grid-template-columns:repeat(2,1fr);gap:20px 28px;margin-top:18px}
 .more > div{display:grid;gap:10px;align-content:start;min-width:0}
 .works b{color:var(--ink);font-weight:600}
 
@@ -236,7 +237,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
   </section>
 
   <section id="install">
-    <div class="intro"><span class="label">Install</span><h2>Add it to Claude or ChatGPT, then say "make my résumé from my LinkedIn".</h2><p><a href="guide#install">See the step-by-step guide</a>, with pictures of each step.</p></div>
+    <div class="intro"><span class="label">Install</span><h2>Add it to Claude or ChatGPT, then say "make my résumé from my LinkedIn".</h2><p><a href="guide#install">See the step-by-step guide</a>.</p></div>
     <div class="ways">
       <div class="way">
         <span class="tag">No coding · Claude Cowork</span>
@@ -245,10 +246,16 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
           <li>Open <b>Customize</b>, then <b>Plugins</b>, then <b>Add marketplace</b>.</li>
           <li>Enter <span class="mono">julieclarkson/living-resume</span> and install <b>Living Résumé</b>.</li>
           <li>Pick a folder for your résumé when asked, for example <span class="mono">Documents/Résumé</span>.</li>
+          <li>Put your LinkedIn .zip (or old résumé) in that folder.</li>
           <li>Say <span class="mono">make my résumé from my LinkedIn</span>.</li>
         </ol>
       </div>
-      <!-- ChatGPT desktop wording follows OpenAI's plugin docs (2026-10-26): verify each step in the app before launch. -->
+      <!-- LAUNCH CHECKLIST (Julie): verify in the ChatGPT desktop app before launch, then fix this card from what you see:
+           1. Is Node.js needed? If yes, add step 0 "Install Node.js from nodejs.org" (and to the Cowork card only if Cowork needs it too).
+           2. The marketplace.json shape and its "./" source (.agents/plugins/marketplace.json) install the plugin.
+           3. The name to mention: does "@Living Résumé" work? (plugin.json has no verified display-name field yet; see README.)
+           4. Does the app ask for a folder? Does a file attached in the chat reach that folder?
+           Wording follows OpenAI's plugin docs (2026-10-26). Keep this comment until checked. -->
       <div class="way">
         <span class="tag">No coding · ChatGPT desktop</span>
         <h3>ChatGPT desktop app</h3>
@@ -256,11 +263,16 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
           <li>Add the marketplace <span class="mono">julieclarkson/living-resume</span>.</li>
           <li>Open the <b>Plugins Directory</b> and install <b>Living Résumé</b>.</li>
           <li>Pick a folder for your résumé when asked, for example <span class="mono">Documents/Résumé</span>.</li>
-          <li>In a local thread, mention <span class="mono">@Living Résumé</span> and say <span class="mono">make my résumé from my LinkedIn</span>.</li>
+          <li>Put your LinkedIn .zip (or old résumé) in that folder.</li>
+          <!-- TODO (fix 10): once the display-name field the app reads is verified, set it in plugin.json and use "mention @Living Résumé". -->
+          <li>In a local thread, mention <b>Living Résumé</b> and say <span class="mono">make my résumé from my LinkedIn</span>.</li>
         </ol>
       </div>
     </div>
-    <p style="margin-top:18px">Either way, your PDF, Word file, and web page come back as downloads, and your AI helps you put the page online and update LinkedIn. Everything stays in that folder on your computer.</p>
+    <p style="margin-top:18px">Either way, your PDF, Word file, and web page come back as downloads (they're also in that folder, under <span class="mono">dist</span>), and your AI helps you put the page online and update LinkedIn. Everything stays in that folder on your computer.</p>
+    <div class="devs">
+    <h3>For developers</h3>
+    <p class="works">Claude Code, Codex, Cursor, VS Code, or any MCP client. Same engine, same files, same checks.</p>
     <div class="more">
       <div>
         <p>Claude Code</p>
@@ -272,16 +284,18 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
         <p>Codex</p>
         <pre>codex plugin marketplace add julieclarkson/living-resume</pre>
       </div>
-      <!-- npx works once the npm package is published. -->
       <div>
         <p>Cursor, VS Code, or any MCP client</p>
         <pre>npx -y -p living-resume living-resume-mcp</pre>
+        <p class="works">After the npm package is published. Needs Node.js 18 or newer.</p>
       </div>
       <div>
         <p>Or the command line</p>
         <pre>npx living-resume init
 npx living-resume import ~/Downloads/linkedin.zip</pre>
+        <p class="works">After the npm package is published. Needs Node.js 18 or newer.</p>
       </div>
+    </div>
     </div>
   </section>
 

@@ -12,13 +12,21 @@ npx living-resume build && npx living-resume check       # every format → ~/Li
 In an AI tool, just say "start my résumé", "add this to my résumé", "assess my résumé inbox", "set up my design engineer résumé", "I'm applying to this job", or "publish my résumé".
 
 ## Install in your AI tool
-- **Claude Cowork (no coding):** Customize → Plugins → Add marketplace → `julieclarkson/living-resume` → Install. Pick a folder for your résumé when asked, then say "make my résumé from my LinkedIn". Claude runs everything and hands you the files. PDFs work without Chrome (a built-in fallback).
-- **ChatGPT desktop app (no coding):** add the marketplace `julieclarkson/living-resume`, install Living Résumé from the Plugins Directory, then in a local thread mention @Living Résumé and say "make my résumé from my LinkedIn". Packaged as an OpenAI plugin: root `plugin.json`, `mcp.json`, `skills/`, and `.agents/plugins/marketplace.json` (verify the marketplace format in the ChatGPT desktop app before launch).
+- **Claude Cowork (no coding):** Customize → Plugins → Add marketplace → `julieclarkson/living-resume` → Install. Pick a folder for your résumé when asked, put your LinkedIn .zip (or old résumé) in it, then say "make my résumé from my LinkedIn". Claude runs everything and hands you the files. PDFs work without Chrome (a built-in fallback).
+- **ChatGPT desktop app (no coding):** add the marketplace `julieclarkson/living-resume`, install Living Résumé from the Plugins Directory, pick a folder and put your LinkedIn .zip (or old résumé) in it, then in a local thread mention Living Résumé and say "make my résumé from my LinkedIn". Packaged as an OpenAI plugin: root `plugin.json`, `mcp.json`, `skills/`, and `.agents/plugins/marketplace.json`. Not yet checked in the app: see the launch checklist below.
 - **Claude Code:** `/plugin marketplace add julieclarkson/living-resume` then `/plugin install living-resume` (skill, slash commands, and MCP server).
 - **Codex:** `codex plugin marketplace add julieclarkson/living-resume`, then install it from the plugins list and mention it with `$`. Or add only the MCP server: `codex mcp add living-resume -- npx -y -p living-resume living-resume-mcp`, with `AGENTS.md` or `.codex/prompts/` for guidance.
 - **Cursor / any MCP client** (after the npm package is published): `{"mcpServers":{"living-resume":{"command":"npx","args":["-y","-p","living-resume","living-resume-mcp"]}}}`. VS Code (`.vscode/mcp.json`) uses a `servers` key: `{"servers":{"living-resume":{"type":"stdio","command":"npx","args":["-y","-p","living-resume","living-resume-mcp"]}}}`.
 
-All of these drive the same engine (CLI + MCP server); only install and wording differ.
+All of these drive the same engine (CLI + MCP server); only install and wording differ. In hosts that don't load the skill (Cursor, VS Code, plain MCP clients), the `resume_guide` tool returns it.
+
+### Launch checklist: verify in the ChatGPT desktop app
+The ChatGPT card follows OpenAI's plugin docs (2026-10-26) and has only been checked statically. Before launch, install it in the app and fix the card (`marketing/index.html`, `marketing/guide.html`, this README) from what you see:
+1. Is Node.js needed? `mcp.json` runs `node`. If the app doesn't bring its own, add step 0 "Install Node.js from nodejs.org" to the ChatGPT card (and to the Cowork card only if Cowork needs it too).
+2. The `.agents/plugins/marketplace.json` shape and its `"./"` source: does adding the marketplace find and install the plugin?
+3. The name to mention: does "@Living Résumé" work? `plugin.json` has no display-name field yet because the field the app reads isn't verified; until then the card says "mention Living Résumé" without the @.
+4. Does the app ask for a folder, and does a file attached in the chat reach that folder? (The card tells people to put the file in the folder.)
+The HTML pages carry the same list as comments; remove them once checked.
 
 ## Commands
 | Command | What it does |
@@ -26,6 +34,9 @@ All of these drive the same engine (CLI + MCP server); only install and wording 
 | `init [folder] [--name] [--email] [--url]` | Start a workspace (default `~/Living-Resume`). Never overwrites. |
 | `import <file or folder>` | LinkedIn export (.zip or folder), résumé .pdf / .docx / .txt / .md. Scanned first; every line becomes a proposal. |
 | `review [approve\|edit\|reject\|later <id>]` | Decide each proposal. `approve-all <prefix>` only when you ask for it. |
+| `propose '<json>'` | Write one proposal for review (for AI tools that can't write files; MCP `resume_propose`). |
+| `fix-role <role-id> '<json>'` | Fix an imported role's title, org, location, start, end (MCP `resume_fix_role`). |
+| `target ["the work you want next"]` | Show or save the rubric target (MCP `resume_set_target`). |
 | `build` | PDF, DOCX, `index.html`, `resume.json`, LinkedIn packet, public report. |
 | `check` | Privacy, private names, framing, plain voice, PDF pages and text, stale-build guard, quarantine. |
 | `publish [--write \| --mark]` | Dry run (and how to put `dist/site/` online), copy into your site folder, or record a version you uploaded yourself. Never commits or pushes. |
