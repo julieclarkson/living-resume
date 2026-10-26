@@ -1,6 +1,10 @@
 # Changelog
 
 ## 1.3.0 · 2026-10-26 (unreleased)
+- **Role versions in that role's words:** a Design Engineer or Product Designer version (any role) reorders the same approved lines and can use an approved alternate headline or summary (`variant` proposals). Each builds to `dist/roles/<slug>/` and is checked like the main résumé.
+- **Coach, sharper and kinder:** reads for readability (run-on sentences, stock words like "leveraged") and, on recent contract or freelance roles, for who the clients were, whether they came back, and how work was scoped. Any "how many?" also offers a safe floor ("10+"). Set `"coach": { "counts": false }` in the rubric and it never asks for numbers. Awards count as results. Page-fit advice never suggests trimming recent community or leadership; it lists what to keep and points at older roles and long bullets instead.
+- **`next` stays quiet when nothing changed:** after you update LinkedIn, a rebuild alone (new date, renamed field labels) no longer says "Update your LinkedIn". `next` and `linkedin` use the same rule.
+- **Your look, kept:** `dateStyle` ("years" or "months") and `certStyle` ("line": "Certificates in A and B") in your ledger. "Outside of work" shows on the PDF and Word file when you approved it for them, and `heading interests "…"` renames it.
 - **What's next:** `next` (MCP `resume_next`) gives the one next step from where you are (review, build, put it online, LinkedIn, inbox, target, job search, top match, follow-ups, make it stronger), why it matters, and exactly what to say. The skill starts every conversation with it.
 - **Headings are each person's own:** `heading <section> "Text"` (MCP `resume_heading`) renames a section in every format, stored in that person's ledger.
 - **LinkedIn: profile data only.** The guide and skill say to export only profile items; import keeps only the profile files it read (never connections, messages or contacts).
