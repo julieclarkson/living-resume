@@ -19,7 +19,7 @@
 //   heading [<section> "Text" | <section> --reset]   rename a section heading for this person only
 //   style [dates years|months|auto | certs list|line | counts on|off]   this person's date, certificate, and coach choices
 //   linkedin                                 which LinkedIn fields changed, with the text to paste
-//   roles [new <slug> "Name" | show <slug>]  a version of your résumé per kind of role (Free: one)
+//   roles [new <slug> "Name" | show <slug> | set <slug> '<json>']  a version of your résumé per kind of role (Free: one)
 //   apply <posting> [--role …] [--company …] (Pro)  best-fit role version for one job, logged privately
 //   jobs [criteria | find | add | today | note | dismiss | applied | prep | schedule]
 //                                 (Pro)      daily job matches against your approved résumé, with Apply links

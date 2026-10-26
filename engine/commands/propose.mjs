@@ -4,6 +4,7 @@
 //   { "id"?, "kind": "add|edit|remove|variant|basics", "section"?, "target"?, "role"?, "newId"?,
 //     "text", "reason", "evidence", "fields"?, "surfaces"?, "link"? }
 // link: an optional public proof link (https only) shown on the web page; evidence stays private.
+import { listRoles } from '../lib/roles.mjs';
 import fs from 'node:fs';
 import { P, writeJSON, loadLedger, findItem, confined, requireWorkspace, safeId, today, httpsUrl } from '../lib/util.mjs';
 
@@ -33,7 +34,10 @@ if (['edit', 'remove', 'variant'].includes(p.kind)) {
   out.target = id(p.target, 'target');
   if (!findItem(L, out.target)) die(`No ledger item "${out.target}".`);
 }
-if (p.kind === 'variant') { if (p.role !== undefined) out.role = id(p.role, 'role'); if (p.newId !== undefined) out.newId = id(p.newId, 'newId'); }
+if (p.kind === 'variant') {
+  if (p.role !== undefined) { out.role = id(p.role, 'role'); if (!listRoles().some((r) => r.slug === out.role)) die(`No role version "${out.role}". Create it first (resume_role_new, or: roles new ${out.role} "Role name"), then propose its wording.`); }
+  if (p.newId !== undefined) out.newId = id(p.newId, 'newId');
+}
 if (p.kind === 'add') {
   const sec = str(p.section, 'section', 120);
   const [s, r, ...g] = sec.split('.');

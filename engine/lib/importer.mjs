@@ -273,7 +273,9 @@ export function fromText(text, source = 'résumé') {
   for (const l of (sections.education || []).map((x) => x.trim()).filter(Boolean)) draft.education.push({ text: l });
   for (const l of (sections.skills || []).map((x) => x.trim()).filter(Boolean)) for (const s of l.split(/\s*[,;•·|]\s*/)) if (s.length > 1 && s.length < 60) draft.skills.push(s.replace(/^[-*]\s*/, ''));
   for (const l of (sections.certifications || []).map((x) => x.trim()).filter(Boolean)) draft.certifications.push({ name: l.replace(/^[-*•]\s*/, '') });
-  for (const l of (sections.volunteer || []).map((x) => x.trim()).filter(Boolean)) draft.volunteer.push({ text: l.replace(/^[-*•]\s*/, '') });
+  // "Organizer, Meetup   2022 – Present" → "Organizer, Meetup, 2022 to present" (same date wording as roles).
+  const volDates = (t) => t.replace(/[\s,]+((?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+)?(?:19|20)\d{2})\s*[–—-]\s*(present|current|now|(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+)?(?:19|20)\d{2})\s*$/i, (m, a, b) => `, ${a} to ${/^(present|current|now)$/i.test(b) ? 'present' : b}`);
+  for (const l of (sections.volunteer || []).map((x) => x.trim()).filter(Boolean)) draft.volunteer.push({ text: volDates(l.replace(/^[-*•]\s*/, '')) });
   // A wrapped publication (PDF text: an indented line, or the line above ends with a comma) joins the one above.
   // A page break (form feed) is not an indent.
   for (const raw of sections.publications || []) {

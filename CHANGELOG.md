@@ -1,6 +1,10 @@
 # Changelog
 
 ## 1.3.0 · 2026-10-26 (release build, not yet published)
+- **Lines keep their order.** Imported lines stay in the order they appeared, whatever order you approve them in. Volunteer dates read like roles ("2022 to present").
+- **Role versions from any AI tool.** `resume_role_new` and `resume_role_set` (CLI: `roles set <slug> '<json>'`) create a role version and choose its order and exclusions without a shell. Proposing wording for a role version that doesn't exist is refused, so nothing is left orphaned.
+- **Private names stay private.** Matching ignores case, spaces, dashes, underscores, and invisible (zero-width) characters, including one inserted inside a word. Invisible characters are removed before the injection scan.
+- Marketing: privacy and terms pages (drafts for review) linked from the footer; the install note says files are in your résumé folder under dist.
 - **Workable boards work again** (Workable's old address now redirects; the tool calls its current one). Big boards (500+ listings) keep your title matches before the cap.
 - **Workday boards.** Large employers (energy, health systems, banks, manufacturers) can be watched with `workday:<tenant>.<wdN>/<site>`, from their myworkdayjobs.com careers address. Each run searches the site by your job titles and reads full text only for title matches. Only that company's own myworkdayjobs.com host is contacted.
 - **Scores that never sound like a verdict on you.** "Low confidence" is gone: matches show strong, good, or some overlap, with a plain note that fit compares wording, not people, and that about 35% and up is worth a real look. "Not on your résumé" now reads "listing words your résumé doesn't use". A role version named for the job (Design Engineer for a Design Engineer listing) is suggested on a tie.

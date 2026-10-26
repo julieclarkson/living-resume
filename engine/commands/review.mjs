@@ -20,6 +20,15 @@ fs.mkdirSync(dir, { recursive: true });
 const load = () => fs.readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => ({ ...readJSON(path.join(dir, f), {}), file: path.join(dir, f) }));
 const save = (p) => { const { file, ...rest } = p; writeJSON(confined(file), rest); };
 
+// Imported lines keep their source order whatever order they're approved in: an id like
+// "import-2026-10-26-ab12-004" goes before a later line ("-005") from the same import.
+const seq = (id) => { const m = String(id || '').match(/^(.*)-(\d{3,})$/); return m ? { prefix: m[1], n: Number(m[2]) } : null; };
+function insertOrdered(list, item) {
+  const me = seq(item.id);
+  if (me) { const j = list.findIndex((x) => { const o = seq(x.id); return o && o.prefix === me.prefix && o.n > me.n; }); if (j >= 0) { list.splice(j, 0, item); return; } }
+  list.push(item);
+}
+
 function apply(L, p, text) {
   const now = today();
   if (p.kind === 'edit' || p.kind === 'remove') {
@@ -67,15 +76,15 @@ function apply(L, p, text) {
   if (findItem(L, item.id)) throw new Error(`Ledger already has an item "${item.id}"`);
   if (sec === 'person' && ['headline', 'subline', 'linkedinHeadline', 'availability'].includes(role)) { L.person[role] = item; return; }
   if (['summary', 'interests', 'skillsIntro'].includes(sec)) { L[sec] = item; return; }
-  if (sec === 'howIWork') { L.howIWork = L.howIWork || { items: [] }; L.howIWork.items.push(item); return; }
+  if (sec === 'howIWork') { L.howIWork = L.howIWork || { items: [] }; insertOrdered(L.howIWork.items, item); return; }
   if (sec === 'experience') {
     const r = (L.experience || []).find((x) => x.id === role); if (!r) throw new Error(`No role "${role}"`);
     r.groups = r.groups || [];
     let g = r.groups.find((x) => (x.label || '') === (group || '')); if (!g) { g = { label: group || null, items: [] }; r.groups.push(g); }
-    g.items.push(item);
+    insertOrdered(g.items, item);
   } else if (['snippets', 'skills', 'education', 'certifications', 'publications', 'volunteer', 'application_only'].includes(sec)) {
     if (sec === 'application_only') item.visibility = 'application';
-    (L[sec] = L[sec] || []).push(item);
+    insertOrdered(L[sec] = L[sec] || [], item);
   }
   else throw new Error(`Unknown section "${p.section}"`);
 }

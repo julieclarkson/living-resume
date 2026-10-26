@@ -260,3 +260,30 @@ test('MCP replies are plain words: no CLI commands, no Terminal, no developer no
     assert.equal(left.find((p) => p.id === 'p-where').status, 'proposed');
   } finally { s.close(); }
 });
+
+test('role versions through MCP alone: create, set order and exclusions, propose and approve a variant; a variant for a missing role is refused; no CLI syntax', async () => {
+  const dir = workspace('mcp-roles');
+  fs.writeFileSync(path.join(dir, 'cv.txt'), 'Pat Lee\nOps lead\n\nExperience\nOperations Lead, Acme, Austin, TX   2019 - 2021\n- Ran the warehouse for 40 people\n- Cut shipping errors in half\n');
+  const s = session(dir);
+  try {
+    await s.req('initialize', {});
+    assert.equal((await call(s, 'resume_import', { path: 'cv.txt' })).err, false);
+    const prefix = fs.readdirSync(path.join(dir, 'proposals'))[0].replace(/-\d{3}\.json$/, '');
+    for (const f of fs.readdirSync(path.join(dir, 'proposals'))) assert.equal((await call(s, 'resume_review_decide', { id: f.replace(/\.json$/, ''), action: 'approve' })).err, false);
+    const L = JSON.parse(fs.readFileSync(path.join(dir, 'resume', 'ledger.json'), 'utf8'));
+    const bullets = L.experience[0].groups[0].items.map((i) => i.id);
+    const none = await call(s, 'resume_roles', {}); assert.match(none.text, /resume_role_new/); assert.doesNotMatch(none.text, /living-resume/);
+    const miss = await call(s, 'resume_propose', { kind: 'variant', target: bullets[0], role: 'ops-manager', text: 'Ran warehouse operations for 40 people', reason: 'role wording', evidence: 'same fact' });
+    assert.equal(miss.err, true); assert.match(miss.text, /No role version "ops-manager"/);
+    const made = await call(s, 'resume_role_new', { slug: 'ops-manager', name: 'Operations Manager' }); assert.equal(made.err, false, made.text); assert.doesNotMatch(made.text, /living-resume/);
+    const set = await call(s, 'resume_role_set', { slug: 'ops-manager', order: [bullets[1]], exclude: [] }); assert.equal(set.err, false, set.text);
+    assert.equal((await call(s, 'resume_role_set', { slug: 'ops-manager', order: ['no-such-line'] })).err, true);
+    const v = await call(s, 'resume_propose', { id: 'p-var-1', kind: 'variant', target: bullets[0], role: 'ops-manager', text: 'Ran warehouse operations for 40 people', reason: 'role wording', evidence: 'same fact' });
+    assert.equal(v.err, false, v.text);
+    assert.equal((await call(s, 'resume_review_decide', { id: 'p-var-1', action: 'approve' })).err, false);
+    const role = JSON.parse(fs.readFileSync(path.join(dir, 'resume', 'roles', 'ops-manager.json'), 'utf8'));
+    assert.deepEqual(role.order, [bullets[1]]); assert.ok(Object.keys(role.variants).includes(bullets[0]));
+    const show = await call(s, 'resume_role_show', { slug: 'ops-manager' }); assert.match(show.text, /Ran warehouse operations for 40 people/);
+    assert.ok(prefix);
+  } finally { s.close(); }
+});

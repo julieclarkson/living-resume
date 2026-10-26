@@ -21,7 +21,11 @@ export const PROMPT_INJECTION = [
   /\b(curl|wget|bash|sh|powershell)\s+(-\w+\s+)*https?:\/\//i,
 ];
 
+// Zero-width and other invisible characters hide words from pattern checks ("Ign\u200Bore", "Blue\u200Bjay").
+export const INVISIBLE = /[\u00AD\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF]/g;
+
 export function scanIn(text) {
+  text = String(text).replace(INVISIBLE, '');
   const threats = [];
   for (const re of PROMPT_INJECTION) { const m = text.match(re); if (m) threats.push({ name: 'prompt_injection', severity: 'critical', match: m[0].slice(0, 100) }); }
   // "JavaScript: React, Node" is a normal skills line; only an actual javascript: URI counts.
@@ -56,11 +60,15 @@ export function scanOut(text, rules) {
   const v = [];
   const allow = rules.denylist_allow || [];
   // Normalize first so a name split by a line break, extra spaces, "-" or "_" is still caught.
+  text = String(text).replace(INVISIBLE, '');
   const flat = text.replace(/\s+/g, ' ');
   let masked = flat; for (const a of allow) masked = masked.split(a).join(' ');
   // "Open Brain" also catches OpenBrain / open_brain / Open<newline>Brain; "PRODUCT-TEMPLATE" also catches
   // PRODUCT_TEMPLATE / PRODUCTTEMPLATE (but not the plain phrase "product template").
-  const termRe = (term) => new RegExp(term.split(/([\s_-]+)/).map((x, i) => (i % 2 ? (/\s/.test(x) ? '[\\s_-]*' : '[_-]?') : x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))).join(''), 'i');
+  // Inside a word, one inserted space, dash, or underscore is ignored too ("Blue-jay", "Projec t").
+  const esc = (c) => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const word = (w) => [...w].map(esc).join('[\\s_-]?');
+  const termRe = (term) => { const t = String(term).trim(); if (!t) return /$^/; return new RegExp(t.split(/([\s_-]+)/).map((x, i) => (i % 2 ? (/\s/.test(x) ? '[\\s_-]*' : '[_-]?') : word(x))).join(''), 'i'); }; // substring on purpose: over-catching a private name is the safe side
   for (const term of rules.disclosure_denylist || []) if (termRe(term).test(masked)) v.push({ rule: 'disclosure', detail: `private term "${term}"` });
   for (const b of rules.framing?.banned_phrases || []) if (new RegExp(b.pattern, b.flags || '').test(flat)) v.push({ rule: 'framing', detail: `${b.pattern} (${b.why})` });
   if (rules.privacy?.phone_pattern && new RegExp(rules.privacy.phone_pattern).test(text)) v.push({ rule: 'privacy', detail: 'phone number' });
