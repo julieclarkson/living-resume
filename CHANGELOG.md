@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.3.0 · 2026-10-26 (release build, not yet published)
+- **Workday boards.** Large employers (energy, health systems, banks, manufacturers) can be watched with `workday:<tenant>.<wdN>/<site>`, from their myworkdayjobs.com careers address. Each run searches the site by your job titles and reads full text only for title matches. Only that company's own myworkdayjobs.com host is contacted.
 - **Scores that never sound like a verdict on you.** "Low confidence" is gone: matches show strong, good, or some overlap, with a plain note that fit compares wording, not people, and that about 35% and up is worth a real look. "Not on your résumé" now reads "listing words your résumé doesn't use". A role version named for the job (Design Engineer for a Design Engineer listing) is suggested on a tie.
 - The skill searches job-search connectors (Indeed, ZipRecruiter, Dice, Upwork) when the user has one, and brings listings in with `jobs add`.
 - **Job matches that don't hide.** Every listing at or above your fit bar is shown, with confidence as a label (it used to filter out "low confidence" ones, so a 48% fit could vanish). An empty day says why (how many were outside your country, not remote, and so on) and shows the 3 closest listings. Remote jobs in another country ("Remote France" for someone in Charlotte, NC) and hybrid or on-site jobs elsewhere are screened out; set `country` in your criteria if your locations don't say. Fit ignores links, web addresses, city names, and filler words.

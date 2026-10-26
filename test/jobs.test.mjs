@@ -47,8 +47,22 @@ const boards = http.createServer((req, res) => {
     { id: 'sr1', name: 'Front-End Developer', location: { city: 'Remote', remote: true }, typeOfEmployment: { label: 'Contract' } },
     { id: 'sr2', name: 'Accountant', location: { city: 'Boston' }, typeOfEmployment: { label: 'Full-time' } },
   ] });
+  if (req.url === '/workday/wday/cxs/foxtrot/Careers/jobs' && req.method === 'POST') {
+    let b = ''; req.on('data', (c) => (b += c)); req.on('end', () => {
+      const q = JSON.parse(b || '{}'); wdQueries.push(q.searchText);
+      if (q.offset > 0) return send({ total: 2, jobPostings: [] });
+      send({ total: 2, jobPostings: [
+        { title: 'Front-End Developer', externalPath: '/job/Charlotte-NC/Front-End-Developer_R100', locationsText: 'Remote - United States', bulletFields: ['R100'] },
+        { title: 'Payroll Clerk', externalPath: '/job/Charlotte-NC/Payroll-Clerk_R200', locationsText: 'Charlotte, NC', bulletFields: ['R200'] },
+        { title: 'Bad path', externalPath: 'https://evil.example/x' },
+      ] });
+    }); return;
+  }
+  if (req.url === '/workday/wday/cxs/foxtrot/Careers/job/Charlotte-NC/Front-End-Developer_R100') return send({ jobPostingInfo: { title: 'Front-End Developer', jobDescription: `<p>${good}</p>`, location: 'Remote - United States', timeType: 'Contract', remoteType: 'Remote', jobReqId: 'R100', externalUrl: 'https://foxtrot.wd5.myworkdayjobs.com/en-US/Careers/job/Charlotte-NC/Front-End-Developer_R100' } });
+  if (req.url.startsWith('/workday/wday/cxs/foxtrot/Careers/job/')) { res.writeHead(500); return res.end('{}'); } // never asked for: title doesn't match
   res.writeHead(404); res.end('{}');
 });
+const wdQueries = [];
 await new Promise((r) => boards.listen(0, '127.0.0.1', r));
 const polar = await fakePolar({ LRPRO_GOOD_KEY_1234: { status: 'granted' } });
 after(async () => { await polar.close(); await new Promise((r) => boards.close(r)); });
@@ -197,4 +211,23 @@ test('an empty day says why, and shows the closest listings below the bar', () =
   cli(['jobs', 'add', f, '--url', 'https://example.com/j/9', '--title', 'Front-End Developer', '--company', 'Echo'], { dir });
   const out = cli(['jobs', 'today'], { dir }).out;
   assert.match(out, /No listings reached your 99% fit bar/); assert.match(out, /Closest this time/); assert.match(out, /Front-End Developer at Echo/);
+});
+
+
+test('Workday: board format, search by your titles, full text only for title matches, public job links', async () => {
+  const { parseBoard } = await import('../engine/lib/boards.mjs');
+  assert.deepEqual(parseBoard('workday:foxtrot.wd5/Careers'), { provider: 'workday', slug: 'foxtrot', wd: 'wd5', site: 'Careers' });
+  for (const bad of ['workday:foxtrot/Careers', 'workday:foxtrot.wd5', 'workday:evil.com/x', 'workday:foxtrot.wd5/../x', 'workday:foxtrot.wdx/Careers']) assert.throws(() => parseBoard(bad), /Workday board/, bad);
+  const dir = ready(); const env = await proEnv();
+  cli(['jobs', 'criteria', '--set', JSON.stringify({ ...CRIT, companies: [{ name: 'Foxtrot', board: 'workday:foxtrot.wd5/Careers' }] })], { dir });
+  const r = await cliAsync(['jobs', 'find'], { dir, env });
+  assert.equal(r.code, 0, r.out); assert.match(r.out, /Checked 1 of 1 company boards/);
+  assert.deepEqual(wdQueries, ['front-end developer']);
+  assert.ok(!hits.some((h) => /Payroll-Clerk/.test(h)), 'only title matches get full text');
+  const t = JSON.parse(fs.readFileSync(path.join(dir, 'jobs', 'today.json'), 'utf8'));
+  assert.equal(t.matches.length, 1, r.out);
+  const store = JSON.parse(fs.readFileSync(path.join(dir, 'jobs', 'postings.json'), 'utf8'));
+  const p = Object.values(store).find((x) => x.company === 'Foxtrot');
+  assert.equal(p.url, 'https://foxtrot.wd5.myworkdayjobs.com/en-US/Careers/job/Charlotte-NC/Front-End-Developer_R100'); assert.equal(p.remote, true); assert.equal(p.type, 'Contract');
+  assert.ok(!Object.values(store).some((x) => /evil/.test(x.url || '')));
 });

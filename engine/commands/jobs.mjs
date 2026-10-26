@@ -262,7 +262,7 @@ if (sub === 'show' || sub === 'list') {
   const c = goodCrit(); if (!c.companies?.length) die('No companies in your list yet.');
   let bad = 0;
   for (const co of c.companies) {
-    try { const n = (await fetchBoard(co.board, co.name, { details: false })).length; console.log(`✓ ${co.name} (${co.board}): ${n} open listing${n === 1 ? '' : 's'}`); }
+    try { const n = (await fetchBoard(co.board, co.name, { details: false, queries: c.titles || [] })).length; console.log(`✓ ${co.name} (${co.board}): ${n} open listing${n === 1 ? '' : 's'}`); }
     catch (e) { bad++; console.log(`✗ ${co.name} (${co.board}): ${e.message}`); }
   }
   console.log(bad ? `\n${bad} board${bad === 1 ? '' : 's'} didn't answer. A "not found" usually means the company uses a different hiring system or name; ask your AI tool to fix or remove ${bad === 1 ? 'it' : 'them'}. ${MCP ? '"couldn\'t connect" means this tool can\'t reach job boards; the timer on the user\'s computer can, or add listings from web search.' : '"couldn\'t connect" means this tool has no internet access to job boards; run it from your computer\'s Terminal instead.'}` : '\nAll boards answered.');
@@ -273,7 +273,7 @@ if (sub === 'show' || sub === 'list') {
   const store = loadStore(); const tally = { new: 0, seen: 0, held: 0, filtered: 0 }; const failed = [];
   if (!c.companies?.length) console.log('No companies in your list yet, so only listings you added are ranked. Add some: tell your AI tool which companies you want, or see "companies" in resume/job-search.json.');
   for (const co of c.companies || []) {
-    try { for (const p of await fetchBoard(co.board, co.name, { want: (t) => !c.titles?.length || c.titles.some((x) => has(String(t).toLowerCase(), x)) })) tally[admit(p, store, c)]++; }
+    try { for (const p of await fetchBoard(co.board, co.name, { want: (t) => !c.titles?.length || c.titles.some((x) => has(String(t).toLowerCase(), x)), queries: c.titles || [] })) tally[admit(p, store, c)]++; }
     catch (e) { failed.push(`${co.name} (${co.board}): ${e.message}`); }
   }
   prune(store); writeJSON(STORE, store);

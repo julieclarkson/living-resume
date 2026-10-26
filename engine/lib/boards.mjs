@@ -1,12 +1,16 @@
-// Public job boards: the open listing feeds that Greenhouse, Lever, Ashby, Workable, and
-// SmartRecruiters publish for each company's careers page. No accounts, no scraping, no login.
-// Only those five API hosts are ever contacted, over https, with a size cap and a timeout.
+// Public job boards: the open listing feeds that Greenhouse, Lever, Ashby, Workable,
+// SmartRecruiters, and Workday publish for each company's careers page. No accounts, no scraping,
+// no login. Only those API hosts (for Workday, the company's own <tenant>.wdN.myworkdayjobs.com
+// careers site) are ever contacted, over https, with a size cap and a timeout.
 // Everything fetched is untrusted text.
 //
 // A board is "<provider>:<company-slug>", e.g. "greenhouse:vercel", "lever:metr", "ashby:linear",
 // "workable:huggingface", "smartrecruiters:Canva". The slug is the last part of the company's
 // careers URL: boards.greenhouse.io/<slug>, jobs.lever.co/<slug>, jobs.ashbyhq.com/<slug>,
 // apply.workable.com/<slug>, jobs.smartrecruiters.com/<slug>.
+// Workday (large employers): "workday:<tenant>.<wdN>/<site>" from a careers URL like
+// https://dukeenergy.wd1.myworkdayjobs.com/en-US/search → "workday:dukeenergy.wd1/search".
+// Workday boards are searched by your job titles (they can hold thousands of listings).
 
 import crypto from 'node:crypto';
 
@@ -20,6 +24,8 @@ export const PROVIDERS = {
   workable: { host: 'https://www.workable.com', path: (s) => `/api/accounts/${s}?details=true` },
   smartrecruiters: { host: 'https://api.smartrecruiters.com', path: (s, offset = 0) => `/v1/companies/${s}/postings?limit=100&offset=${offset}`, detail: (s, id) => `/v1/companies/${s}/postings/${id}` },
 };
+const WD_BOARD = /^([a-z0-9][a-z0-9-]{0,62})\.(wd\d{1,3})\/([A-Za-z0-9_-]{1,80})$/;
+const WD_PAGE = 20; const WD_PAGES = 5; const WD_QUERIES = 12;
 const DETAILS = 60; // SmartRecruiters lists titles only; full text is fetched for at most this many title matches
 const SLUG = /^[a-z0-9][a-z0-9._-]{0,79}$/i;
 const MAX_BYTES = 12 * 1024 * 1024;
@@ -38,15 +44,22 @@ function origin(provider) {
 }
 
 export function parseBoard(board) {
-  const m = String(board || '').trim().match(/^(greenhouse|lever|ashby|workable|smartrecruiters):(.+)$/i);
-  if (!m || !SLUG.test(m[2])) throw new Error(`"${board}" isn't a board. Use greenhouse:, lever:, ashby:, workable:, or smartrecruiters: followed by the company's slug.`);
-  return { provider: m[1].toLowerCase(), slug: m[2] };
+  const m = String(board || '').trim().match(/^(greenhouse|lever|ashby|workable|smartrecruiters|workday):(.+)$/i);
+  const provider = m?.[1].toLowerCase();
+  if (provider === 'workday') {
+    const w = m[2].match(WD_BOARD);
+    if (!w) throw new Error(`"${board}" isn't a Workday board. Use workday:<tenant>.<wdN>/<site>, from a careers URL like https://acme.wd5.myworkdayjobs.com/en-US/External → workday:acme.wd5/External.`);
+    return { provider, slug: w[1], wd: w[2], site: w[3] };
+  }
+  if (!m || !SLUG.test(m[2])) throw new Error(`"${board}" isn't a board. Use greenhouse:, lever:, ashby:, workable:, smartrecruiters:, or workday: followed by the company's board.`);
+  return { provider, slug: m[2] };
 }
 
-async function getJSON(url) {
+async function getJSON(url, body) {
   const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 20_000);
   try {
-    const res = await fetch(url, { signal: ctl.signal, redirect: 'error', headers: { Accept: 'application/json', 'User-Agent': 'living-resume' } });
+    const res = await fetch(url, { signal: ctl.signal, redirect: 'error', method: body ? 'POST' : 'GET', body: body ? JSON.stringify(body) : undefined,
+      headers: { Accept: 'application/json', 'User-Agent': 'living-resume', ...(body ? { 'Content-Type': 'application/json' } : {}) } });
     if (res.status === 404) throw new Error('board not found (check the company slug)');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const reader = res.body.getReader(); const chunks = []; let n = 0;
@@ -101,6 +114,14 @@ function norm(provider, slug, company, j) {
       text: htmlToText([s.jobDescription?.text, s.qualifications?.text, s.additionalInformation?.text].filter(Boolean).join('\n')),
     };
   }
+  if (provider === 'workday') {
+    const i = j.jobPostingInfo || j; const t = String(i.remoteType || i.workplaceType || '').toLowerCase();
+    return {
+      id: `wd-${slug}-${i.jobReqId || i.id || j._path}`, title: i.title, location: [i.location, ...(i.additionalLocations || [])].filter(Boolean).join('; ') || j.locationsText,
+      remote: /remote/.test(t) && !/hybrid|on-?site/.test(t) ? true : /hybrid|on-?site/.test(t) ? false : null,
+      type: i.timeType || null, pay: null, url: https(i.externalUrl) || j._url, applyUrl: https(i.externalUrl) || j._url, posted: i.startDate || null, text: htmlToText(i.jobDescription || ''),
+    };
+  }
   return { // ashby
     id: `ab-${slug}-${j.id}`, title: j.title, location: j.location || j.address?.postalAddress?.addressLocality, remote: j.isRemote === true ? true : workplace(j.workplaceType),
     type: j.employmentType || null, pay: j.compensation?.compensationTierSummary || j.compensation?.scrapeableCompensationSalarySummary || null,
@@ -108,12 +129,38 @@ function norm(provider, slug, company, j) {
   };
 }
 
-// want(title): which listings are worth full text (SmartRecruiters only). details: false for a quick count.
-export async function fetchBoard(board, company, { want = () => true, details = true } = {}) {
-  const { provider, slug } = parseBoard(board);
-  const base = origin(provider); const P = PROVIDERS[provider];
+// Workday: search the careers site once per job title, then read full text for title matches.
+async function fetchWorkday({ slug, wd, site }, { want, details, queries }) {
+  const test = process.env.LIVING_RESUME_BOARDS_ORIGIN ? origin('workday') : '';
+  const host = test || `https://${slug}.${wd}.myworkdayjobs.com`;
+  const api = `${host}/wday/cxs/${slug}/${site}`;
+  const terms = [...new Set((queries?.length ? queries : ['']).map((q) => String(q).trim().slice(0, 60)))].slice(0, WD_QUERIES);
+  const found = new Map();
+  for (const searchText of terms) {
+    for (let page = 0; page < WD_PAGES; page++) {
+      const r = await getJSON(`${api}/jobs`, { appliedFacets: {}, limit: WD_PAGE, offset: page * WD_PAGE, searchText });
+      const list = r?.jobPostings; if (!Array.isArray(list)) throw new Error('unexpected response');
+      for (const j of list) if (j && typeof j.externalPath === 'string' && /^\/job\/[\w\-./%()~,+]{1,300}$/.test(j.externalPath) && !found.has(j.externalPath)) found.set(j.externalPath, j);
+      if (list.length < WD_PAGE || found.size >= PER_BOARD) break;
+    }
+  }
+  const pub = (path) => `https://${slug}.${wd}.myworkdayjobs.com/en-US/${site}${path}`;
+  let n = 0;
+  return Promise.all([...found.values()].map(async (j) => {
+    const base = { ...j, _path: j.externalPath, _url: pub(j.externalPath), jobPostingInfo: { title: j.title, location: j.locationsText, jobReqId: (j.bulletFields || [])[0] } };
+    if (!details || !want(j.title) || n >= DETAILS) return base;
+    n++; try { const d = await getJSON(`${api}${j.externalPath}`); return d?.jobPostingInfo ? { ...base, jobPostingInfo: { ...base.jobPostingInfo, ...d.jobPostingInfo } } : base; } catch { return base; }
+  }));
+}
+
+// want(title): which listings are worth full text (SmartRecruiters, Workday). details: false for a quick count.
+// queries: job titles to search by (Workday only).
+export async function fetchBoard(board, company, { want = () => true, details = true, queries = [] } = {}) {
+  const parsed = parseBoard(board); const { provider, slug } = parsed;
+  const base = provider === 'workday' ? '' : origin(provider); const P = PROVIDERS[provider];
   let raw = [];
-  if (provider === 'lever') {
+  if (provider === 'workday') raw = await fetchWorkday(parsed, { want, details, queries });
+  else if (provider === 'lever') {
     for (let skip = 0; skip < 1000; skip += 100) { const page = await getJSON(base + P.path(slug, skip)); if (!Array.isArray(page)) throw new Error('unexpected response'); raw.push(...page); if (page.length < 100) break; }
   } else if (provider === 'smartrecruiters') {
     for (let off = 0; off < 1000; off += 100) { const page = await getJSON(base + P.path(slug, off)); if (!Array.isArray(page?.content)) throw new Error('unexpected response'); raw.push(...page.content); if (page.content.length < 100) break; }
