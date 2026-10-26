@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { cli, workspace, tmp, ROOT, hasChrome } from './helpers.mjs';
 import { webPage, printHtml, jsonResume } from '../engine/lib/render.mjs';
 import { scanIn } from '../engine/lib/quarantine.mjs';
@@ -77,4 +78,17 @@ test('a hostile pdf_filename in rules falls back to a safe name', async () => {
   const { spawnSync } = await import('node:child_process');
   const out = spawnSync(process.execPath, ['--input-type=module', '-e', code], { encoding: 'utf8', env: { ...process.env, LIVING_RESUME_DIR: dir } }).stdout.trim();
   assert.equal(out, 'Sam_Rivera_Resume.pdf');
+});
+
+test('the remembered workspace is honored only for a real workspace folder (no symlink, not a missing folder)', async () => {
+  const dir = workspace('remember'); const state = path.join(tmp('state'), 's'); fs.mkdirSync(state, { recursive: true });
+  const link = path.join(tmp('lnk'), 'ws'); fs.symlinkSync(dir, link);
+  const { spawnSync } = await import('node:child_process');
+  const resolve = (w) => {
+    fs.writeFileSync(path.join(state, 'workspace.json'), JSON.stringify({ workspace: w }));
+    const code = `const u = await import(${JSON.stringify(path.join(ROOT, 'engine/lib/util.mjs'))}); console.log(u.rememberedWorkspace());`;
+    return spawnSync(process.execPath, ['--input-type=module', '-e', code], { encoding: 'utf8', cwd: os.tmpdir(), env: { ...process.env, LIVING_RESUME_DIR: '', LIVING_RESUME_STATE_DIR: state } }).stdout.trim();
+  };
+  assert.equal(resolve(dir), dir);
+  for (const bad of [link, 'relative/path', path.join(dir, 'nope'), os.homedir(), '/']) assert.equal(resolve(bad), 'null', bad);
 });

@@ -24,7 +24,10 @@ const rememberFile = () => path.join(stateDir(), 'workspace.json');
 export function rememberedWorkspace() {
   try {
     const w = JSON.parse(fs.readFileSync(rememberFile(), 'utf8')).workspace;
-    if (typeof w === 'string' && path.isAbsolute(w) && !fs.lstatSync(w).isSymbolicLink() && fs.existsSync(path.join(w, 'resume', 'ledger.json'))) return path.resolve(w);
+    const abs = typeof w === 'string' && path.isAbsolute(w) ? path.resolve(w) : null; const home = os.homedir();
+    // Same bounds as resume_init: never home, a drive root, or a folder above home.
+    if (!abs || abs === home || abs === path.parse(abs).root || home.startsWith(abs + path.sep)) return null;
+    if (!fs.lstatSync(abs).isSymbolicLink() && fs.existsSync(path.join(abs, 'resume', 'ledger.json'))) return abs;
   } catch {}
   return null;
 }
