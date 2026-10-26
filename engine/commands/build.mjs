@@ -33,7 +33,7 @@ const html = printHtml(L);
 const htmlPath = `${work}/resume-print.html`; writeText(htmlPath, html);
 const pdfTmp = `${work}/${R.pdf_filename}`;
 let pdfOk = false;
-try { const how = renderPdf(printModel(L), htmlPath, pdfTmp); pdfOk = true; if (how === 'fallback') report.push('· PDF made without Chrome (simplified styling, same content)'); } catch (e) { report.push(`✗ PDF: ${e.message}`); }
+try { const how = renderPdf(printModel(L), htmlPath, pdfTmp); pdfOk = true; if (how === 'fallback') report.push('· PDF made without Chrome (simplified styling, same content)'); } catch (e) { report.push(`! PDF not made here. Open dist/resume-print.html in a browser and choose Print, then Save as PDF.\n  (Technical detail: ${e.message})`); }
 if (pdfOk) {
   const pages = pdfPageCount(pdfTmp);
   if (pages > R.limits.pdf_max_pages) report.push(`! PDF is ${pages} pages (limit ${R.limits.pdf_max_pages})`);
@@ -45,7 +45,7 @@ release('resume-print.html', html, stripTags(html));
 const docxName = R.pdf_filename.replace(/\.pdf$/, '.docx');
 const docxTmp = `${work}/${docxName}`;
 if (htmlToDocx(htmlPath, docxTmp)) release(docxName, fs.readFileSync(docxTmp), stripTags(html));
-else report.push('! Word file (DOCX) not made here: it needs pandoc (or textutil on a Mac). Make it with your AI tool\'s own document tool from dist/resume-print.html (same content), or send the PDF.');
+else report.push(`! Word file (DOCX) not made here: it needs pandoc (or textutil on a Mac). Make it with your AI tool's own document tool from dist/resume-print.html (same content)${pdfOk ? ', or send the PDF' : ''}.`);
 
 // 3. JSON Resume for websites + machine readers
 release('resume.json', JSON.stringify(jsonResume(L), null, 2) + '\n');

@@ -62,3 +62,19 @@ test('without pandoc: build says how to get the Word file instead of a bare skip
   assert.match(b.out, /Word file \(DOCX\) not made here: it needs pandoc/); assert.match(b.out, /dist\/resume-print\.html/);
   assert.ok(fs.existsSync(path.join(dir, 'dist', 'resume-print.html')));
 });
+
+test('no PDF engine at all: build says how to print the PDF and never offers to send one', () => {
+  const dir = ready(); const bin = path.join(dir, '..', 'emptybin'); fs.mkdirSync(bin);
+  const b = cli(['build'], { dir, env: { ...noChrome, PATH: bin } });
+  assert.match(b.out, /PDF not made here\. Open dist\/resume-print\.html in a browser and choose Print, then Save as PDF\./);
+  assert.doesNotMatch(b.out, /send the PDF/);
+  assert.ok(fs.existsSync(path.join(dir, 'dist', 'resume-print.html')));
+});
+
+test('a PDF that cannot be read here: import asks the AI to read it and import the text', () => {
+  const dir = ready(); const bin = path.join(dir, '..', 'emptybin2'); fs.mkdirSync(bin);
+  const f = path.join(dir, '..', 'cv.pdf'); fs.writeFileSync(f, '%PDF-1.4\n');
+  const r = cli(['import', f], { dir, env: { PATH: bin } });
+  assert.notEqual(r.code, 0); assert.match(r.out, /I can't read PDFs on this computer\. Ask your AI to read the PDF and import its text\./);
+  assert.doesNotMatch(r.out, /brew|poppler/);
+});

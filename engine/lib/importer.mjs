@@ -265,7 +265,7 @@ export function extract(file) {
   }
   if (ext === '.pdf') {
     try { return { kind: 'text', parts: [{ name: path.basename(file), text: execFileSync('pdftotext', ['-layout', '-enc', 'UTF-8', file, '-'], { stdio: ['ignore', 'pipe', 'pipe'], timeout: 60_000, maxBuffer: 20 * 1024 * 1024 }).toString('utf8').replace(/ {3,}/g, '\n') }] }; }
-    catch { throw new Error('Reading PDFs needs poppler (macOS: brew install poppler). Or save the PDF as text and import the .txt.'); }
+    catch { throw new Error("I can't read PDFs on this computer. Ask your AI to read the PDF and import its text."); }
   }
   if (['.txt', '.md', '.text'].includes(ext)) return { kind: 'text', parts: [{ name: path.basename(file), text: buf.toString('utf8') }] };
   throw new Error(`Can't import ${ext || 'that file'}. Use a LinkedIn export (.zip or folder), .pdf, .docx, .txt, or .md.`);
