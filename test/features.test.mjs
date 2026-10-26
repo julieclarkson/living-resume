@@ -145,3 +145,17 @@ test('coach: a 3-page PDF becomes a lift; old roles are not asked for more depth
   for (const r of L.experience || []) r.end = '2004-06';
   assert.ok(!coach(L).suggestions.some((s) => s.kinds.includes('thin')), 'roles that ended long ago are not "recent"');
 });
+
+test('next: one step at a time, from where the user is', () => {
+  const dir = workspace('next');
+  assert.match(cli(['next'], { dir }).out, /NEXT: Bring in your LinkedIn/);
+  cli(['import', SAMPLE], { dir });
+  assert.match(cli(['next'], { dir }).out, /NEXT: Review \d+ suggested lines/);
+  const prefix = fs.readdirSync(path.join(dir, 'proposals'))[0].replace(/-\d{3}\.json$/, '');
+  cli(['review', 'approve-all', prefix], { dir });
+  assert.match(cli(['next'], { dir }).out, /NEXT: Build your résumé files/);
+  cli(['build'], { dir, env: { LIVING_RESUME_NO_CHROME: '1' } });
+  const after = cli(['next'], { dir }).out;
+  assert.match(after, /NEXT: Put your résumé online/); assert.match(after, /Also waiting:[\s\S]*LinkedIn/);
+  const j = JSON.parse(cli(['next', '--json'], { dir }).out); assert.ok(j.next && j.next.say);
+});

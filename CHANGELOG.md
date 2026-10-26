@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.3.0 · 2026-10-26 (unreleased)
+- **What's next:** `next` (MCP `resume_next`) gives the one next step from where you are (review, build, put it online, LinkedIn, inbox, target, job search, top match, follow-ups, make it stronger), why it matters, and exactly what to say. The skill starts every conversation with it.
 - **Headings are each person's own:** `heading <section> "Text"` (MCP `resume_heading`) renames a section in every format, stored in that person's ledger.
 - **LinkedIn: profile data only.** The guide and skill say to export only profile items; import keeps only the profile files it read (never connections, messages or contacts).
 - Coach: a "fit on two pages" lift when the last PDF runs long; only current or last-10-year roles count as recent.

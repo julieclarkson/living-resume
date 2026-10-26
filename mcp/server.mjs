@@ -89,6 +89,7 @@ function run(args) {
 
 const S = (props = {}, required = []) => ({ type: 'object', properties: props, required, additionalProperties: false });
 const TOOLS = [
+  { name: 'resume_next', description: "The one next step for this user, from where they are (résumé, online, LinkedIn, job search, matches, follow-ups), with why and what to say. Call it at the start of a conversation and whenever they ask what to do now; end replies with its step.", inputSchema: S(), args: () => ['next'] },
   { name: 'resume_status', description: 'What is recorded, queued for review, public on each surface, published, and which plan (Free or Pro).', inputSchema: S(), args: () => ['status'] },
   { name: 'resume_guide', description: 'The full Living Résumé skill: how to run the first run, import, review, the score card, roles, jobs, and publishing. Read it once at the start if your tool did not load the skill.', inputSchema: S(), guide: true },
   { name: 'resume_init', description: "Create a résumé workspace if none exists (never overwrites). Call resume_status first: if it finds a workspace, don't call this. Pass folder (the full path of the folder the user picked, for example in Claude Cowork) to keep it there. The folder is remembered, so later conversations find it. Without folder: LIVING_RESUME_DIR if set, else the remembered folder, else ~/Living-Resume.", inputSchema: S({ folder: { type: 'string', description: 'Absolute path of the folder the user chose' }, name: { type: 'string' }, email: { type: 'string' } }),

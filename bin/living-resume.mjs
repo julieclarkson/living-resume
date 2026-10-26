@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // living-resume <command> [args]   (one entry point for the CLI, skills, and the MCP server)
 //
+//   next                                     the one next step from where you are, and what to say
 //   init [folder] [--name "…"] [--email …]   start a résumé workspace (default ~/Living-Resume)
 //   import <file|folder>                     LinkedIn export, résumé PDF/DOCX/TXT → proposals to review
 //   add "what you did" [--link …]            put new work in your résumé inbox (assessed by your AI tool)
@@ -34,7 +35,7 @@ const di = argv.indexOf('--dir');
 if (di >= 0) { if (!argv[di + 1]) { console.error('--dir needs a folder'); process.exit(2); } process.env.LIVING_RESUME_DIR = path.resolve(argv[di + 1]); argv.splice(di, 2); }
 
 const ALIASES = { 'gate:test': 'check', test: 'check', tailor: 'apply' };
-const COMMANDS = ['init', 'import', 'add', 'inbox', 'snippet', 'status', 'review', 'propose', 'fix-role', 'target', 'roles', 'build', 'check', 'coach', 'publish', 'linkedin', 'heading', 'apply', 'jobs', 'scout', 'license'];
+const COMMANDS = ['next', 'init', 'import', 'add', 'inbox', 'snippet', 'status', 'review', 'propose', 'fix-role', 'target', 'roles', 'build', 'check', 'coach', 'publish', 'linkedin', 'heading', 'apply', 'jobs', 'scout', 'license'];
 const cmd = ALIASES[argv[0]] || argv[0];
 
 if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h') {
