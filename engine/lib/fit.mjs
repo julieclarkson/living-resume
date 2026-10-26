@@ -17,13 +17,14 @@ responsibilities requirements qualifications preferred required bonus nice what'
 about role responsibilities you'll will be the best people world mission culture values customers customer product products
 grow run ship drive own create deliver partner collaborate collaboration support ensure provide build building built develop developing interfaces interface
 expertise proficiency proficient familiarity familiar fully hands-on passionate passion fast-paced environment world-class cross-functional stakeholders deep solid proven track record
-senior junior mid-level staff principal production high quality impact impactful scale scalable modern complex end-to-end closely variety wide range various ideally preferably`.split(/\s+/));
+senior junior mid-level staff principal production high quality impact impactful scale scalable modern complex end-to-end closely variety wide range various ideally preferably
+need needs don now both set some rather together think thinking focus care better choice inside move idea ideas offer offers type goals goal blog https http www san francisco new york london berlin sydney toronto seattle austin boston chicago remote-friendly co-working anywhere really truly every everything something things thing way ways want wants get gets got lot lots much many first next right real today tomorrow often always never`.split(/\s+/));
 
 // Light stemming so "systems" matches "system" and "designing" matches "design".
 const stem = (w) => w.length > 5 && w.endsWith('ing') ? w.slice(0, -3) : w.length > 4 && w.endsWith('ies') ? `${w.slice(0, -3)}y` : w.length > 4 && w.endsWith('ed') && !w.endsWith('eed') ? w.slice(0, -2) : w.length > 3 && w.endsWith('s') && !/(ss|us|is)$/.test(w) ? w.slice(0, -1) : w;
 
 // Words in a text, minus stopwords and posting boilerplate.
-const words = (s) => (String(s).toLowerCase().match(/[a-z][a-z0-9+.#-]{2,}/g) || []).map((w) => w.replace(/[.-]+$/, '')).filter((w) => w.length > 2 && !STOP.has(w) && !STOP.has(stem(w)));
+const words = (s) => (String(s).replace(/https?:\/\/\S+/gi, ' ').replace(/\b[\w-]+\.(app|com|io|org|ai|dev|co|net|so)\b/gi, ' ').toLowerCase().match(/[a-z][a-z0-9+.#-]{2,}/g) || []).map((w) => w.replace(/[.-]+$/, '')).filter((w) => w.length > 2 && !STOP.has(w) && !STOP.has(stem(w)));
 export const terms = (s) => words(s).map(stem);
 export const termSet = (s) => new Set(terms(s));
 

@@ -176,3 +176,25 @@ test('the job criteria formats the skill documents are the ones the validator ac
   assert.equal(ok.code, 0, ok.out);
   for (const bad of [{ remote: 'yes' }, { min_fit: 0.4 }, { schedule: { days: ['Wed'], time: '8am', ai_review: 'no' } }, { work_type: ['fulltime'] }]) assert.notEqual(cli(['jobs', 'criteria', '--set', JSON.stringify(bad)], { dir }).code, 0, JSON.stringify(bad));
 });
+
+test('location: remote in another country and hybrid elsewhere are screened out for someone in Charlotte, NC', () => {
+  const dir = ready();
+  cli(['jobs', 'criteria', '--set', JSON.stringify({ remote: 'preferred', locations: ['Charlotte, NC'], titles: ['developer'] })], { dir });
+  const f = path.join(dir, 'l.txt'); fs.writeFileSync(f, 'Front-end developer role. We work remote-first.');
+  const add = (loc, n) => cli(['jobs', 'add', f, '--url', `https://example.com/j/${n}`, '--title', 'Front-End Developer', '--company', 'Echo', '--location', loc], { dir }).out;
+  assert.match(add('Remote France', 1), /outside the US/);
+  assert.match(add('Remote Canada', 2), /outside the US/);
+  assert.match(add('Hybrid - San Francisco', 3), /doesn't pass/);
+  assert.match(add('Remote US', 4), /Added/);
+  assert.match(add('Remote - North America, Europe', 5), /Added/);
+  assert.match(add('Charlotte, NC', 6), /Added/);
+});
+
+test('an empty day says why, and shows the closest listings below the bar', () => {
+  const dir = ready();
+  cli(['jobs', 'criteria', '--set', JSON.stringify({ remote: 'any', titles: ['developer'], min_fit: 99 })], { dir });
+  const f = path.join(dir, 'l.txt'); fs.writeFileSync(f, 'Front-end developer for a gateway routing product with billing dashboards.');
+  cli(['jobs', 'add', f, '--url', 'https://example.com/j/9', '--title', 'Front-End Developer', '--company', 'Echo'], { dir });
+  const out = cli(['jobs', 'today'], { dir }).out;
+  assert.match(out, /No listings reached your 99% fit bar/); assert.match(out, /Closest this time/); assert.match(out, /Front-End Developer at Echo/);
+});

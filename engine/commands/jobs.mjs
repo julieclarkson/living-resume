@@ -98,6 +98,24 @@ function workTypes(p) {
   if (/contract[- ]to[- ]hire/.test(`${head} ${body}`)) t.add('full-time');
   return t;
 }
+// Which country the person is in: criteria "country" ("us", or a country name), or from their locations ("Charlotte, NC").
+const US_STATES = 'al ak az ar ca co ct de fl ga hi id il in ia ks ky la me md ma mi mn ms mo mt ne nv nh nj nm ny nc nd oh ok or pa ri sc sd tn tx ut vt va wa wv wi wy dc'.split(' ');
+function homeCountry(c) {
+  if (c.country) return String(c.country).toLowerCase().replace(/^(usa|united states( of america)?)$/, 'us');
+  const l = (c.locations || []).map((x) => x.toLowerCase());
+  if (l.some((x) => /\b(usa|united states|u\.s\.)\b/.test(x) || US_STATES.includes((x.split(',')[1] || '').trim()))) return 'us';
+  return '';
+}
+const COUNTRIES = ['canada', 'mexico', 'brazil', 'argentina', 'uk', 'united kingdom', 'england', 'ireland', 'france', 'germany', 'spain', 'portugal', 'italy', 'netherlands', 'belgium', 'switzerland', 'austria', 'sweden', 'norway', 'denmark', 'finland', 'poland', 'czech', 'romania', 'greece', 'israel', 'india', 'singapore', 'japan', 'korea', 'china', 'australia', 'new zealand', 'emea', 'europe', 'apac', 'latam', 'london', 'berlin', 'paris', 'dublin', 'amsterdam', 'toronto', 'vancouver', 'sydney', 'melbourne', 'tokyo', 'bangalore'];
+const HOME_WORDS = { us: /\b(us|u\.s\.|usa|united states|north america|americas|anywhere|worldwide|global)\b|\b(san francisco|new york|seattle|austin|boston|chicago|denver|los angeles|atlanta)\b/ };
+/** The foreign place a location names when it names no place in the person's own country, else ''. */
+function foreignOnly(loc, home) {
+  const hit = COUNTRIES.find((x) => new RegExp(`\\b${x}\\b`).test(loc));
+  if (!hit) return '';
+  const homeRe = HOME_WORDS[home] || new RegExp(`\\b${home}\\b`);
+  return homeRe.test(loc) ? '' : hit.replace(/\b\w/g, (m) => m.toUpperCase()).replace(/^(Uk|Emea|Apac|Latam)$/, (m) => m.toUpperCase());
+}
+
 function screen(p, c) {
   const title = p.title.toLowerCase(); const all = `${title}\n${p.company.toLowerCase()}\n${p.text.toLowerCase()}`;
   const unknown = [];
@@ -105,9 +123,16 @@ function screen(p, c) {
   const bad = (c.avoid || []).find((w) => has(all, w)); if (bad) return { ok: false, why: `mentions "${bad}"` };
   if (c.titles?.length && !c.titles.some((t) => has(title, t))) return { ok: false, why: 'title not in your list' };
   if (c.must_have?.length && !c.must_have.some((w) => has(all, w))) return { ok: false, why: 'missing a must-have' };
-  const remote = p.remote === true || (p.remote == null && /\bremote\b/.test(`${(p.location || '').toLowerCase()} ${title}`));
-  const remoteMaybe = !remote && p.remote == null && /\b(fully remote|remote[- ]first|work remotely|remote (role|position|friendly))\b/.test(all);
-  const local = (c.locations || []).some((l) => has((p.location || '').toLowerCase(), l.toLowerCase().split(',')[0]));
+  const loc = (p.location || '').toLowerCase();
+  const local = (c.locations || []).some((l) => has(loc, l.toLowerCase().split(',')[0]));
+  // Remote in another country isn't remote for you ("Remote France" for someone in Charlotte).
+  const home = homeCountry(c);
+  const elsewhere = home && !local && foreignOnly(loc, home);
+  if (elsewhere && c.remote !== 'any') return { ok: false, why: `in ${elsewhere}, outside ${home === 'us' ? 'the US' : home}` };
+  // "Hybrid - San Francisco" or "On-site" is not remote, whatever the boilerplate says.
+  const onsite = /\b(hybrid|on-?site|in[- ]office)\b/.test(loc) && !/\bremote\b/.test(loc);
+  const remote = !onsite && (p.remote === true || (p.remote == null && /\bremote\b/.test(`${loc} ${title}`)));
+  const remoteMaybe = !onsite && !remote && p.remote == null && /\b(fully remote|remote[- ]first|work remotely|remote (role|position|friendly))\b/.test(all);
   if (c.remote === 'required' && !remote) { if (remoteMaybe) unknown.push('remote not confirmed'); else return { ok: false, why: 'not remote' }; }
   if (c.remote === 'preferred' && !remote && !local && c.locations?.length) { if (remoteMaybe) unknown.push('remote not confirmed'); else return { ok: false, why: 'not remote or in your locations' }; }
   if (c.work_type?.length) {
@@ -131,15 +156,28 @@ function score(p, L, roles, c) {
 }
 function rank({ all = false } = {}) {
   const c = goodCrit(); const L = loadLedger(); const roles = listRoles(); const st = loadState(); const store = loadStore();
-  const pool = Object.values(store).filter((p) => !p.held && !st.dismissed[p.id] && !st.applied[p.id] && (all || !st.shown[p.id] || st.shown[p.id] === today()) && screen(p, c).ok);
+  const fresh = Object.values(store).filter((p) => !p.held && !st.dismissed[p.id] && !st.applied[p.id] && (all || !st.shown[p.id] || st.shown[p.id] === today()));
+  // Why listings didn't pass, so an empty day says what to change ("12 outside the US").
+  const why = {}; const pool = fresh.filter((p) => { const r = screen(p, c); if (!r.ok) { const k = r.why.replace(/^in .+?, outside/, 'outside').replace(/^mentions ".*"$/, 'mention a word you avoid'); why[k] = (why[k] || 0) + 1; } return r.ok; });
   const order = { high: 0, medium: 1, low: 2 };
-  const scored = pool.map((p) => ({ p, s: score(p, L, roles, c) })).filter(({ s }) => s.fit >= c.min_fit && s.confidence !== 'low')
+  // Every listing at or above the fit bar is shown; confidence is a label, never a hidden filter.
+  const all_ = pool.map((p) => ({ p, s: score(p, L, roles, c) }));
+  const scored = all_.filter(({ s }) => s.fit >= c.min_fit)
     .sort((a, b) => order[a.s.confidence] - order[b.s.confidence] || b.s.fit - a.s.fit).slice(0, c.daily_limit);
+  const closest = scored.length ? [] : all_.sort((a, b) => b.s.fit - a.s.fit).slice(0, 3);
   for (const { p } of scored) st.shown[p.id] ||= today();
   writeJSON(STATE, st);
-  return { picks: scored, pool: pool.length, notes: st.notes };
+  return { picks: scored, closest, pool: pool.length, fresh: fresh.length, why, notes: st.notes };
 }
-function page({ picks, pool, notes }) {
+function emptyText({ pool, fresh, why, c }) {
+  const out = [`No listings reached your ${c.min_fit}% fit bar today.`];
+  const reasons = Object.entries(why).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${n} ${k}`);
+  out.push(`${fresh} new listing${fresh === 1 ? '' : 's'} had a title on your list; ${pool} passed your criteria${reasons.length ? ` (the rest: ${reasons.join(', ')})` : ''}.`);
+  if ((c.companies || []).length < 40) out.push(`You're checking ${(c.companies || []).length} companies. More companies (or job alerts you forward with "add this job") means more to choose from.`);
+  if (c.work_type?.includes('contract') || /contract/i.test(c.looking_for || '')) out.push('Company job boards rarely list part-time contract work; most of it comes through agencies, networks, and people you know.');
+  return out.join(' ');
+}
+function page({ picks, closest = [], pool, fresh = pool, why = {}, notes }) {
   const c = loadCrit(); const date = today();
   const card = ({ p, s }, i) => `<article>
   <h2><span class="n">${i + 1}</span> <a href="${esc(p.url || p.applyUrl)}" rel="noopener noreferrer">${esc(p.title)}</a></h2>
@@ -167,12 +205,12 @@ h2{font-size:19px;margin:0 0 4px;line-height:1.3}h2 a{color:inherit}.n{color:var
 .ask{color:var(--mute);font-size:14px}.empty{color:var(--mute)}</style></head><body><main>
 <h1>Your job matches</h1><p class="sub">${esc(new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }))} · ${picks.length} of ${pool} new listings that pass your criteria
 Fit is how much of each listing's key wording your approved résumé lines already cover. Confidence drops when the listing asks for things your résumé doesn't show, or doesn't say whether it's remote or contract.</p>
-${picks.length ? picks.map(card).join('\n') : `<p class="empty">No strong matches today. ${pool ? 'Some listings passed your criteria but scored below your fit bar.' : 'Nothing new passed your criteria.'} Your criteria: ${esc(c.looking_for || 'not set yet')}</p>`}
+${picks.length ? picks.map(card).join('\n') : `<p class="empty">${esc(emptyText({ pool, fresh, why, c }))}</p>${closest.length ? `<h2 style="margin:28px 0 12px">Closest this time (below your ${c.min_fit}% bar)</h2>${closest.map(card).join('\n')}` : ''}`}
 </main></body></html>`;
   writeText(confined(P('jobs', 'today.html')), html);
   writeText(confined(P('jobs', `${date}.html`)), html);
   const md = [`# Job matches · ${date}`, '', ...picks.map(({ p, s }, i) => `${i + 1}. **${p.title}** at ${p.company}${p.location ? ` (${p.location})` : ''}: ${s.fit}% fit, ${s.confidence} confidence, send ${sendWhat(s)}.${notes[p.id] ? ` ${notes[p.id]}` : ''}\n   Apply: ${p.applyUrl || p.url}   (id ${p.id})`)];
-  if (!picks.length) md.push('No strong matches today.');
+  if (!picks.length) { md.push(emptyText({ pool, fresh, why, c })); if (closest.length) md.push('', `Closest this time (below your ${c.min_fit}% bar):`, ...closest.map(({ p, s }) => `- ${p.title} at ${p.company}${p.location ? ` (${p.location})` : ''}: ${s.fit}% fit. Not on your résumé: ${s.missing.slice(0, 5).join(', ')}   (id ${p.id})`)); }
   writeText(confined(P('jobs', 'today.md')), md.join('\n') + '\n');
   writeJSON(confined(P('jobs', 'today.json')), { date, pool, matches: picks.map(({ p, s }) => ({ ...s, title: p.title, company: p.company, location: p.location, pay: p.pay, url: p.url, applyUrl: p.applyUrl, note: notes[p.id] || null })) });
   return md.join('\n');
