@@ -1,7 +1,7 @@
 {
   "name": "living-resume",
   "version": "1.3.0",
-  "description": "Keep your résumé current from your real build history. One evidence-backed ledger builds your PDF, DOCX, web page, JSON Resume, and LinkedIn packet. You approve every line. Runs inside Claude, Codex, and Cursor. Zero dependencies.",
+  "description": "Never update your résumé again. One evidence-backed ledger builds your PDF, Word file, web page, JSON Resume, and LinkedIn packet, and you approve every line. Works in Claude and ChatGPT (plugins), plus Codex, Cursor, VS Code, and Claude Code. Zero dependencies.",
   "type": "module",
   "bin": {
     "living-resume": "bin/living-resume.mjs",
@@ -17,6 +17,9 @@
     "commands/",
     ".claude-plugin/",
     ".mcp.json",
+    "plugin.json",
+    "mcp.json",
+    ".agents/",
     "product.config.json",
     "AGENTS.md",
     "README.md",
@@ -46,7 +49,10 @@
     "claude-code",
     "codex",
     "cursor",
-    "ai-agent"
+    "ai-agent",
+    "chatgpt",
+    "openai",
+    "vscode"
   ],
   "author": "Jacobus Company, LLC (https://julieclarkson.com)",
   "homepage": "https://living-resume.julieclarkson.com",
