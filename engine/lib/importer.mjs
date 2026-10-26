@@ -150,7 +150,7 @@ export function fromText(text, source = 'résumé') {
     if (m) {
       // What's left on the date line once the dates and any duration "(2 yrs 3 mos)" are removed.
       // "(self-employed)" or "(Contract)" stays: it's part of the org.
-      const rest = l.replace(RANGE_RE, '').replace(/\([^)]*\d[^)]*\)|\(\s*\)/g, '').replace(/^[\s,|·–—-]+|[\s,|·–—-]+$/g, '');
+      const rest = l.replace(RANGE_RE, '').replace(/\([^)\d]*\d[^)]*\)|\(\s*\)/g, '').replace(/^[\s,|·–—-]+|[\s,|·–—-]+$/g, '');
       const onDateLine = /[a-z]{2}/i.test(rest);
       const parts = onDateLine ? rest.split(SEP).map((x) => x.trim()).filter(Boolean) : [];
       // The role header is the run of non-bullet lines just above the dates: at most two, one when

@@ -2,6 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { ROOT, workspace, tmp } from './helpers.mjs';
@@ -102,7 +103,7 @@ test('resume_init with the folder the user picked: later tools use that folder; 
   const s = session(elsewhere);
   try {
     await s.req('initialize', {});
-    for (const folder of ['Documents/Résumé', `${base}/../x`, '-rf']) {
+    for (const folder of ['Documents/Résumé', `${base}/../x`, '-rf', os.homedir(), path.parse(base).root, path.dirname(os.homedir()), path.join(os.homedir(), '.ssh'), path.join(base, '.hidden', 'r')]) {
       const bad = await s.req('tools/call', { name: 'resume_init', arguments: { folder } });
       assert.equal(bad.result.isError, true, folder);
     }

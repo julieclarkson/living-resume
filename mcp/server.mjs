@@ -35,6 +35,10 @@ function initFolder(v) {
   if (v === undefined || v === null || v === '') return process.env.LIVING_RESUME_DIR ? path.resolve(process.env.LIVING_RESUME_DIR) : WS.DEFAULT_HOME;
   if (typeof v !== 'string' || v.length > 500 || !path.isAbsolute(v) || v.split(/[\\/]/).includes('..') || /[\0\n\r]/.test(v)) throw new Error('folder must be the full path of the folder the user chose (for example /Users/sam/Documents/Résumé).');
   const abs = path.resolve(v);
+  // Never the home folder, a drive root, a folder above home, or a hidden folder (~/.ssh, ~/.config):
+  // the workspace bounds what the other tools may read.
+  const home = os.homedir();
+  if (abs === path.parse(abs).root || abs === home || home.startsWith(abs + path.sep) || path.relative(path.parse(abs).root, abs).split(path.sep).some((x) => x.startsWith('.'))) throw new Error('Pick a folder just for your résumé, for example Documents/Résumé (not your home folder, a drive, or a hidden folder).');
   let cur = abs;
   while (true) { if (fs.existsSync(cur) && fs.lstatSync(cur).isSymbolicLink()) throw new Error('Symlinks are not followed.'); if (fs.existsSync(cur)) break; const up = path.dirname(cur); if (up === cur) break; cur = up; }
   if (fs.existsSync(abs) && !fs.statSync(abs).isDirectory()) throw new Error('folder must be a folder, not a file.');
