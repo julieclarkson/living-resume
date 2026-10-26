@@ -11,7 +11,7 @@
 //   { "name": "AI Product Engineer", "headline": "headline", "order": [...], "exclude": [...], "variants": {...} }
 import fs from 'node:fs';
 import path from 'node:path';
-import { P, readJSON, writeJSON, findItem, allItems, safeId, confined } from './util.mjs';
+import { P, readJSON, writeJSON, findItem, allItems, safeId, confined, rolesInOrder } from './util.mjs';
 
 export const rolesDir = () => P('resume', 'roles');
 
@@ -37,6 +37,8 @@ export function newRole(slug, name) {
 export function validateRole(L, role) {
   const errs = [];
   const ids = new Set(allItems(L).map((i) => i.id));
+  // order may also list role ids (experience entries) to set the order of the roles themselves.
+  for (const r of L.experience || []) if (r.id) ids.add(r.id);
   for (const k of ['order', 'exclude']) for (const id of role[k] || []) if (!ids.has(id)) errs.push(`${k}: no ledger line "${id}"`);
   const variants = { ...(role.variants || {}) };
   if (role.headline && role.headline !== L.person?.headline?.id) variants[L.person?.headline?.id] = role.headline;
@@ -66,6 +68,13 @@ export function applyRole(ledger, role) {
   const tidy = (list) => (list || []).filter((i) => !out.has(i.id))
     .map((i, n) => [i, rank.has(i.id) ? rank.get(i.id) : 10_000 + n]).sort((a, b) => a[1] - b[1]).map(([i]) => i);
   for (const r of L.experience || []) for (const g of r.groups || []) g.items = tidy(g.items);
+  if (L.experience) L.experience = L.experience.filter((r) => !out.has(r.id));
+  // Roles named in order come first, in that order; the rest follow newest first.
+  if ((L.experience || []).some((r) => rank.has(r.id))) {
+    const dated = rolesInOrder(L);
+    L.experience = [...dated.filter((r) => rank.has(r.id)).sort((a, b) => rank.get(a.id) - rank.get(b.id)), ...dated.filter((r) => !rank.has(r.id))];
+    L.experienceOrder = 'profile';
+  }
   for (const k of ['skills', 'education', 'certifications', 'volunteer', 'snippets']) if (Array.isArray(L[k])) L[k] = tidy(L[k]);
   if (L.howIWork?.items) L.howIWork.items = tidy(L.howIWork.items);
   if (L.summary && out.has(L.summary.id)) L.summary = null;

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 // Renderers: ledger → print HTML, web preview HTML, JSON Resume, LinkedIn packet,
 // "What's public now" report, capability statement. One source, every format.
-import { esc, mdHtml, mdPlain, fmtRange, fmtMonth, fmtYears, shows, roleShows, monthYear, allItems, links, hostOf, safeUrl } from './util.mjs';
+import { rolesInOrder, esc, mdHtml, mdPlain, fmtRange, fmtMonth, fmtYears, shows, roleShows, monthYear, allItems, links, hostOf, safeUrl } from './util.mjs';
 
 // The site's font, embedded so the PDF looks the same on any machine (no network needed).
 // Instrument Sans, SIL Open Font License 1.1.
@@ -26,7 +26,7 @@ const skillLabel = (L, s) => { const n = String(s.name || '').trim().toLowerCase
 export function printHtml(L, { surface = 'pdf', title } = {}) {
   const p = L.person; const S = surface;
   const work = links(L).portfolio;
-  const roles = (L.experience || []).filter((r) => roleShows(r, S)).map((r) => {
+  const roles = rolesInOrder(L).filter((r) => roleShows(r, S)).map((r) => {
     const items = (r.groups || []).flatMap((g) => (g.items || []).filter((i) => shows(i, S)));
     return `<div class="job"><h3 class="role"><span>${esc(r.title)}</span><span class="when">${fmtYears(r.start, r.end)}</span></h3><p class="org">${esc([r.org, r.location].filter(Boolean).join(', '))}</p><ul>${items.map((i) => `<li>${linkify(mdPlain(i.text), work)}</li>`).join('')}</ul></div>`;
   }).join('\n');
@@ -78,7 +78,7 @@ export function printModel(L, { surface = 'pdf' } = {}) {
   const p = L.person || {}; const S = surface;
   const where = place(p); const remote = p.location?.remote !== false;
   const sections = [];
-  const jobs = (L.experience || []).filter((r) => roleShows(r, S)).map((r) => ({
+  const jobs = rolesInOrder(L).filter((r) => roleShows(r, S)).map((r) => ({
     title: r.title || '', when: fmtYears(r.start, r.end), org: [r.org, r.location].filter(Boolean).join(', '),
     bullets: (r.groups || []).flatMap((g) => (g.items || []).filter((i) => shows(i, S))).map((i) => mdPlain(i.text)),
   }));
@@ -121,7 +121,7 @@ export function jsonResume(L, { site } = {}) {
       'x-subline': shows(p.subline, S) ? p.subline.text : undefined,
       'x-availability': shows(p.availability, S) ? p.availability.text : undefined,
     },
-    work: (L.experience || []).filter((r) => roleShows(r, S)).map((r) => {
+    work: rolesInOrder(L).filter((r) => roleShows(r, S)).map((r) => {
       const highlights = (r.groups || []).flatMap((g) => pub(g.items)).map((i) => mdPlain(i.text));
       return { name: r.org, position: r.title, location: r.location, startDate: r.start, ...(r.end ? { endDate: r.end } : {}), highlights };
     }),
@@ -158,7 +158,7 @@ export function linkedinPacket(L, rules, changes = [], settings = {}) {
   const how = (L.howIWork?.items || []).filter((i) => shows(i, S)).map((i) => `• ${i.text}`).join('\n');
   const about = [shows(L.summary, S) ? L.summary.text : '', how ? `How I work\n${how}` : '', shows(p.availability, S) ? p.availability.text + '.' : ''].filter(Boolean).join('\n\n');
   sec('About', about, lim.about);
-  for (const r of (L.experience || []).filter((x) => roleShows(x, S))) {
+  for (const r of rolesInOrder(L).filter((x) => roleShows(x, S))) {
     // One key per role (title, org, start year), so a promotion at the same company or a blank org never collides.
     const role = `Experience: ${r.title || '—'} at ${r.org || '—'} (${String(r.start || '').slice(0, 4) || '—'})`;
     sec(`${role} title`, r.title || '', lim.position_title);
@@ -220,7 +220,7 @@ ul{margin:2px 0 0;padding-left:16px}li{margin:0 0 4px}p{margin:0}table{border-co
 // Free tier adds one small credit link in the footer (never on the PDF).
 export function webPage(L, { credit = null, pdfHref = '', jsonHref = 'resume.json' } = {}) {
   const S = 'web'; const p = L.person || {}; const lk = links(L);
-  const roles = (L.experience || []).filter((r) => roleShows(r, S)).map((r) => {
+  const roles = rolesInOrder(L).filter((r) => roleShows(r, S)).map((r) => {
     const items = (r.groups || []).flatMap((g) => (g.items || []).filter((i) => shows(i, S)));
     return `<article class="job"><header><h3>${esc(r.title)}</h3><span class="when">${fmtYears(r.start, r.end)}</span></header><p class="org">${esc([r.org, r.location].filter(Boolean).join(', '))}</p>${items.length ? `<ul>${items.map((i) => `<li>${linkify(mdPlain(i.text), lk.portfolio)}</li>`).join('')}</ul>` : ''}</article>`;
   }).join('\n');

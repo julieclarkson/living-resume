@@ -3,7 +3,7 @@
 // roles show <slug>              print that role's version, line by line, with ledger ids
 // A role only chooses from approved lines: headline, order, exclude, and approved
 // alternate wordings (variants). See engine/lib/roles.mjs. Free: one role. Pro (and pre-launch): unlimited.
-import { loadLedger, requireWorkspace, mdPlain, roleShows, shows } from '../lib/util.mjs';
+import { loadLedger, requireWorkspace, mdPlain, roleShows, shows, rolesInOrder } from '../lib/util.mjs';
 import { listRoles, newRole, validateRole, applyRole } from '../lib/roles.mjs';
 import { proUnlocked, productConfig } from '../lib/license.mjs';
 
@@ -41,7 +41,7 @@ if (cmd === 'show') {
   console.log(`${r.name}\n`);
   if (shows(V.person?.headline, S)) { console.log('HEADLINE'); line(V.person.headline); }
   console.log('\nEXPERIENCE');
-  for (const role of (V.experience || []).filter((x) => roleShows(x, S))) { console.log(` ${role.title}, ${role.org}`); for (const g of role.groups || []) for (const i of (g.items || []).filter((x) => shows(x, S))) line(i); }
+  for (const role of rolesInOrder(V).filter((x) => roleShows(x, S))) { console.log(` ${role.title}, ${role.org}`); for (const g of role.groups || []) for (const i of (g.items || []).filter((x) => shows(x, S))) line(i); }
   if (V.howIWork?.items?.some((i) => shows(i, S))) { console.log('\nHOW I WORK'); V.howIWork.items.filter((i) => shows(i, S)).forEach(line); }
   if (V.skills?.some((i) => shows(i, S))) { console.log('\nSKILLS'); V.skills.filter((i) => shows(i, S)).forEach(line); }
   console.log(`\nExcluded: ${(r.exclude || []).join(', ') || 'none'}`);

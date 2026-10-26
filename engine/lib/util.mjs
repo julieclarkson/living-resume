@@ -54,7 +54,8 @@ export const P = (...a) => path.join(ROOT, ...a);
 export const isWorkspace = (dir = ROOT) => fs.existsSync(path.join(dir, 'resume', 'ledger.json'));
 export function requireWorkspace() {
   if (!isWorkspace()) {
-    console.error(`✗ No résumé workspace found (looked for resume/ledger.json from ${process.cwd()}).\n  Start one:  living-resume init   (or set LIVING_RESUME_DIR)`);
+    if (process.env.LIVING_RESUME_VIA === 'mcp') console.error('No résumé workspace found yet. Ask where their résumé folder is, then resume_init with it.');
+    else console.error(`✗ No résumé workspace found (looked for resume/ledger.json from ${process.cwd()}).\n  Start one:  living-resume init   (or set LIVING_RESUME_DIR)`);
     process.exit(2);
   }
 }
@@ -150,6 +151,16 @@ export function allItems(ledger) {
   for (const it of ledger.howIWork?.items || []) push(it, 'howIWork');
   push(ledger.skillsIntro, 'skillsIntro'); push(ledger.interests, 'interests');
   return out;
+}
+
+// Experience newest first: by end date (present first), then start date; ties keep ledger order.
+// A role profile that orders roles itself (applyRole sets experienceOrder) is left as it is.
+const endKey = (r) => (!r.end ? (r.start ? '9999-99' : '0000-00') : /^\d{4}$/.test(r.end) ? `${r.end}-12` : String(r.end));
+const startKey = (r) => (!r.start ? '0000-00' : /^\d{4}$/.test(r.start) ? `${r.start}-01` : String(r.start));
+export function rolesInOrder(L) {
+  const list = [...(L.experience || [])];
+  if (L.experienceOrder === 'profile') return list;
+  return list.map((r, i) => [r, i]).sort(([a, i], [b, j]) => endKey(b).localeCompare(endKey(a)) || startKey(b).localeCompare(startKey(a)) || i - j).map(([r]) => r);
 }
 
 export function findItem(ledger, id) {

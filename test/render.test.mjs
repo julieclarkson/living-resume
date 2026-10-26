@@ -68,3 +68,23 @@ test('PDF fallback draws unlabelled skills and the certificate list', { skip: !h
   assert.ok(fs.statSync(out).size > 1000);
   try { const t = execFileSync('pdftotext', [out, '-'], { encoding: 'utf8' }); assert.match(t, /CPR and First Aid/); assert.match(t, /Certificates/); assert.doesNotMatch(t, /Certificates in/); } catch (e) { if (e.code !== 'ENOENT') throw e; }
 });
+
+test('experience renders newest first in every format, whatever order the ledger holds', async () => {
+  const { jsonResume } = await import('../engine/lib/render.mjs');
+  const L = { person: { name: 'Sam Rivera' }, experience: [
+    { ...role('r2021', 'Director', 'Delta', '2021', 'Led the region'), end: null },
+    { ...role('r2017', 'Manager', 'Gamma', '2017', 'Ran the clinic'), end: '2020-12' },
+    { ...role('r2001', 'Coordinator', 'Alpha', '2001', 'Kept the schedule'), end: '2004' },
+    { ...role('r2013', 'Lead', 'Beta', '2013', 'Grew the team'), end: '2017' },
+  ] };
+  const order = (s) => ['Director', 'Manager', 'Lead', 'Coordinator'].map((t) => s.indexOf(t));
+  const sorted = (a) => a.every((x, i) => x >= 0 && (i === 0 || x > a[i - 1]));
+  assert.ok(sorted(order(printHtml(L))), 'print');
+  assert.ok(sorted(order(webPage(L))), 'web');
+  assert.ok(sorted(order(JSON.stringify(printModel(L)))), 'pdf fallback');
+  assert.ok(sorted(order(linkedinPacket(L, RULES).text)), 'linkedin');
+  assert.deepEqual(jsonResume(L).work.map((w) => w.position), ['Director', 'Manager', 'Lead', 'Coordinator']);
+  const { applyRole } = await import('../engine/lib/roles.mjs');
+  const V = applyRole(L, { name: 'x', order: ['r2001'] }); // a role profile may put a role first
+  assert.ok(printHtml(V).indexOf('Coordinator') < printHtml(V).indexOf('Director'));
+});
