@@ -1,4 +1,5 @@
 // check: every check must pass before anything can be published.
+import { pageInfo } from '../lib/coach-pages.mjs';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { P, readJSON, loadLedger, loadRules, allItems, mdPlain, requireWorkspace, roleShows, httpsUrl } from '../lib/util.mjs';
@@ -123,7 +124,7 @@ for (const r of results) console.log(`${r.ok ? '✓' : '✗'} ${r.name}${r.detai
 console.log(`\n${results.length - failed.length}/${results.length} checks passed.`);
 // Coach suggestions never fail the build: they are ways to make true lines stronger.
 try {
-  const c = coach(L, { target: readJSON(P('resume', 'rubric.json'), {}).target || '' });
+  const c = coach(L, { target: readJSON(P('resume', 'rubric.json'), {}).target || '', ...(await pageInfo()) });
   if (c.lifts.length) console.log(`\nSuggestions (not failures). Résumé strength ${c.score}/100. Biggest lifts:\n${c.lifts.map((l, i) => `  ${i + 1}. ${l.title}`).join('\n')}\n${process.env.LIVING_RESUME_VIA === 'mcp' ? 'Details: resume_coach.' : 'Details: living-resume coach'}`);
 } catch {}
 process.exit(failed.length ? 1 : 0);

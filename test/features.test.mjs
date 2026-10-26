@@ -134,3 +134,14 @@ test('heading: a section heading is the person\'s own choice, shown in every for
   assert.equal(cli(['heading', 'community', '--reset'], { dir }).code, 0);
   assert.match(cli(['heading'], { dir }).out, /community\s+Community and volunteer\s+\(default\)/);
 });
+
+test('coach: a 3-page PDF becomes a lift; old roles are not asked for more depth', async () => {
+  const { coach } = await import('../engine/lib/coach.mjs');
+  const L = JSON.parse(fs.readFileSync(path.join(ready(), 'resume', 'ledger.json'), 'utf8'));
+  const over = coach(L, { pages: 3, limit: 2 });
+  assert.ok(over.lifts.some((l) => l.kind === 'pages' && /two pages \(3 now\)/.test(l.title)), JSON.stringify(over.lifts));
+  const ok = coach(L, { pages: 2, limit: 2 });
+  assert.ok(!ok.suggestions.some((s) => s.kinds.includes('pages')));
+  for (const r of L.experience || []) r.end = '2004-06';
+  assert.ok(!coach(L).suggestions.some((s) => s.kinds.includes('thin')), 'roles that ended long ago are not "recent"');
+});

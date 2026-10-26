@@ -74,9 +74,12 @@ function topSuggestions(L, target) {
   return out;
 }
 
-function shapeSuggestions(roles) {
+// A role is recent if it is current or ended within the last 10 years.
+const isRecent = (r) => { const y = Number(String(r.end || '').slice(0, 4)); return !r.end || !y || y >= new Date().getFullYear() - 10; };
+function shapeSuggestions(roles, { pages = 0, limit = 2 } = {}) {
   const out = []; const paid = roles.filter((r) => !isVolunteerRole(r) && r.volunteer !== true);
-  for (const r of paid.slice(0, 2)) if (r.items.length < 3) out.push({ id: r.id, where: `${r.title}${r.org ? `, ${r.org}` : ''}`, kinds: ['thin'], weight: r.items.length <= 1 ? 4 : 3,
+  if (pages > limit) out.push({ id: 'pages', where: 'Length', kinds: ['pages'], weight: 6, why: `Your PDF is ${pages} pages; screeners expect ${limit} at most. Trim the lines that matter least for the work you want next (older roles, volunteer work, long bullets), or leave them on the web page only.`, questions: ['Which older or volunteer lines matter least for the work you want next?', 'Should any of them stay on your web page only, off the PDF?'] });
+  for (const r of paid.slice(0, 2).filter(isRecent)) if (r.items.length < 3) out.push({ id: r.id, where: `${r.title}${r.org ? `, ${r.org}` : ''}`, kinds: ['thin'], weight: r.items.length <= 1 ? 4 : 3,
     why: `Only ${r.items.length} bullet${r.items.length === 1 ? '' : 's'} on a recent role. Recent roles carry the most weight; 3 to 5 bullets is typical.`, questions: ['What else did you own in this role?', 'What are you proudest of from this job?', 'Roughly how many people, sites, or dollars did it touch?'] });
   const firstPaid = roles.findIndex((r) => paid.includes(r));
   roles.forEach((r, i) => { if (firstPaid >= 0 && i < firstPaid && isVolunteerRole(r) && r.volunteer === undefined) out.push({ id: r.id, where: `${r.title}${r.org ? `, ${r.org}` : ''}`, kinds: ['order'], weight: 3,
@@ -93,6 +96,7 @@ const LIFT = {
   shorthand: () => 'Turn the headline into a plain phrase (no | + /).',
   summary: () => 'Add a short summary aimed at your target.',
   'first-person': () => 'Rewrite the summary without "I", same facts.',
+  pages: (s) => `Fit your PDF on two pages (${s[0].why.match(/is (\d+) pages/)?.[1] || 'more than 2'} now).`,
   thin: (s) => `Add depth to ${s.length === 1 ? s[0].where : `${s.length} recent roles`} (3 to 5 bullets each).`,
   order: () => 'List the volunteer role after your paid roles.',
   result: (s) => `Show a number or result in ${s.length} bullet${s.length === 1 ? '' : 's'}.`,
@@ -107,7 +111,7 @@ const LIFT = {
 function lifts(all) {
   const by = new Map();
   for (const s of all) { const k = s.kinds[0]; if (!by.has(k)) by.set(k, []); by.get(k).push(s); }
-  return [...by].map(([k, list]) => ({ kind: k, title: LIFT[k] ? LIFT[k](list) : k, ids: [...new Set(list.map((x) => x.id))], impact: Math.min(['dates', 'long'].includes(k) ? 2 : 99, list.reduce((a, x) => a + x.weight, 0)) + (['target', 'thin', 'order', 'aim'].includes(k) ? 3 : 0) }))
+  return [...by].map(([k, list]) => ({ kind: k, title: LIFT[k] ? LIFT[k](list) : k, ids: [...new Set(list.map((x) => x.id))], impact: Math.min(['dates', 'long'].includes(k) ? 2 : 99, list.reduce((a, x) => a + x.weight, 0)) + (['target', 'thin', 'order', 'aim', 'pages'].includes(k) ? 3 : 0) }))
     .sort((a, b) => b.impact - a.impact).slice(0, 3);
 }
 
@@ -120,11 +124,11 @@ function structureScore(roles, tgt, has) {
 }
 
 /** Read-only coach report for a ledger. target = the rubric target (or ''). */
-export function coach(L, { target = '' } = {}) {
+export function coach(L, { target = '', pages = 0, limit = 2 } = {}) {
   const tgt = DEFAULT_TARGET.test(target || '') ? '' : String(target || '').trim();
   const roles = rolesInOrder(L).filter((r) => roleShows(r, 'pdf')).map((r) => ({ ...r, items: (r.groups || []).flatMap((g) => (g.items || []).filter((i) => shows(i, 'pdf'))) }));
   const lines = lineSuggestions(roles);
-  const top = topSuggestions(L, tgt); const shape = shapeSuggestions(roles);
+  const top = topSuggestions(L, tgt); const shape = shapeSuggestions(roles, { pages, limit });
   const has = (k) => [...top, ...shape].some((s) => s.kinds.includes(k));
   const score = Math.max(0, Math.min(100, Math.round((lines.n ? (60 * lines.good) / lines.n : 0) + structureScore(roles, tgt, has))));
   const suggestions = [...top, ...shape, ...lines.out.sort((a, b) => b.weight - a.weight)];
