@@ -21,7 +21,7 @@ test('coach: duty phrasing, no result, size without outcome, vague words, long b
   assert.deepEqual(kinds('Managed 14 clinics in the Upstate region'), ['outcome']);
   assert.ok(kinds('Handled various vendor projects, etc.').includes('vague'));
   assert.ok(kinds(`Led the rollout across 14 clinics ${'and more detail '.repeat(14)}`).includes('long'));
-  for (const t of ['Cut days in A/R from 52 to 38', 'Grew a newsletter list from 1,200 to 4,800 subscribers', 'Opened 22 new sites in 30 months, all within 5% of budget']) assert.deepEqual(kinds(t), [], t);
+  for (const t of ['Set up a shared spreadsheet for intake counts that the board now uses for grant reports', 'Cut days in A/R from 52 to 38', 'Grew a newsletter list from 1,200 to 4,800 subscribers', 'Opened 22 new sites in 30 months, all within 5% of budget']) assert.deepEqual(kinds(t), [], t);
 });
 
 const ledger = () => ({

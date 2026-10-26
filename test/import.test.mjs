@@ -151,6 +151,9 @@ test('executive résumé (Elena): summary kept, board lines in volunteer, only t
   // Speaking and publications have a home of their own now ("Publications and talks").
   assert.deepEqual(d.unplacedHeadings, []);
   assert.equal(d.publications.length, 2); assert.match(d.publications[0], /MGMA Annual Conference, 2022/);
+  // PDF text wraps a long publication onto an indented line: it stays one entry.
+  const w = fromText('Pat Lee\nOps\n\nPublications\n"Shared Services," MGMA, 2022\nCo-author, "Front-line Turnover," Journal of Healthcare Management,\n 2021\n- A talk, 2019\n');
+  assert.deepEqual(w.publications, ['"Shared Services," MGMA, 2022', 'Co-author, "Front-line Turnover," Journal of Healthcare Management, 2021', 'A talk, 2019']);
 });
 
 test('import says which headings it did not place, and places publications', () => {

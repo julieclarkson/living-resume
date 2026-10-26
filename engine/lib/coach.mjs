@@ -5,7 +5,7 @@ import { rolesInOrder, roleShows, shows, mdPlain } from './util.mjs';
 
 const DUTY = /^(responsible for|duties included|duties were|in charge of|worked on|worked with|helped with|helped|assisted( with)?|supported|participated in|tasked with)\b/i;
 const BARE = /^(ran|run|managed|manage|handled|handle|oversaw|oversee|coordinated|coordinate|kept|maintained|did|performed|was)\b/i;
-const OUTCOME = /\b(increas\w*|grew|grow|cut|cuts|reduc\w*|rais\w*|sav\w*|improv\w*|launch\w*|shipped|deliver\w*|won|became|adopted|went (up|down)|from .{1,40} to|on time|under budget|within|doubl\w*|tripl\w*|now use|still use|used by|turned around|opened|built|created|introduced|consolidated|stood up|led the|so that|which|resulting|record|first)\b|%/i;
+const OUTCOME = /\b(increas\w*|grew|grow|cut|cuts|reduc\w*|rais\w*|sav\w*|improv\w*|launch\w*|shipped|deliver\w*|won|became|adopted|went (up|down)|from .{1,40} to|on time|under budget|within|doubl\w*|tripl\w*|now use\w*|still use\w*|used by|turned around|opened|built|created|introduced|consolidated|stood up|led the|so that|which|resulting|record|first)\b|%/i;
 const NUMBER = /\d|\b(one|two|three|four|five|six|seven|eight|nine|ten|dozen|hundred|thousand)\b/i;
 const VAGUE = /\b(various|etc\.?|many|misc\.?|miscellaneous|numerous|several|stuff|things|and more)(?=$|[\s.,;:)])/i;
 const FIRST = /\b(I|I'm|I’m|I've|I’ve|I'd)(?=$|[\s.,;:!?])|\b(my|me)\b/i;
@@ -69,7 +69,7 @@ function topSuggestions(L, target) {
   }
   const sum = pub(L.summary) ? mdPlain(L.summary.text) : '';
   if (!sum) out.push({ id: 'summary', where: 'Summary', kinds: ['summary'], weight: 2, why: 'No summary. Two or three plain sentences aimed at your target help a reader place you.', questions: ['What do you want a hiring manager to know first?', 'What are you best at, with one example?'] });
-  else if (FIRST.test(sum)) out.push({ id: L.summary.id, where: 'Summary', text: clip(sum), kinds: ['first-person'], weight: 3, why: 'Written in the first person ("I", "my"). Résumés read better without it, with the same facts.', questions: ['Is it okay to drop the "I" and keep the same facts?'] });
+  else if (FIRST.test(sum)) out.push({ id: L.summary.id, where: 'Summary', text: clip(sum), kinds: ['first-person'], weight: 3, why: 'Written in the first person ("I", "my"). Résumés read better without it, with the same facts.', questions: ['Is it okay to write it without "I" or "my", same facts?'] });
   if (sum && VAGUE.test(sum)) out.push({ id: L.summary.id, where: 'Summary', text: clip(sum), kinds: ['vague'], weight: 1, why: WHY.vague, questions: Q.vague });
   return out;
 }
