@@ -9,7 +9,7 @@ npx living-resume import ~/Downloads/linkedin-export.zip # or a résumé .pdf / 
 npx living-resume review                                 # Approve · Edit · Reject · Later
 npx living-resume build && npx living-resume check       # every format → ~/Living-Resume/dist
 ```
-In an AI tool, just say "start my résumé", "review my résumé updates", "build my résumé", or "publish my résumé".
+In an AI tool, just say "start my résumé", "add this to my résumé", "assess my résumé inbox", "set up my design engineer résumé", "I'm applying to this job", or "publish my résumé".
 
 ## Install in your AI tool
 - **Claude Code:** `/plugin marketplace add julieclarkson/living-resume` then `/plugin install living-resume` (skill, slash commands, and MCP server).
@@ -26,14 +26,18 @@ In an AI tool, just say "start my résumé", "review my résumé updates", "buil
 | `check` | Privacy, private names, framing, plain voice, PDF pages and text, stale-build guard, quarantine. |
 | `publish [--write]` | Dry run, or copy files into your site folder. Never commits or pushes. |
 | `status` | Recording, queue, public lines, history, plan. |
-| `scout` (Pro) | New résumé-worthy moments from case-study-maker logs + market wording from saved postings. |
-| `tailor <posting> <slug>` (Pro) | Private PDF/DOCX for one job, verified lines only. |
+| `add "what you did" [--link …]` | Put new work in your résumé inbox. Nothing changes until your AI tool assesses it and you approve. |
+| `inbox [all \| assessed <id> … \| skip <id> "why"]` | What's waiting, and each verdict. |
+| `snippet` | A paragraph to paste into your projects so the agents you work with nominate wins. |
+| `roles [new <slug> "Name" \| show <slug>]` | A version of your résumé per kind of role, built from approved lines only (Free: one). |
+| `apply <posting> [--role …] [--company …]` (Pro) | Best-fit role version for one job, coverage report, private PDF/DOCX, logged. |
+| `scout` (Pro) | New résumé-worthy moments from case-study-maker logs. |
 | `license status\|activate <key>\|validate\|deactivate` | Free or Pro (Polar). |
 
 Use `--dir <folder>` or `LIVING_RESUME_DIR` to point at a workspace elsewhere.
 
 ## Free and Pro
-Free: import, review, every format, checks, publish, LinkedIn packet; a small credit link on the web page (never on the PDF). Pro (yearly, via Polar): scout, tailoring, capability statement and vendor kit, no credit link. The license is checked against Polar's public license-key endpoint, cached locally, and works offline for 30 days between checks.
+Free: import, the résumé inbox and rubric, review, every format, one role profile, checks, publish, LinkedIn packet; a small credit link on the web page (never on the PDF). Pro (yearly, via Polar): unlimited role profiles, job-by-job versions (`apply`), the scout, capability statement and vendor kit, no credit link. The license is checked against Polar's public license-key endpoint, cached locally, and works offline for 30 days between checks.
 
 ## Requirements
 Node 18.17+. PDF: Google Chrome, Chromium, Edge, or Brave (or `CHROME_PATH`). DOCX: macOS `textutil` or `pandoc`. Optional: poppler (`pdftotext`) for PDF import and the PDF text check.

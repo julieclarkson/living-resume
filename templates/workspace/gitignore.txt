@@ -2,6 +2,7 @@
 quarantine/
 scout/
 applications/
+inbox/
 imports/
 dist/resume-print.html
 *.tmp

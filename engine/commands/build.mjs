@@ -9,6 +9,7 @@ import { releaseOut } from '../lib/quarantine.mjs';
 import { htmlToPdf, htmlToDocx, pdfText, pdfPageCount } from '../lib/print.mjs';
 import { changesSinceLastPublish } from '../lib/history.mjs';
 import { licenseState, productConfig } from '../lib/license.mjs';
+import { listRoles, applyRole } from '../lib/roles.mjs';
 
 requireWorkspace();
 const L = loadLedger(); const R = loadRules(); const S = loadSettings();
@@ -65,6 +66,20 @@ if (vendor?.company && pro) {
   try { const out = `${work}/capability-statement.pdf`; htmlToPdf(chPath, out); release('capability-statement.pdf', fs.readFileSync(out), pdfText(out) ?? stripTags(ch)); }
   catch (e) { report.push(`✗ capability statement: ${e.message}`); }
 } else if (vendor?.company) report.push('· capability statement skipped (Pro)');
+
+// 6. Role versions: dist/roles/<slug>/<Name>_Resume.pdf + .docx (Free builds the first role only)
+fs.rmSync(confined(P('dist', 'roles')), { recursive: true, force: true });
+listRoles().forEach((r, i) => {
+  if (i > 0 && !pro) { report.push(`· role ${r.slug} skipped (more than one role is Pro)`); return; }
+  let V; try { V = applyRole(L, r); } catch (e) { held.push({ rel: `roles/${r.slug}` }); report.push(`✗ role ${r.slug}: ${e.message}`); return; }
+  const rh = printHtml(V, { title: `${L.person.name} - Résumé` }); const hp = `${work}/role-${r.slug}.html`; writeText(hp, rh);
+  try {
+    const pdf = `${work}/role-${r.slug}.pdf`; htmlToPdf(hp, pdf);
+    const pages = pdfPageCount(pdf); if (pages > R.limits.pdf_max_pages) report.push(`! role ${r.slug} is ${pages} pages (limit ${R.limits.pdf_max_pages}); exclude a line in its profile`);
+    release(`roles/${r.slug}/${R.pdf_filename}`, fs.readFileSync(pdf), pdfText(pdf) ?? stripTags(rh));
+    const dx = `${work}/role-${r.slug}.docx`; if (htmlToDocx(hp, dx)) release(`roles/${r.slug}/${docxName}`, fs.readFileSync(dx), stripTags(rh));
+  } catch (e) { report.push(`✗ role ${r.slug} PDF: ${e.message}`); }
+});
 
 fs.rmSync(work, { recursive: true, force: true });
 // Stamp: check refuses a dist/ that was built from a different ledger or rules.

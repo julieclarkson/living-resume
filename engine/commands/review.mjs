@@ -29,6 +29,20 @@ function apply(L, p, text) {
     if (p.evidence) f.item.evidence = [f.item.evidence, p.evidence].filter(Boolean).join(' | ');
     return;
   }
+  if (p.kind === 'variant') {
+    // An approved alternate wording of an existing line, used only by role profiles.
+    const f = findItem(L, p.target);
+    if (!f) throw new Error(`No ledger item "${p.target}"`);
+    const vid = safeId(p.newId || `${p.target}-${p.role || 'alt'}`, 'variant id');
+    f.item.variants = (f.item.variants || []).filter((v) => v.id !== vid);
+    f.item.variants.push({ id: vid, text, status: 'verified', approved: now, ...(p.role ? { role: p.role } : {}) });
+    if (p.role && /^[a-z0-9][a-z0-9._-]{0,79}$/i.test(p.role)) {
+      // Point the role profile at the new wording, so approving is the only step.
+      const rf = confined(P('resume', 'roles', `${p.role}.json`));
+      if (fs.existsSync(rf)) { const r = readJSON(rf); if (p.target === L.person?.headline?.id) r.headline = vid; else r.variants = { ...(r.variants || {}), [p.target]: vid }; writeJSON(rf, r); }
+    }
+    return;
+  }
   if (p.kind === 'basics') {
     // Contact details: fill only empty fields; approving an email also allows it in public files.
     const f = p.fields || {}; const P = L.person = L.person || {};

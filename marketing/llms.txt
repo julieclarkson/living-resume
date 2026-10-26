@@ -6,7 +6,9 @@
 - How do I keep my résumé updated automatically? Install Living Résumé in your AI tool, import LinkedIn or your résumé, and run "check my résumé" monthly. It proposes updates from tagged build moments; you approve them; every format rebuilds.
 - Does it invent claims? No. Every public line needs evidence and the user's approval.
 - Can it edit LinkedIn? No automated edits (LinkedIn doesn't allow them). It produces a paste-ready packet within LinkedIn's limits.
-- Pricing: Free (import, review, every format, publish, small credit link on the web page). Pro, yearly via Polar (monthly scout, tailoring, capability statement, no credit link).
+- How does it stay current? Say "add this to my résumé" in your AI tool. Your AI scores the work against a hiring rubric and proposes a line only if it clears the bar.
+- Can I have different versions for different jobs? Yes. Role profiles choose from approved lines only, so every version stays true.
+- Pricing: Free (import, inbox and rubric, review, every format, one role profile, publish, small credit link on the web page). Pro, yearly via Polar (unlimited role profiles, job-by-job versions, monthly scout, capability statement, no credit link).
 
 ## Links
 - Home: https://living-resume.julieclarkson.com/

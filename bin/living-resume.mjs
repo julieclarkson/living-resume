@@ -3,13 +3,17 @@
 //
 //   init [folder] [--name "…"] [--email …]   start a résumé workspace (default ~/Living-Resume)
 //   import <file|folder>                     LinkedIn export, résumé PDF/DOCX/TXT → proposals to review
+//   add "what you did" [--link …]            put new work in your résumé inbox (assessed by your AI tool)
+//   inbox [all | assessed <id> … | skip <id> "why"]   what's waiting, and the verdicts
+//   snippet                                  text to paste into your projects so agents nominate wins
 //   status                                   recording · queue · public · history · plan
 //   review [approve|edit|reject|later <id>]  Approve · Edit · Reject · Later
 //   build                                    every format → dist/
 //   check                                    every check (run before publishing)
 //   publish [--write]                        dry run, or copy files to your site (never commits)
-//   scout [--all]                 (Pro)      new résumé-worthy moments + market wording
-//   tailor <posting> <slug>       (Pro)      private PDF/DOCX for one job
+//   roles [new <slug> "Name" | show <slug>]  a version of your résumé per kind of role (Free: one)
+//   apply <posting> [--role …] [--company …] (Pro)  best-fit role version for one job, logged privately
+//   scout [--all]                 (Pro)      new résumé-worthy moments from case-study-maker logs
 //   license <status|activate <key>|validate|deactivate>
 //
 //   --dir <folder>   use this workspace (or set LIVING_RESUME_DIR)
@@ -21,8 +25,8 @@ const argv = process.argv.slice(2);
 const di = argv.indexOf('--dir');
 if (di >= 0) { if (!argv[di + 1]) { console.error('--dir needs a folder'); process.exit(2); } process.env.LIVING_RESUME_DIR = path.resolve(argv[di + 1]); argv.splice(di, 2); }
 
-const ALIASES = { 'gate:test': 'check', test: 'check' };
-const COMMANDS = ['init', 'import', 'status', 'review', 'build', 'check', 'publish', 'scout', 'tailor', 'license'];
+const ALIASES = { 'gate:test': 'check', test: 'check', tailor: 'apply' };
+const COMMANDS = ['init', 'import', 'add', 'inbox', 'snippet', 'status', 'review', 'roles', 'build', 'check', 'publish', 'apply', 'scout', 'license'];
 const cmd = ALIASES[argv[0]] || argv[0];
 
 if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h') {
@@ -38,7 +42,7 @@ if (cmd === '--version' || cmd === 'version') {
 if (!COMMANDS.includes(cmd)) { console.error(`Unknown command "${argv[0]}". Run: living-resume help`); process.exit(2); }
 
 // Commands that change the workspace run one at a time.
-if (['import', 'review', 'build', 'publish', 'scout', 'tailor'].includes(cmd) && !(cmd === 'review' && !argv[1])) {
+if (['import', 'add', 'inbox', 'review', 'roles', 'build', 'publish', 'apply', 'scout'].includes(cmd) && !(['review', 'inbox', 'roles'].includes(cmd) && (!argv[1] || ['all', 'list', 'show'].includes(argv[1])))) {
   const { lockWorkspace, isWorkspace } = await import('../engine/lib/util.mjs');
   if (isWorkspace()) { try { lockWorkspace(); } catch (e) { console.error(`✗ ${e.message}`); process.exit(4); } }
 }

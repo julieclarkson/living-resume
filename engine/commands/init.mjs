@@ -31,7 +31,7 @@ const copy = (from, to) => {
 };
 fs.mkdirSync(target, { recursive: true });
 copy(tpl, target);
-for (const d of ['dist', 'proposals', 'archive', 'quarantine/in/postings', 'quarantine/in/imports', 'quarantine/out']) fs.mkdirSync(path.join(target, d), { recursive: true });
+for (const d of ['dist', 'proposals', 'inbox', 'resume/roles', 'archive', 'quarantine/in/postings', 'quarantine/in/imports', 'quarantine/out']) fs.mkdirSync(path.join(target, d), { recursive: true });
 
 const lp = path.join(target, 'resume', 'ledger.json');
 const L = JSON.parse(fs.readFileSync(lp, 'utf8'));

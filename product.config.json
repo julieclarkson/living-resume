@@ -23,8 +23,9 @@
     }
   },
   "proFeatures": {
-    "scout": "Monthly scout: finds résumé-worthy moments in your build history and current market wording",
-    "tailor": "Tailored PDF and DOCX for a specific job posting",
+    "scout": "The monthly scout that reads your case-study-maker build history",
+    "apply": "Best-fit résumé version for each job application, with a coverage report",
+    "roles": "More than one role profile",
     "capability": "One-page capability statement and vendor kit",
     "no-credit": "No credit link on your web page"
   }

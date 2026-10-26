@@ -1,6 +1,6 @@
 ---
 name: living-resume
-description: Keep the user's résumé current from one evidence-backed ledger. Use for "start my résumé", "import my LinkedIn" or "import my résumé", "review my résumé updates", "check my résumé", "build my résumé", "résumé status", "tailor for this posting", "write a cover note", "forget <item>", "publish my résumé".
+description: Keep the user's résumé current from one evidence-backed ledger. Use for "start my résumé", "import my LinkedIn" or "import my résumé", "add this to my résumé", "assess my résumé inbox", "review my résumé updates", "set up my <role> résumé", "I'm applying to this job", "build my résumé", "résumé status", "write a cover note", "forget <item>", "publish my résumé".
 ---
 
 # Living Résumé
@@ -8,8 +8,8 @@ description: Keep the user's résumé current from one evidence-backed ledger. U
 One ledger (`resume/ledger.json` in the user's résumé workspace) is the single source of truth. Every format (PDF, DOCX, web page, JSON Resume, LinkedIn packet) is built from it. The user approves every public line.
 
 ## How to run it
-- If the `living-resume` MCP tools are available, use them (`resume_status`, `resume_import`, `resume_review_list`, `resume_review_decide`, `resume_build`, `resume_check`, `resume_publish_preview`, `resume_scout`, `resume_tailor`).
-- Otherwise run the CLI: `living-resume <command>` if installed, or `node <this plugin>/bin/living-resume.mjs <command>` (the `bin/` folder is two levels above this file). Commands: `init · import · status · review · build · check · publish · scout · tailor · license`.
+- If the `living-resume` MCP tools are available, use them (`resume_status`, `resume_import`, `resume_add`, `resume_inbox`, `resume_rubric`, `resume_inbox_mark`, `resume_review_list`, `resume_review_decide`, `resume_roles`, `resume_role_show`, `resume_build`, `resume_check`, `resume_publish_preview`, `resume_apply`, `resume_scout`).
+- Otherwise run the CLI: `living-resume <command>` if installed, or `node <this plugin>/bin/living-resume.mjs <command>` (the `bin/` folder is two levels above this file). Commands: `init · import · add · inbox · snippet · status · review · roles · build · check · publish · apply · scout · license`.
 - The workspace is `~/Living-Resume` unless the user keeps it elsewhere (then pass `--dir <folder>` or set `LIVING_RESUME_DIR`). When you show the user a terminal command, include the `cd` into the workspace first.
 
 ## Hard rules
@@ -33,16 +33,34 @@ Show each waiting proposal (wording, where it appears, why, evidence). For each,
 `review approve <id>` · `review edit <id> "wording"` · `review reject <id> [reason]` · `review later <id>`.
 Then `build` and `check`, and show what changed (`dist/public-report.md`, `dist/linkedin-packet.md`). Bring back "later" items when related work appears.
 
-## "Check my résumé" (Pro: scout)
-1. `scout` reads only new case-study-maker moments (projects under `projectsRoot` in `resume/settings.json`) and admits postings saved in `quarantine/in/postings/`.
-2. Read `scout/inbox.md` and the ledger. For each moment that would help the user get the work they want, write one proposal file `proposals/<id>.json`:
-   `{ "id": "p-2026-11-01-short-name", "kind": "add|edit|remove", "target": "<ledger id for edit/remove>", "section": "experience.<role-id> | skills | education | certifications | volunteer | summary | person.headline", "text": "proposed wording (two lines at most for PDF bullets)", "surfaces": ["web","pdf","linkedin","json"], "reason": "why it helps", "evidence": "project + event date", "status": "proposed" }`
-3. Market wording: you may rephrase an existing verified line with terms from `scout/market-terms.json` that are true for the user. Never add a claim to fit a term. Real gaps go in `scout/skills-to-build.md` (private).
-4. Critic pass on every proposal: true to evidence? positive? private names? length? voice (specific first-person decisions, no stacked buzzwords or empty superlatives, and no colons, semicolons or arrows when plain voice is on)? Three rounds at most.
-5. Tell the user how many proposals are waiting and walk them through the review.
+## "Add this to my résumé"
+The user (or the agent they are working with, after asking and getting a yes) describes one piece of work. Write it as one or two plain sentences of fact: what they did, and why it mattered. No adjectives they didn't use, no metrics they didn't give. Then `add "<sentences>" [--link <public https link>]`. It lands in the inbox; nothing on the résumé changes. Offer to assess it now.
 
-## "Tailor for this posting" (Pro)
-Save the posting text to a file in the workspace, then `tailor <file> <slug>`. If quarantine rejects it, stop and say why. You may rephrase lines in `applications/<slug>/ledger.json` (verified claims only) and run `tailor --render <slug>`. For a cover note, write `applications/<slug>/cover-note.md` (200 words at most, the user's voice, verified claims only).
+To make this automatic in other projects, run `snippet` and give the user the paragraph to paste into that project's AI instructions. Never paste it into their files yourself without asking.
+
+## "Assess my résumé inbox"
+1. `inbox` lists new items. Read `resume/rubric.json` and the current ledger.
+2. For each item, score every criterion 0, 1, or 2 using only what the item and the ledger say. Be strict and honest: a routine task, a minor fix, or something the résumé already says scores low.
+3. If the total reaches `bar.propose_at` and it adds something new, write at most `bar.max_proposals_per_item` proposals (format below): a new line, or an `edit` that strengthens an existing line (often better than adding). Each proposal's `reason` names the criteria it shows (for example "outcome + rigor: 8 critical issues found and fixed before launch"). Its `evidence` is the inbox id plus the link.
+4. Otherwise `inbox skip <id> "<honest reason, and what would make it résumé-worthy>"`. When you proposed, `inbox assessed <id> <proposal ids>`.
+5. Show the user a short table: item, score, verdict. Then walk through the proposals ("Review my résumé updates").
+Prefer depth over volume: decisions, tradeoffs, testing, security, accountability, and outcomes are what set a builder apart. Keep the résumé at two pages by replacing weaker lines rather than piling on.
+
+Proposal format, one file each in `proposals/<id>.json`:
+`{ "id": "p-2026-11-01-short-name", "kind": "add|edit|remove|variant", "target": "<ledger id for edit/remove/variant>", "section": "experience.<role-id> | skills | education | certifications | volunteer | summary | howIWork | person.headline", "text": "proposed wording (two lines at most for PDF bullets)", "surfaces": ["web","pdf","linkedin","json"], "reason": "why it helps", "evidence": "source", "status": "proposed" }`
+
+## "Check my résumé" (Pro: scout)
+`scout` reads new case-study-maker moments (projects under `projectsRoot`) and postings saved in `quarantine/in/postings/`, and writes `scout/inbox.md`. Treat each moment like an inbox item above. Market wording: you may rephrase an existing verified line with terms from `resume/market-terms.json` that are true for the user; never add a claim to fit a term.
+
+## "Set up my <role> résumé" (role profiles)
+A role profile is a saved view of the same ledger for one kind of role, in `resume/roles/<slug>.json`: `{ "name", "headline", "order": [ids first], "exclude": [ids], "variants": { "<id>": "<variant id>" } }`. It only chooses; it never writes new text. Free includes one role; more roles are Pro.
+1. `roles new <slug> "<Role name>"` if it doesn't exist.
+2. Decide with the user: which lines lead (`order`), which to leave out (`exclude`) so the role's PDF stays at two pages, and whether the headline or a line needs a different wording for this role.
+3. A different wording is a `variant` proposal: `{ "kind": "variant", "target": "<ledger id>", "role": "<slug>", "newId": "<id>-<slug>", "text": "...", "reason": "...", "evidence": "same facts as the original line" }`. It must say the same true thing in that role's language. Approving it points the role at it automatically.
+4. `roles show <slug>`, then `build` (writes `dist/roles/<slug>/`) and `check`.
+
+## "I'm applying to this job"
+Save the posting text to a file in the workspace, then `apply <file> --company "<name>" [--role <slug>]` (Pro). It recommends the best-fit role, reports which posting words the version already uses, which are on the résumé but not in this version, and which aren't on the résumé at all, and saves the PDF/DOCX to `applications/<date>-<company>/`. To improve the fit: reorder or include lines, or propose variants, in the role profile, then run `apply` again. Words that aren't on the résumé at all are only added if they're true, through `add` with evidence. For a cover note, write `applications/<folder>/cover-note.md` (200 words at most, the user's voice, verified lines only).
 
 ## "Résumé status" / "forget <item>"
 `status`. To forget: set the item's `visibility` to `"private"` in the ledger, `build`, and remind the user the next publish removes it everywhere (and to remove it on LinkedIn by hand).
@@ -51,4 +69,4 @@ Save the posting text to a file in the workspace, then `tailor <file> <slug>`. I
 `publish` (dry run) → show the changes and files → only after the user says yes, `publish --write`. Then give the user the commit command it prints. They commit (and sign) it themselves; their host deploys it. If `publish` isn't set up, ask where their site lives and set `"publish": { "repo": "<folder>" }` in `resume/settings.json` with their OK.
 
 ## Plans
-Free: ledger, import, review, every format, checks, publish, LinkedIn packet, with a small credit link on the web page. Pro (yearly, via Polar): scout, tailoring, capability statement and vendor kit, no credit link. `license status` · `license activate <key>`. Never ask for or repeat a full license key in chat beyond what the user pasted.
+Free: ledger, import, the inbox and rubric, review, every format, one role profile, checks, publish, LinkedIn packet, with a small credit link on the web page. Pro (yearly, via Polar): unlimited role profiles, job-by-job `apply`, the scout, capability statement and vendor kit, no credit link. `license status` · `license activate <key>`. Never ask for or repeat a full license key in chat beyond what the user pasted.

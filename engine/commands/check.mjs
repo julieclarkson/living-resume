@@ -5,6 +5,7 @@ import { P, loadLedger, loadRules, allItems, mdPlain, requireWorkspace, roleShow
 import { scanOut, scanIn } from '../lib/quarantine.mjs';
 import { pdfPageCount, pdfText } from '../lib/print.mjs';
 import { printHtml } from '../lib/render.mjs';
+import { listRoles, validateRole } from '../lib/roles.mjs';
 
 requireWorkspace();
 const L = loadLedger(); const R = loadRules();
@@ -34,6 +35,16 @@ if (R.voice?.plain !== false) {
   check('plain voice: no colons, semicolons, or arrows in public lines', !plain.length, plain.map((i) => i.id).join(', '));
 }
 
+// 2c. Approved alternate wordings (used by role profiles) pass the same rules as public lines.
+const variants = items.flatMap((i) => (i.variants || []).filter((v) => v.status === 'verified').map((v) => ({ ...v, of: i.id })));
+if (variants.length) {
+  const vv = scanOut(variants.map((v) => v.text).join('\n'), R);
+  check('outbound scan: approved alternate wordings', !vv.length, vv.map((x) => `${x.rule}: ${x.detail}`).join('; '));
+  if (R.voice?.plain !== false) { const pv = variants.filter((v) => /[;→]|[^\s/]:\s/.test(mdPlain(v.text))); check('plain voice: alternate wordings', !pv.length, pv.map((v) => v.id).join(', ')); }
+}
+// 2d. Role profiles only choose from approved lines.
+for (const r of listRoles()) { const errs = validateRole(L, r); check(`role ${r.slug}: uses only approved lines and wordings`, !errs.length, errs.join('; ')); }
+
 // 3. Built outputs (run build first)
 const dist = (f) => P('dist', f);
 {
@@ -55,6 +66,12 @@ if (fs.existsSync(dist(R.pdf_filename))) {
     const ov = scanOut(txt, R); check('PDF: outbound scan of extracted text', !ov.length, ov.map((x) => x.detail).join('; '));
   }
 } else check('PDF exists (run build)', false);
+for (const r of listRoles()) {
+  const f = P('dist', 'roles', r.slug, R.pdf_filename);
+  if (!fs.existsSync(f)) continue;
+  const pages = pdfPageCount(f); check(`role ${r.slug} PDF: ≤ ${R.limits.pdf_max_pages} pages`, pages > 0 && pages <= R.limits.pdf_max_pages, `${pages} page(s)`);
+  const t = pdfText(f); if (t !== null) { const ov = scanOut(t, R); check(`role ${r.slug} PDF: outbound scan`, !ov.length, ov.map((x) => x.detail).join('; ')); }
+}
 if (fs.existsSync(dist('capability-statement.pdf'))) {
   const t = pdfText(dist('capability-statement.pdf'));
   if (t !== null) { const ov = scanOut(t, R); check('capability statement: outbound scan', !ov.length, ov.map((x) => x.detail).join('; ')); }

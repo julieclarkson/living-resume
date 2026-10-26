@@ -2,12 +2,13 @@
 
 ```
 bin/living-resume.mjs      one entry point (CLI, skills, MCP all call it)
-engine/commands/*.mjs      init · import · review · build · check · publish · status · scout · tailor · license
+engine/commands/*.mjs      init · import · add · inbox · snippet · review · roles · build · check · publish · apply · status · scout · license
 engine/lib/util.mjs        workspace resolution, confinement, lock, ledger helpers
 engine/lib/render.mjs      ledger → print HTML, web page, JSON Resume, LinkedIn packet, report, capability statement
 engine/lib/quarantine.mjs  inbound scan (postings, imports) and outbound scan (every released file)
 engine/lib/importer.mjs    zip/csv/docx/pdf text → draft → role outlines + proposals
 engine/lib/license.mjs     Polar license keys (the only network code)
+engine/lib/roles.mjs       role profiles: choose, order, exclude, approved variants; never new text
 engine/lib/print.mjs       Chrome headless → PDF; textutil/pandoc → DOCX
 engine/vendor/mcp-core/    vendored scanners from the shared core
 mcp/server.mjs             stdio MCP server, zero deps, tools call the CLI with validated args

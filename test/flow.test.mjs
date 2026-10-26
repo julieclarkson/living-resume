@@ -110,7 +110,7 @@ test('Pro features say so on Free and change nothing', () => {
   const dir = workspace('gate');
   fs.writeFileSync(path.join(dir, 'posting.txt'), 'We are hiring a product designer.');
   const s = cli(['scout'], { dir }); assert.equal(s.code, 3); assert.match(s.out, /part of Living Résumé Pro/);
-  const t = cli(['tailor', path.join(dir, 'posting.txt'), 'acme'], { dir }); assert.equal(t.code, 3);
+  const t = cli(['apply', path.join(dir, 'posting.txt'), '--company', 'Acme'], { dir }); assert.equal(t.code, 3);
   assert.ok(!fs.existsSync(path.join(dir, 'applications')));
   assert.ok(!fs.existsSync(path.join(dir, 'scout', 'state.json')));
 });

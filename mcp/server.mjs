@@ -37,7 +37,7 @@ function insideWorkspace(p) {
   return abs;
 }
 const needId = (v, what) => { if (typeof v !== 'string' || !ID.test(v) || v.includes('..')) throw new Error(`Invalid ${what}.`); return v; };
-const needText = (v, what, max = 2000) => { if (typeof v !== 'string' || !v.trim() || v.length > max) throw new Error(`${what} must be 1–${max} characters.`); return v; };
+const needText = (v, what, max = 2000) => { if (typeof v !== 'string' || !v.trim() || v.length > max) throw new Error(`${what} must be 1–${max} characters.`); if (/^-/.test(v.trim())) throw new Error(`${what} can't start with a dash.`); return v; };
 
 function run(args) {
   return new Promise((resolve) => {
@@ -70,8 +70,16 @@ const TOOLS = [
   { name: 'resume_publish_preview', description: 'Dry run of publishing: runs checks and shows what would change on the site. Never copies, commits, or pushes. Copying is a human step: living-resume publish --write.', inputSchema: S(), args: () => ['publish'] },
   { name: 'resume_scout', description: '(Pro) Find new résumé-worthy moments in case-study-maker build logs and count market wording in saved postings. Writes scout/inbox.md.', inputSchema: S({ all: { type: 'boolean' } }), args: (a) => ['scout', ...(a.all ? ['--all'] : [])] },
   { name: 'resume_scout_inbox', description: '(Pro) Read scout/inbox.md after resume_scout.', inputSchema: S(), read: 'scout/inbox.md' },
-  { name: 'resume_tailor', description: '(Pro) Make a private, unpublished PDF/DOCX for one job posting saved inside the workspace. Uses only verified lines.', inputSchema: S({ posting: { type: 'string', description: 'Posting text file, relative to the workspace' }, slug: { type: 'string' } }, ['posting', 'slug']),
-    args: (a) => ['tailor', insideWorkspace(needText(a.posting, 'posting', 500)), needId(a.slug, 'slug')] },
+  { name: 'resume_add', description: "Put one piece of the user's work in their résumé inbox (one or two plain sentences of fact, plus an optional https link). Only after the user said yes. Nothing on the résumé changes.", inputSchema: S({ text: { type: 'string' }, link: { type: 'string' } }, ['text']),
+    args: (a) => ['add', needText(a.text, 'text', 4000), ...(a.link ? ['--link', needText(a.link, 'link', 500)] : [])] },
+  { name: 'resume_inbox', description: 'List inbox items waiting to be assessed against resume/rubric.json.', inputSchema: S({ all: { type: 'boolean' } }), args: (a) => ['inbox', ...(a.all ? ['all'] : [])] },
+  { name: 'resume_rubric', description: 'Read resume/rubric.json: the criteria and bar for deciding what belongs on the résumé.', inputSchema: S(), read: 'resume/rubric.json' },
+  { name: 'resume_inbox_mark', description: 'Record the assessment of an inbox item: "assessed" with the proposal ids you wrote, or "skip" with an honest reason.', inputSchema: S({ id: { type: 'string' }, verdict: { type: 'string', enum: ['assessed', 'skip'] }, proposals: { type: 'array', items: { type: 'string' } }, reason: { type: 'string' } }, ['id', 'verdict']),
+    args: (a) => a.verdict === 'skip' ? ['inbox', 'skip', needId(a.id, 'inbox id'), needText(a.reason || 'below the bar', 'reason', 300)] : ['inbox', 'assessed', needId(a.id, 'inbox id'), ...((Array.isArray(a.proposals) ? a.proposals : []).slice(0, 5).map((x) => needId(x, 'proposal id')))] },
+  { name: 'resume_roles', description: 'List role profiles (a version of the résumé per kind of role) and whether each is ready.', inputSchema: S(), args: () => ['roles'] },
+  { name: 'resume_role_show', description: "Show one role profile's version line by line, with ledger ids.", inputSchema: S({ slug: { type: 'string' } }, ['slug']), args: (a) => ['roles', 'show', needId(a.slug, 'role')] },
+  { name: 'resume_apply', description: '(Pro) For one job posting saved inside the workspace: recommend the best-fit role version, report which posting words are covered, and save a private PDF/DOCX to applications/.', inputSchema: S({ posting: { type: 'string', description: 'Posting text file, relative to the workspace' }, role: { type: 'string' }, company: { type: 'string' } }, ['posting']),
+    args: (a) => ['apply', insideWorkspace(needText(a.posting, 'posting', 500)), ...(a.role ? ['--role', needId(a.role, 'role')] : []), ...(a.company ? ['--company', needText(a.company, 'company', 80)] : [])] },
   { name: 'license_status', description: 'Show Free or Pro, and what Pro adds.', inputSchema: S(), args: () => ['license', 'status'] },
 ];
 
