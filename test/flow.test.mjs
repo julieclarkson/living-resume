@@ -128,3 +128,16 @@ test('plain voice: check names the lines and says how to reword them', () => {
   const c = cli(['check'], { dir }); assert.notEqual(c.code, 0);
   assert.match(c.out, /✗ plain voice.*p-voice: reword without ; : →/);
 });
+
+test('review: deciding an already-decided proposal says so, changes nothing, no stack trace', () => {
+  const dir = workspace('twice');
+  fs.writeFileSync(path.join(dir, 'proposals', 'p-twice.json'), JSON.stringify({ id: 'p-twice', kind: 'add', section: 'certifications', text: 'CPR and First Aid', status: 'proposed' }));
+  assert.equal(cli(['review', 'approve', 'p-twice'], { dir }).code, 0);
+  const before = fs.readFileSync(path.join(dir, 'resume', 'ledger.json'), 'utf8');
+  for (const args of [['approve', 'p-twice'], ['edit', 'p-twice', 'New words'], ['reject', 'p-twice']]) {
+    const r = cli(['review', ...args], { dir });
+    assert.equal(r.code, 1, r.out); assert.match(r.out, /p-twice was already approved/); assert.doesNotMatch(r.out, /at .*\.mjs:\d+/);
+  }
+  assert.equal(fs.readFileSync(path.join(dir, 'resume', 'ledger.json'), 'utf8'), before);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'proposals', 'p-twice.json'), 'utf8')).status, 'approved');
+});

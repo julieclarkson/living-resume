@@ -104,12 +104,19 @@ if (!cmd || cmd === 'list') {
 }
 const p = all.find((x) => x.id === id);
 if (!p) { console.error(`No proposal "${id}"`); process.exit(1); }
+// Already decided (approved, edited, or rejected): say so plainly and change nothing. "Later" items can still be decided.
+if (['approved', 'edited', 'rejected'].includes(p.status) && ['approve', 'edit', 'reject', 'later'].includes(cmd)) {
+  console.error(`${id} was already ${p.status === 'edited' ? 'edited and approved' : p.status}${p.decided ? ` on ${p.decided}` : ''}. Nothing changed.${p.status === 'rejected' ? '' : ' To change that line now, write a new edit proposal for it.'}`);
+  process.exit(1);
+}
 if (cmd === 'reject') { p.status = 'rejected'; p.reason_rejected = rest.join(' ') || ''; p.decided = today(); save(p); console.log(`Rejected ${id}. It won't be suggested again.`); }
 else if (cmd === 'later') { p.status = 'later'; p.decided = today(); save(p); console.log(`Parked ${id} in incubating. The scout brings it back when related work appears.`); }
 else if (cmd === 'approve' || cmd === 'edit') {
   const text = cmd === 'edit' ? rest.join(' ') : p.text;
   if (cmd === 'edit' && !text) { console.error('Give the new wording in quotes.'); process.exit(1); }
-  const L = loadLedger(); apply(L, p, text); writeJSON(ledgerPath(), L);
+  const L = loadLedger();
+  try { apply(L, p, text); } catch (e) { console.error(`Couldn't apply ${id}: ${e.message}. Nothing changed.`); process.exit(1); }
+  writeJSON(ledgerPath(), L);
   p.status = cmd === 'edit' ? 'edited' : 'approved'; p.final_text = text; p.decided = today(); save(p);
   console.log(`${cmd === 'edit' ? 'Edited and approved' : 'Approved'} ${id}. Ledger updated. Run: living-resume build && living-resume check`);
 } else { console.error(`Unknown action "${cmd}"`); process.exit(1); }
