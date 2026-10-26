@@ -72,7 +72,7 @@ test('Pro unlocks the scout and removes the credit link; deactivate returns to F
   const vk = path.join(dir, 'vendor-kit', 'profile.json'); const V = JSON.parse(fs.readFileSync(vk, 'utf8')); V.company = 'Rivera Design LLC'; V.overview = 'Product design.'; fs.writeFileSync(vk, JSON.stringify(V));
   const b = await cli(['build'], { dir, env: e });
   assert.doesNotMatch(fs.readFileSync(path.join(dir, 'dist', 'index.html'), 'utf8'), /Kept current with Living Résumé/);
-  if (/✓ Sam_Rivera_Resume\.pdf/.test(b.out)) assert.ok(fs.existsSync(path.join(dir, 'dist', 'capability-statement.pdf')), b.out);
+  if (!/capability statement needs Google Chrome/.test(b.out)) assert.ok(fs.existsSync(path.join(dir, 'dist', 'capability-statement.pdf')), b.out);
   const d = await cli(['license', 'deactivate'], { env: e }); assert.equal(d.code, 0);
   assert.ok(polar.calls.some((c) => c.ep === 'deactivate' && c.body.activation_id === 'act_1'));
   assert.equal((await cli(['scout'], { dir, env: e })).code, 3);
