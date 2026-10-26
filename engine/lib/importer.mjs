@@ -119,6 +119,8 @@ const HEAD = [
   ['contact', /^(contact|contact information|contact info)$/],
   ['other', /^(projects|languages|honors|honors (?:&|and) awards|awards|publications|interests|references|page \d+ of \d+)$/],
 ];
+// One-line role headers: "Title at Org", "Title | Org", "Title · Org", "Title, Org".
+const SEP = /\s+at\s+|\s+[|·]\s+|,\s+/;
 export function fromText(text, source = 'résumé') {
   const lines = String(text).replace(/\r/g, '').split('\n').map((l) => l.replace(/\s+$/, '')).filter((l) => !/^\s*page \d+ of \d+\s*$/i.test(l));
   const linkedinPdf = /linkedin\.com\/in\//i.test(text) && /\bTop Skills\b/.test(text);
@@ -146,15 +148,23 @@ export function fromText(text, source = 'résumé') {
     const l = raw.trim(); if (!l) continue;
     const m = l.match(RANGE_RE);
     if (m) {
-      // The role header is the run of non-bullet lines just above the dates (at most two).
-      let k = pending.length; while (k > 0 && pending.length - k < 2 && !/^[-*•▪●◦]/.test(pending[k - 1])) k--;
+      // What's left on the date line once the dates and any duration "(2 yrs 3 mos)" are removed.
+      // "(self-employed)" or "(Contract)" stays: it's part of the org.
+      const rest = l.replace(RANGE_RE, '').replace(/\([^)]*\d[^)]*\)|\(\s*\)/g, '').replace(/^[\s,|·–—-]+|[\s,|·–—-]+$/g, '');
+      const onDateLine = /[a-z]{2}/i.test(rest);
+      const parts = onDateLine ? rest.split(SEP).map((x) => x.trim()).filter(Boolean) : [];
+      // The role header is the run of non-bullet lines just above the dates: at most two, one when
+      // the date line also holds a name ("Org (self-employed)  Mar 2021 - Present"), none when it
+      // holds both title and org ("Title, Org 2017 - 2021").
+      const maxHead = parts.length >= 2 ? 0 : onDateLine ? 1 : 2;
+      let k = pending.length; while (k > 0 && pending.length - k < maxHead && !/^[-*•▪●◦]/.test(pending[k - 1])) k--;
       const head = pending.slice(k);
       if (role) role.bullets.push(...pending.slice(0, k).map((x) => x.replace(/^[-*•▪●◦]\s*/, '')));
       let title = '', org = '';
-      if (head.length === 2) [title, org] = linkedinPdf ? [head[1], head[0]] : head;
-      else if (head.length === 1) { const s = head[0].split(/\s+at\s+|\s+[|·]\s+|,\s+/); title = s[0]; org = s[1] || ''; }
-      const rest = l.replace(RANGE_RE, '').replace(/\(.*?\)/g, '').replace(/^[\s,|·-]+|[\s,|·-]+$/g, '');
-      if (rest && !title) title = rest;
+      if (parts.length >= 2) [title, org] = parts;
+      else if (head.length === 2) [title, org] = linkedinPdf ? [head[1], head[0]] : head;
+      else if (head.length === 1) { const s = head[0].split(SEP); title = s[0]; org = s[1] || rest; }
+      else if (onDateLine) title = rest;
       role = { title, org, location: '', start: parseDate(m[1]), end: parseDate(m[2]), bullets: [] };
       draft.roles.push(role); pending = [];
       continue;

@@ -102,3 +102,18 @@ test('text parser: LinkedIn "Save to PDF" order (company above title)', () => {
   const d = fromText(t);
   assert.equal(d.roles[0].org, 'Hooli'); assert.equal(d.roles[0].title, 'Senior Analyst'); assert.equal(d.roles[0].location, 'New York, NY');
 });
+
+test('role headers with the dates on the same line split into title and org', () => {
+  const d = fromText(['Pat Lee', 'Office Manager', '', 'Experience', 'Office Manager, Brightway Dental 2017 - 2021', '- Ran scheduling for four dentists', 'Line Cook | Harbor Grill | Jun 2014 - Aug 2016', '- Prepped and cooked for 200 covers a night', 'Photographer, Pat Lee Photo (self-employed) 2019 - Present', '- Shot weddings and family portraits'].join('\n'));
+  assert.deepEqual(d.roles.map((r) => [r.title, r.org, r.start, r.end]), [
+    ['Office Manager', 'Brightway Dental', '2017', '2021'],
+    ['Line Cook', 'Harbor Grill', '2014-06', '2016-08'],
+    ['Photographer', 'Pat Lee Photo (self-employed)', '2019', null],
+  ]);
+  assert.deepEqual(d.roles.map((r) => r.bullets), [['Ran scheduling for four dentists'], ['Prepped and cooked for 200 covers a night'], ['Shot weddings and family portraits']]);
+});
+
+test('a title line above a date line that holds the org keeps both', () => {
+  const d = fromText(['Maya Lee', 'Marketer', '', 'Experience', 'Freelance Marketing Consultant', 'Okafor-Reyes Marketing (self-employed)    Mar 2021 - Present', '- Run email marketing for retainer clients'].join('\n'));
+  assert.deepEqual([d.roles[0].title, d.roles[0].org, d.roles[0].start], ['Freelance Marketing Consultant', 'Okafor-Reyes Marketing (self-employed)', '2021-03']);
+});

@@ -45,7 +45,7 @@ Most users don't code. Never show commands, file paths, or JSON unless they ask.
 1. `init` (asks nothing if a workspace exists). Pass `--name` and `--email` if the user gave them.
 2. Ask for one source: the LinkedIn data export (LinkedIn → Settings → Data privacy → Get a copy of your data; the .zip works as is), or a résumé PDF, DOCX, or text file. For the MCP tool, copy the file into the workspace's `quarantine/in/imports/` first.
 3. `import <file>`. If quarantine stops it, tell the user why and stop.
-4. Read `imports/<stamp>.draft.json` and the proposals it created. Fix obvious parsing slips **in the proposal files only** (a title and company swapped, a wrapped line split in two, a location read as a bullet). Don't change meaning or add claims.
+4. Read `imports/<stamp>.draft.json` and the proposals it created. Fix obvious parsing slips (a title and company swapped or run together, a wrapped line split in two, a location read as a bullet) **in the proposal files**, plus the role headers (`title`, `org`, `location`, `start`, `end`) of `experience[]` in `resume/ledger.json`, which import sets up without a proposal. Touch nothing else in the ledger. Don't change meaning or add claims.
 5. Ask for anything the résumé needs that the source didn't have (location, website, the role they want next). Then walk through the review below. Offer "approve all from this import" only if the user asks for it (`review approve-all <import-prefix>`).
 
 ## "Catch up my résumé"
