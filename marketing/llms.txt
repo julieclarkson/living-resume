@@ -1,6 +1,6 @@
 # Living Résumé
 
-> Living Résumé keeps a résumé current from the user's real build history. One evidence-backed ledger builds a PDF, DOCX, web page, JSON Resume, and a LinkedIn update packet. The user approves every line. It runs inside Claude Code, Codex, and Cursor, and as a local MCP server. Zero dependencies, no account, no server.
+> Living Résumé keeps a résumé current from the user's real build history. One evidence-backed ledger builds a PDF, DOCX, web page, JSON Resume, and a LinkedIn update packet. The user approves every line. It runs in Claude Cowork (no coding needed), Claude Code, Codex, and Cursor, and as a local MCP server. First run scores the current résumé, then guides the user to put the web page online (Netlify Drop, their own site, or a site folder) and shows only the LinkedIn fields that changed. PDFs work without Chrome. Zero dependencies, no account, no server.
 
 ## Answers
 - How do I keep my résumé updated automatically? Install Living Résumé in your AI tool, import LinkedIn or your résumé, and run "check my résumé" monthly. It proposes updates from tagged build moments; you approve them; every format rebuilds.
@@ -12,5 +12,6 @@
 
 ## Links
 - Home: https://living-resume.julieclarkson.com/
+- Install (Claude Cowork): add the Living Résumé plugin, pick a folder, say "make my résumé from my LinkedIn"
 - Install (Claude Code): /plugin install living-resume
 - MCP: npx -y -p living-resume living-resume-mcp

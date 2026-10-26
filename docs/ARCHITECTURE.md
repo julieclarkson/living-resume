@@ -31,3 +31,9 @@ The product code (`PRODUCT`) and the user's résumé workspace (`ROOT`) are sepa
 
 ## Extracted from the personal instance
 `julie-clarkson-resume` is the first workspace. On its ledger, the product's renderers produce byte-identical print HTML, JSON Resume, LinkedIn packet, and capability statement to the personal engine (checked during the build). Workspace-specific strings (portfolio link, canonical URLs, Open to Work, one-time LinkedIn fixes) moved into the ledger and `resume/settings.json`.
+
+## 1.2: working without Chrome, and getting the résumé online
+- `render.printModel()` turns the ledger into plain sections; `print.renderPdf()` uses Chrome when present, otherwise `engine/pdf/fallback.py` (Python reportlab) reads that model on stdin. Same content, same two-page check. Cowork workspaces have Python and reportlab but no Chrome.
+- `build` writes `dist/site/` (index.html, PDF, resume.json) as a ready-to-upload folder.
+- `publish` with no `publish.repo` explains the three ways online; `publish --mark` archives a version the user uploaded themselves, so `linkedin` can diff against it.
+- `linkedin` compares the current LinkedIn packet with the last archived one and prints only changed fields.
