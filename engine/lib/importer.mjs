@@ -257,9 +257,10 @@ export function fromText(text, source = 'résumé') {
   for (const l of (sections.certifications || []).map((x) => x.trim()).filter(Boolean)) draft.certifications.push({ name: l.replace(/^[-*•]\s*/, '') });
   for (const l of (sections.volunteer || []).map((x) => x.trim()).filter(Boolean)) draft.volunteer.push({ text: l.replace(/^[-*•]\s*/, '') });
   // A wrapped publication (PDF text: an indented line, or the line above ends with a comma) joins the one above.
+  // A page break (form feed) is not an indent.
   for (const raw of sections.publications || []) {
     const l = raw.trim(); if (!l) continue; const prev = draft.publications.at(-1);
-    if (prev && !MARK.test(l) && (/^\s/.test(raw) || /,$/.test(prev))) draft.publications[draft.publications.length - 1] = `${prev} ${l}`; else draft.publications.push(l.replace(MARK, ''));
+    if (prev && !MARK.test(l) && (/^[ \t]/.test(raw) || /,$/.test(prev))) draft.publications[draft.publications.length - 1] = `${prev} ${l}`; else draft.publications.push(l.replace(MARK, ''));
   }
   return draft;
 }
