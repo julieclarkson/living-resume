@@ -156,7 +156,8 @@ const MARK = /^(?:[•▪●◦]|[-*](?=\s))\s*/;
 const looksLikeHeader = (l) => !!l && !MARK.test(l) && /^[A-Z]/.test(l) && !/[.;:]$/.test(l) && l.length <= 120 && (STRONG.test(l) || !!cutLocation(l)[1]);
 const looksLikeTitle = (l, before) => !!l && !MARK.test(l) && /^[A-Z]/.test(l) && !/[.;:]$/.test(l) && l.length <= 80 && (before === undefined || MARK.test(before) || /[.!?]$/.test(before));
 function headerAbove(pending) {
-  for (let i = pending.length - 2; i >= 0; i--) if (MARK.test(pending[i + 1]) && looksLikeHeader(pending[i])) return i;
+  // Looks back at most 60 lines (one role's worth), so a huge file can't make this slow.
+  for (let i = pending.length - 2; i >= Math.max(0, pending.length - 60); i--) if (MARK.test(pending[i + 1]) && looksLikeHeader(pending[i])) return i;
   return -1;
 }
 const titleCase = (s) => s.toLowerCase().replace(/(^|[\s'-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase());
