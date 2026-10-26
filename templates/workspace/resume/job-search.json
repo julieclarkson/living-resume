@@ -15,7 +15,7 @@
   "avoid_about": "Words that rule a listing out, e.g. \"crypto\", \"senior director\".",
   "avoid_companies": [],
   "companies": [],
-  "companies_about": "Companies to check every day. Each is { \"name\": \"Vercel\", \"board\": \"greenhouse:vercel\" }. The board is the provider and the last part of their careers page address: boards.greenhouse.io/<slug>, jobs.lever.co/<slug>, or jobs.ashbyhq.com/<slug>.",
+  "companies_about": "Companies to check every day. Each is { \"name\": \"Vercel\", \"board\": \"greenhouse:vercel\" }. The board is the provider and the last part of their careers page address: boards.greenhouse.io/<slug>, jobs.lever.co/<slug>, jobs.ashbyhq.com/<slug>, apply.workable.com/<slug>, or jobs.smartrecruiters.com/<slug>.",
   "daily_limit": 10,
   "min_fit": 40,
   "schedule_about": "Optional. { \"days\": [\"wednesday\"], \"time\": \"08:00\", \"ai_review\": false }. Most new listings go up Monday to Wednesday. Without AI review a run uses no AI tokens."

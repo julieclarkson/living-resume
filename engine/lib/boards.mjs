@@ -1,10 +1,12 @@
-// Public job boards: the open listing feeds that Greenhouse, Lever, and Ashby publish for each
-// company's careers page. No accounts, no scraping, no login. Only these three hosts are ever
-// contacted, over https, with a size cap and a timeout. Everything fetched is untrusted text.
+// Public job boards: the open listing feeds that Greenhouse, Lever, Ashby, Workable, and
+// SmartRecruiters publish for each company's careers page. No accounts, no scraping, no login.
+// Only those five API hosts are ever contacted, over https, with a size cap and a timeout.
+// Everything fetched is untrusted text.
 //
-// A board is "<provider>:<company-slug>", e.g. "greenhouse:vercel", "lever:plaid", "ashby:linear".
-// The slug is the last part of the company's careers URL (boards.greenhouse.io/<slug>,
-// jobs.lever.co/<slug>, jobs.ashbyhq.com/<slug>).
+// A board is "<provider>:<company-slug>", e.g. "greenhouse:vercel", "lever:metr", "ashby:linear",
+// "workable:huggingface", "smartrecruiters:Canva". The slug is the last part of the company's
+// careers URL: boards.greenhouse.io/<slug>, jobs.lever.co/<slug>, jobs.ashbyhq.com/<slug>,
+// apply.workable.com/<slug>, jobs.smartrecruiters.com/<slug>.
 
 import crypto from 'node:crypto';
 
@@ -15,7 +17,10 @@ export const PROVIDERS = {
   greenhouse: { host: 'https://boards-api.greenhouse.io', path: (s) => `/v1/boards/${s}/jobs?content=true` },
   lever: { host: 'https://api.lever.co', path: (s, skip = 0) => `/v0/postings/${s}?mode=json&limit=100&skip=${skip}` },
   ashby: { host: 'https://api.ashbyhq.com', path: (s) => `/posting-api/job-board/${s}?includeCompensation=true` },
+  workable: { host: 'https://www.workable.com', path: (s) => `/api/accounts/${s}?details=true` },
+  smartrecruiters: { host: 'https://api.smartrecruiters.com', path: (s, offset = 0) => `/v1/companies/${s}/postings?limit=100&offset=${offset}`, detail: (s, id) => `/v1/companies/${s}/postings/${id}` },
 };
+const DETAILS = 60; // SmartRecruiters lists titles only; full text is fetched for at most this many title matches
 const SLUG = /^[a-z0-9][a-z0-9._-]{0,79}$/i;
 const MAX_BYTES = 12 * 1024 * 1024;
 const MAX_TEXT = 20_000; // characters of listing text kept (enough to score; keeps storage small)
@@ -33,8 +38,8 @@ function origin(provider) {
 }
 
 export function parseBoard(board) {
-  const m = String(board || '').trim().match(/^(greenhouse|lever|ashby):(.+)$/i);
-  if (!m || !SLUG.test(m[2])) throw new Error(`"${board}" isn't a board. Use greenhouse:<slug>, lever:<slug>, or ashby:<slug>.`);
+  const m = String(board || '').trim().match(/^(greenhouse|lever|ashby|workable|smartrecruiters):(.+)$/i);
+  if (!m || !SLUG.test(m[2])) throw new Error(`"${board}" isn't a board. Use greenhouse:, lever:, ashby:, workable:, or smartrecruiters: followed by the company's slug.`);
   return { provider: m[1].toLowerCase(), slug: m[2] };
 }
 
@@ -79,6 +84,23 @@ function norm(provider, slug, company, j) {
     url: https(j.hostedUrl), applyUrl: https(j.applyUrl || j.hostedUrl), posted: j.createdAt ? iso(j.createdAt) : null,
     text: [j.descriptionPlain || htmlToText(j.description), ...(Array.isArray(j.lists) ? j.lists : []).map((l) => `${l?.text || ''}\n${htmlToText(l?.content)}`), j.additionalPlain || ''].join('\n'),
   };
+  if (provider === 'workable') {
+    const loc = j.location || {}; const where = [j.city || loc.city, j.state || loc.region, j.country || loc.country].filter(Boolean).join(', ');
+    const url = https(j.url || j.shortlink || (j.shortcode ? `https://apply.workable.com/${slug}/j/${j.shortcode}/` : ''));
+    return {
+      id: `wk-${slug}-${j.shortcode || j.id || j.code}`, title: j.title, location: where, remote: (j.telecommuting ?? loc.telecommuting) === true ? true : workplace(j.workplace_type || j.workplace),
+      type: j.employment_type || null, pay: null, url, applyUrl: https(j.application_url) || url, posted: j.published_on || j.created_at || null, text: htmlToText([j.description, j.requirements, j.benefits].filter(Boolean).join('\n')),
+    };
+  }
+  if (provider === 'smartrecruiters') {
+    const loc = j.location || {}; const s = j.jobAd?.sections || {};
+    const url = https(j.postingUrl || `https://jobs.smartrecruiters.com/${slug}/${j.id}`);
+    return {
+      id: `sr-${slug}-${j.id}`, title: j.name, location: loc.fullLocation || [loc.city, loc.region, loc.country].filter(Boolean).join(', '), remote: loc.remote === true || loc.fullyRemote === true ? true : loc.hybrid === true ? false : null,
+      type: j.typeOfEmployment?.label || null, pay: null, url, applyUrl: https(j.applyUrl) || url, posted: j.releasedDate || null,
+      text: htmlToText([s.jobDescription?.text, s.qualifications?.text, s.additionalInformation?.text].filter(Boolean).join('\n')),
+    };
+  }
   return { // ashby
     id: `ab-${slug}-${j.id}`, title: j.title, location: j.location || j.address?.postalAddress?.addressLocality, remote: j.isRemote === true ? true : workplace(j.workplaceType),
     type: j.employmentType || null, pay: j.compensation?.compensationTierSummary || j.compensation?.scrapeableCompensationSalarySummary || null,
@@ -86,15 +108,25 @@ function norm(provider, slug, company, j) {
   };
 }
 
-export async function fetchBoard(board, company) {
+// want(title): which listings are worth full text (SmartRecruiters only). details: false for a quick count.
+export async function fetchBoard(board, company, { want = () => true, details = true } = {}) {
   const { provider, slug } = parseBoard(board);
   const base = origin(provider); const P = PROVIDERS[provider];
   let raw = [];
   if (provider === 'lever') {
     for (let skip = 0; skip < 1000; skip += 100) { const page = await getJSON(base + P.path(slug, skip)); if (!Array.isArray(page)) throw new Error('unexpected response'); raw.push(...page); if (page.length < 100) break; }
+  } else if (provider === 'smartrecruiters') {
+    for (let off = 0; off < 1000; off += 100) { const page = await getJSON(base + P.path(slug, off)); if (!Array.isArray(page?.content)) throw new Error('unexpected response'); raw.push(...page.content); if (page.content.length < 100) break; }
+    if (details) {
+      let n = 0;
+      raw = await Promise.all(raw.map(async (j) => {
+        if (!j || typeof j.name !== 'string' || !want(j.name) || n >= DETAILS || !/^[\w-]{1,64}$/.test(String(j.id))) return j;
+        n++; try { return { ...j, ...(await getJSON(base + P.detail(slug, j.id))) }; } catch { return j; }
+      }));
+    }
   } else {
     const j = await getJSON(base + P.path(slug));
-    raw = provider === 'greenhouse' ? j.jobs : j.jobs;
+    raw = j?.jobs;
     if (!Array.isArray(raw)) throw new Error('unexpected response');
     if (provider === 'ashby') raw = raw.filter((x) => x.isListed !== false);
   }

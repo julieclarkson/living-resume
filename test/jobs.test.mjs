@@ -38,6 +38,15 @@ const boards = http.createServer((req, res) => {
   if (req.url.startsWith('/ashby/posting-api/job-board/gamma')) return send({ jobs: [
     { id: 'g1', title: 'Front-End Developer, Crypto Wallet', jobUrl: 'https://jobs.ashbyhq.com/gamma/g1', applyUrl: 'https://jobs.ashbyhq.com/gamma/g1/application', isRemote: true, employmentType: 'Contract', descriptionPlain: good },
   ] });
+  if (req.url.startsWith('/workable/api/accounts/delta')) return send({ name: 'Delta', jobs: [
+    { title: 'Front-End Developer', shortcode: 'ABC123', url: 'https://apply.workable.com/delta/j/ABC123/', application_url: 'https://apply.workable.com/delta/j/ABC123/apply/', telecommuting: true, employment_type: 'Contract', city: 'Austin', country: 'United States', description: `<p>${good}</p>` },
+  ] });
+  if (/^\/smartrecruiters\/v1\/companies\/Echo\/postings\/sr1/.test(req.url)) return send({ id: 'sr1', name: 'Front-End Developer', jobAd: { sections: { jobDescription: { text: `<p>${good}</p>` } } }, postingUrl: 'https://jobs.smartrecruiters.com/Echo/sr1' });
+  if (/^\/smartrecruiters\/v1\/companies\/Echo\/postings\/sr2/.test(req.url)) { res.writeHead(500); return res.end('{}'); } // never asked for: title doesn't match
+  if (req.url.startsWith('/smartrecruiters/v1/companies/Echo/postings')) return send({ totalFound: 2, content: [
+    { id: 'sr1', name: 'Front-End Developer', location: { city: 'Remote', remote: true }, typeOfEmployment: { label: 'Contract' } },
+    { id: 'sr2', name: 'Accountant', location: { city: 'Boston' }, typeOfEmployment: { label: 'Full-time' } },
+  ] });
   res.writeHead(404); res.end('{}');
 });
 await new Promise((r) => boards.listen(0, '127.0.0.1', r));
@@ -51,12 +60,12 @@ const proEnv = async () => {
   return env;
 };
 const CRIT = { looking_for: 'Remote contract front-end work, nothing in crypto', titles: ['front-end developer'], work_type: ['contract'], remote: 'required', avoid: ['crypto'],
-  companies: [{ name: 'Acme', board: 'greenhouse:acme' }, { name: 'Beta', board: 'lever:beta' }, { name: 'Gamma', board: 'ashby:gamma' }], min_fit: 10 };
+  companies: [{ name: 'Acme', board: 'greenhouse:acme' }, { name: 'Beta', board: 'lever:beta' }, { name: 'Gamma', board: 'ashby:gamma' }, { name: 'Delta', board: 'workable:delta' }, { name: 'Echo', board: 'smartrecruiters:Echo' }], min_fit: 10, daily_limit: 20 };
 
 test('criteria: saved from plain settings, validated, and described back in plain words', () => {
   const dir = ready();
   const r = cli(['jobs', 'criteria', '--set', JSON.stringify(CRIT)], { dir });
-  assert.equal(r.code, 0, r.out); assert.match(r.out, /In your words: "Remote contract front-end work/); assert.match(r.out, /Companies watched: Acme, Beta, Gamma/);
+  assert.equal(r.code, 0, r.out); assert.match(r.out, /In your words: "Remote contract front-end work/); assert.match(r.out, /Companies watched: Acme, Beta, Gamma, Delta, Echo/);
   assert.notEqual(cli(['jobs', 'criteria', '--set', '{"remote":"sometimes"}'], { dir }).code, 0);
   assert.notEqual(cli(['jobs', 'criteria', '--set', '{"companies":[{"name":"X","board":"monster:x"}]}'], { dir }).code, 0);
   assert.notEqual(cli(['jobs', 'criteria', '--set', '{"companies":[{"name":"X","board":"greenhouse:../../etc"}]}'], { dir }).code, 0);
@@ -74,11 +83,11 @@ test('find: reads all three boards, screens, holds injections, ranks, and writes
   cli(['jobs', 'criteria', '--set', JSON.stringify(CRIT)], { dir });
   const r = await cliAsync(['jobs', 'find'], { dir, env });
   assert.equal(r.code, 0, r.out);
-  assert.match(r.out, /Checked 3 of 3 company boards/);
+  assert.match(r.out, /Checked 5 of 5 company boards/);
   const bo = await cliAsync(['jobs', 'boards'], { dir, env }); assert.match(bo.out, /✓ Acme \(greenhouse:acme\): 3 open listings/); assert.match(bo.out, /All boards answered/); assert.match(r.out, /held by the safety scan/);
   const t = JSON.parse(fs.readFileSync(path.join(dir, 'jobs', 'today.json'), 'utf8'));
   const ids = t.matches.map((m) => m.id);
-  assert.deepEqual(ids.sort(), [GH1, LV1, listingId('lv', 'beta', 'lv-beta-ccc-333'), listingId('lv', 'beta', 'lv-beta-ddd-444')].sort(), r.out); // a bad date or character code skips nothing; 'unspecified' + 'Remote - US' counts as remote; // sales (title), onsite full-time, crypto, and the injection are out
+  assert.deepEqual(ids.sort(), [GH1, LV1, listingId('lv', 'beta', 'lv-beta-ccc-333'), listingId('lv', 'beta', 'lv-beta-ddd-444'), listingId('wk', 'delta', 'wk-delta-ABC123'), listingId('sr', 'Echo', 'sr-Echo-sr1')].sort(), r.out); // a bad date or character code skips nothing; 'unspecified' + 'Remote - US' counts as remote; // sales (title), onsite full-time, crypto, and the injection are out
   for (const m of t.matches) { assert.ok(m.fit >= 10); assert.ok(['high', 'medium'].includes(m.confidence)); assert.ok(m.covered.length); }
   const html = fs.readFileSync(path.join(dir, 'jobs', 'today.html'), 'utf8');
   assert.match(html, /href="https:\/\/jobs\.lever\.co\/beta\/aaa-111\/apply"[^>]*>Apply</);
@@ -86,10 +95,11 @@ test('find: reads all three boards, screens, holds injections, ranks, and writes
   assert.match(html, /Content-Security-Policy" content="default-src 'none'/); assert.doesNotMatch(html, /<script/i);
   assert.match(html, /href="\.\.\/dist\/Sam_Rivera_Resume\.pdf"/);
   // Only the three public board hosts' paths were requested.
-  assert.ok(hits.every((h) => /^\/(greenhouse|lever|ashby)\//.test(h)));
+  assert.ok(hits.every((h) => /^\/(greenhouse|lever|ashby|workable|smartrecruiters)\//.test(h)));
+  assert.ok(!hits.some((h) => /postings\/sr2/.test(h)), 'only title matches get full text');
   // Seen listings don't come back tomorrow; a second run today shows the same ones.
   const again = await cliAsync(['jobs', 'today'], { dir, env });
-  assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'jobs', 'today.json'), 'utf8')).matches.length, 4, again.out);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'jobs', 'today.json'), 'utf8')).matches.length, 6, again.out);
 });
 
 test('note, dismiss, applied, read; add from elsewhere; a listing is data, not instructions', async () => {
@@ -126,7 +136,7 @@ test('boards: refuses non-local test origins and odd board names', async () => {
   assert.deepEqual(parseBoard('Lever:plaid'), { provider: 'lever', slug: 'plaid' });
   const dir = ready(); cli(['jobs', 'criteria', '--set', JSON.stringify(CRIT)], { dir });
   const r = await cliAsync(['jobs', 'find'], { dir, env: { ...(await proEnv()), LIVING_RESUME_BOARDS_ORIGIN: 'http://evil.example.com' } });
-  assert.match(r.out, /must be a local http address/); assert.match(r.out, /Checked 0 of 3/);
+  assert.match(r.out, /must be a local http address/); assert.match(r.out, /Checked 0 of 5/);
   assert.match((await cliAsync(['jobs', 'find'], { dir: ready(), env: await proEnv() })).out, /Set up your job search first/);
 });
 
