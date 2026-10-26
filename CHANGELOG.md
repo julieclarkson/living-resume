@@ -1,6 +1,9 @@
 # Changelog
 
 ## 1.3.0 · 2026-10-26 (unreleased)
+- **Headings are each person's own:** `heading <section> "Text"` (MCP `resume_heading`) renames a section in every format, stored in that person's ledger.
+- **LinkedIn: profile data only.** The guide and skill say to export only profile items; import keeps only the profile files it read (never connections, messages or contacts).
+- Coach: a "fit on two pages" lift when the last PDF runs long; only current or last-10-year roles count as recent.
 - **Make it stronger: an honest coach, not a formatter.** `coach` (MCP `resume_coach`, read-only) scores the approved, public lines out of 100 and lists the 3 biggest lifts, then line-by-line suggestions: duty phrasing, bullets with no number or result, size without an outcome, vague words, long bullets, a first-person summary, shorthand headlines, thin recent roles, a volunteer role above paid roles, year-only dates, a missing target. Each has the ledger id, why, and 1-3 questions to ask you. It never writes wording: your AI rewrites only from your answers, as proposals you approve. `check` shows the lifts as Suggestions that never fail. The skill asks the target first, interviews 5 questions at a time, and does a hiring-manager review before handing over.
 - **Proof links:** an optional public https `link` on a line (proposals and ledger) shows on the web page and in JSON Resume, never in the PDF body; evidence stays private; anything but https is refused.
 - **Publications and talks:** a `publications` section in every format; import places "Publications", "Speaking", "Talks" headings there.

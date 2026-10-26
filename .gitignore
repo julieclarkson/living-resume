@@ -4,3 +4,6 @@ node_modules/
 .state/
 # never commit a personal résumé workspace into the product
 Living-Resume/
+
+# Usability test runs (dev-only, never released)
+usability/
