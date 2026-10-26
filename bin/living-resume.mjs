@@ -45,7 +45,7 @@ if (cmd === '--version' || cmd === 'version') {
 if (!COMMANDS.includes(cmd)) { console.error(`Unknown command "${argv[0]}". Run: living-resume help`); process.exit(2); }
 
 // Commands that change the workspace run one at a time.
-if (['import', 'add', 'inbox', 'review', 'roles', 'build', 'publish', 'apply', 'jobs', 'scout'].includes(cmd) && !(['review', 'inbox', 'roles', 'jobs'].includes(cmd) && (!argv[1] || ['all', 'list', 'show', 'schedule', 'read'].includes(argv[1]) || (cmd === 'jobs' && argv[1] === 'criteria' && !argv.includes('--set'))))) {
+if (['import', 'add', 'inbox', 'review', 'roles', 'build', 'publish', 'apply', 'jobs', 'scout'].includes(cmd) && !(['review', 'inbox', 'roles', 'jobs'].includes(cmd) && (!argv[1] || ['all', 'list', 'show', 'schedule', 'read', 'boards'].includes(argv[1]) || (cmd === 'jobs' && argv[1] === 'criteria' && !argv.includes('--set'))))) {
   const { lockWorkspace, isWorkspace } = await import('../engine/lib/util.mjs');
   if (isWorkspace()) { try { lockWorkspace(); } catch (e) { console.error(`✗ ${e.message}`); process.exit(4); } }
 }

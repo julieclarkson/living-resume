@@ -1,5 +1,6 @@
 // jobs                                   what you're looking for, and today's matches
 // jobs criteria [--set '<json>']         show or change what you're looking for (resume/job-search.json)
+// jobs boards                           check that every company board in your list answers (run once after setup)
 // jobs find                     (Pro)    check every company board in your list, then rank (one daily run)
 // jobs add <file> --url <link> --title "…" --company "…" [--location "…"] [--remote yes|no] [--type contract]
 //                                        add a listing found elsewhere (a job alert email, a web search)
@@ -216,6 +217,14 @@ if (sub === 'show' || sub === 'list') {
   const errs = validateCrit(next); if (errs.length) die(errs.join('\n  '));
   writeJSON(CRIT, next);
   console.log(`✓ Saved.\n${describe(next)}`);
+} else if (sub === 'boards') {
+  const c = goodCrit(); if (!c.companies?.length) die('No companies in your list yet.');
+  let bad = 0;
+  for (const co of c.companies) {
+    try { const n = (await fetchBoard(co.board, co.name)).length; console.log(`✓ ${co.name} (${co.board}): ${n} open listing${n === 1 ? '' : 's'}`); }
+    catch (e) { bad++; console.log(`✗ ${co.name} (${co.board}): ${e.message}`); }
+  }
+  console.log(bad ? `\n${bad} board${bad === 1 ? '' : 's'} didn't answer. A "not found" usually means the company uses a different hiring system or name; ask your AI tool to fix or remove ${bad === 1 ? 'it' : 'them'}. "couldn't connect" means this tool has no internet access to job boards; run it from your computer's Terminal instead.` : '\nAll boards answered.');
 } else if (sub === 'find') {
   await pro('jobs');
   const c = goodCrit();

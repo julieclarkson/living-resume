@@ -3,6 +3,7 @@ quarantine/
 scout/
 applications/
 jobs/
+resume/job-search.json
 inbox/
 imports/
 dist/resume-print.html

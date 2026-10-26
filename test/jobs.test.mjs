@@ -74,7 +74,8 @@ test('find: reads all three boards, screens, holds injections, ranks, and writes
   cli(['jobs', 'criteria', '--set', JSON.stringify(CRIT)], { dir });
   const r = await cliAsync(['jobs', 'find'], { dir, env });
   assert.equal(r.code, 0, r.out);
-  assert.match(r.out, /Checked 3 of 3 company boards/); assert.match(r.out, /held by the safety scan/);
+  assert.match(r.out, /Checked 3 of 3 company boards/);
+  const bo = await cliAsync(['jobs', 'boards'], { dir, env }); assert.match(bo.out, /✓ Acme \(greenhouse:acme\): 3 open listings/); assert.match(bo.out, /All boards answered/); assert.match(r.out, /held by the safety scan/);
   const t = JSON.parse(fs.readFileSync(path.join(dir, 'jobs', 'today.json'), 'utf8'));
   const ids = t.matches.map((m) => m.id);
   assert.deepEqual(ids.sort(), [GH1, LV1, listingId('lv', 'beta', 'lv-beta-ccc-333'), listingId('lv', 'beta', 'lv-beta-ddd-444')].sort(), r.out); // a bad date or character code skips nothing; 'unspecified' + 'Remote - US' counts as remote; // sales (title), onsite full-time, crypto, and the injection are out

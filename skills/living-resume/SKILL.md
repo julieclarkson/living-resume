@@ -91,7 +91,7 @@ A short list of open jobs that fit, scored against the user's approved résumé,
 8. **How many matches per run, and how strong?** Default 10 at 40% fit. → `daily_limit`, `min_fit`
 9. **How often, and should Claude review each match?** Suggest weekly on Wednesday morning: most new listings are posted Monday to Wednesday, and applying early helps. Twice a week (Tuesday and Thursday) if speed matters most. A review means Claude reads each match and writes a one-line take, about 3–5k tokens per match, so roughly 30–50k tokens for 10 matches. Without a review the run costs no tokens: they get the page, and Claude only steps in when they say "prepare" for a job. → `schedule: { "days": [...], "time": "08:00", "ai_review": true|false }`
 
-Save with `jobs criteria --set '<json>'` (MCP: `resume_jobs_criteria`), filling only what they said. Read it back with `jobs` and confirm before the first run.
+Save with `jobs criteria --set '<json>'` (MCP: `resume_jobs_criteria`), filling only what they said. Read it back with `jobs` and confirm before the first run. Then `jobs boards` checks every company's board; fix or remove any that aren't found. If this tool has no internet access to job boards ("couldn't connect"), say so plainly: the no-AI timer on their computer can reach them, and here you can add listings from web search with `jobs add`.
 
 **Never read the user's email or messages for this,** and never log in to a job site or scrape one. Sources are the public boards of the companies they chose, plus listings from public web pages and web search only if they ask for that.
 
