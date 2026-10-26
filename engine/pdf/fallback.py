@@ -111,9 +111,12 @@ def main():
                 body.append(Paragraph(f"<b>{e(r['strong'])}</b>{e(r['rest'])}", st['body']))
                 if r.get('note'): body.append(Paragraph(e(r['note']), st['note']))
                 body.append(Spacer(1, 3))
+            if sec.get('certLine'): body.append(Paragraph(e(sec['certLine']), st['note']))
             if sec.get('certsLabel'): body.append(Paragraph(f"<b>{e(sec['certsLabel'])}</b>", st['body']))
             if sec.get('certList'): body.append(bullets(sec['certList']))
             s.append(KeepTogether(head + body))
+        elif k == 'para':
+            s.append(KeepTogether(head + [Paragraph(e(sec['text']), st['body'])]))
         elif k == 'cols':
             items = sec['items']; half = (len(items) + 1) // 2
             if len(items) <= 2:  # one or two lines read better as a plain list than as two columns

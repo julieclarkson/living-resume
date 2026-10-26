@@ -88,3 +88,34 @@ test('experience renders newest first in every format, whatever order the ledger
   const V = applyRole(L, { name: 'x', order: ['r2001'] }); // a role profile may put a role first
   assert.ok(printHtml(V).indexOf('Coordinator') < printHtml(V).indexOf('Director'));
 });
+
+test('per-person date style: "years" always shows years, default shows months when every role has them', () => {
+  const r = (id, start, end) => ({ ...role(id, 'Lead', 'Acme', start, 'Ran it'), end });
+  const L = { ...base(), experience: [r('a', '2019-08', null), r('b', '2012-07', '2019-06')] };
+  assert.match(printHtml(L), /Aug 2019 to present/);
+  assert.match(printHtml({ ...L, dateStyle: 'years' }), /2019 to present/); assert.doesNotMatch(printHtml({ ...L, dateStyle: 'years' }), /Aug 2019/);
+  const mixed = { ...L, experience: [r('a', '2019-08', null), r('b', '2012', '2019')], dateStyle: 'months' };
+  assert.match(printHtml(mixed), /Aug 2019 to present/); assert.match(printHtml(mixed), /2012 to 2019/);
+  assert.equal(printModel({ ...L, dateStyle: 'years' }).sections[0].jobs[0].when, '2019 to present');
+});
+
+test('interests follow their own surfaces: on the PDF when approved for it, and split by sentence in JSON Resume', async () => {
+  const { jsonResume, interestList } = await import('../engine/lib/render.mjs');
+  const text = 'Ran a marathon and several half marathons. Golf, tennis, and walking dogs.';
+  const L = { ...base(), interests: item('interests', text) };
+  assert.match(printHtml(L), /Outside of work/); assert.match(printHtml(L), /Ran a marathon/);
+  assert.ok(printModel(L).sections.some((s) => s.kind === 'para' && s.text === text));
+  const webOnly = { ...base(), interests: item('interests', text, { surfaces: ['web', 'json'] }) };
+  assert.doesNotMatch(printHtml(webOnly), /Outside of work/);
+  assert.match(printHtml({ ...L, headings: { interests: 'Off the clock' } }), /Off the clock/);
+  assert.deepEqual(interestList(text), ['Ran a marathon and several half marathons', 'Golf', 'tennis', 'walking dogs']);
+  assert.deepEqual(jsonResume(L).interests[0].keywords, interestList(text));
+});
+
+test('certStyle "line" writes one or two certificates as one line; three stay a list', () => {
+  const L = { ...base(), certStyle: 'line', education: [item('e1', 'BA English', { institution: 'Smith College' })], certifications: [item('c1', 'Google UX Design'), item('c2', 'CPR and First Aid')] };
+  assert.match(printHtml(L), /Certificates in Google UX Design and CPR and First Aid/);
+  assert.equal(printModel(L).sections.find((s) => s.kind === 'edu').certLine, 'Certificates in Google UX Design and CPR and First Aid');
+  const three = { ...L, certifications: [...L.certifications, item('c3', 'Forklift')] };
+  assert.doesNotMatch(printHtml(three), /Certificates in/);
+});

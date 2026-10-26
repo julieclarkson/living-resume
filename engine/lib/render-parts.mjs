@@ -2,10 +2,12 @@
 import { esc, mdPlain, shows, roleShows, fmtMonth, fmtYears, httpsUrl, hostOf, allItems } from './util.mjs';
 
 const month = (d) => /^\d{4}-\d{2}$/.test(String(d || ''));
-/** Dates for a role list: "Mar 2021 to present" when every shown role has months, else "2021 to present". */
+/** Dates for a role list: "Mar 2021 to present" when every shown role has months, else "2021 to present".
+ *  A person can choose with ledger "dateStyle": "years" (always years) or "months" (months wherever known). */
 export function dateFormat(L, S) {
   const shown = (L.experience || []).filter((r) => roleShows(r, S));
-  const all = shown.length && shown.every((r) => month(r.start) && (!r.end || month(r.end)));
+  const all = L.dateStyle === 'years' ? false : shown.length && shown.every((r) => month(r.start) && (!r.end || month(r.end)));
+  if (L.dateStyle === 'months') return (r) => `${month(r.start) ? fmtMonth(r.start) : String(r.start || '').slice(0, 4)} to ${r.end ? (month(r.end) ? fmtMonth(r.end) : String(r.end).slice(0, 4)) : 'present'}`;
   return (r) => (all ? `${fmtMonth(r.start)} to ${r.end ? fmtMonth(r.end) : 'present'}` : fmtYears(r.start, r.end));
 }
 /** A line's public proof link on the web page: " · <a>host</a>" (https only; never in the PDF body). */

@@ -1,11 +1,11 @@
 // heading                      show this résumé's section headings
 // heading <section> "Text"     rename a section for this person only (stored in their own ledger)
 // heading <section> --reset    back to the default
-// Sections: experience · howIWork · skills · education · community · publications
+// Sections: experience · howIWork · skills · education · community · publications · interests
 import { loadLedger, ledgerPath, writeJSON, requireWorkspace } from '../lib/util.mjs';
 
 requireWorkspace();
-const DEFAULTS = { experience: 'Experience', howIWork: 'How I work', skills: 'Skills', education: 'Education', community: 'Community and volunteer', publications: 'Publications and talks' };
+const DEFAULTS = { experience: 'Experience', howIWork: 'How I work', skills: 'Skills', education: 'Education', community: 'Community and volunteer', publications: 'Publications and talks', interests: 'Outside of work' };
 const [section, ...rest] = process.argv.slice(2);
 const L = loadLedger(); L.headings = L.headings || {};
 if (!section) { for (const [k, d] of Object.entries(DEFAULTS)) console.log(`${k.padEnd(13)} ${L.headings[k] || d}${L.headings[k] ? '' : '  (default)'}`); process.exit(0); }

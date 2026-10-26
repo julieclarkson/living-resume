@@ -8,6 +8,7 @@ import { P, readJSON, loadLedger, loadRules, requireWorkspace, today } from '../
 import { lastArchive } from '../lib/history.mjs';
 import { coach } from '../lib/coach.mjs';
 import { pageInfo } from '../lib/coach-pages.mjs';
+import { linkedinChanges } from '../lib/linkedin-sync.mjs';
 
 requireWorkspace();
 const via = process.env.LIVING_RESUME_VIA === 'mcp';
@@ -30,16 +31,16 @@ const stamp = json('dist', '.build.json');
 const built = stamp && stamp.ledger === hash(P('resume', 'ledger.json')) && stamp.rules === hash(P('resume', 'rules.json'));
 add(people && !built, 'Build your résumé files', 'Your approved lines have changed since the PDF and web page were made.', 'Build my résumé');
 const pi = await pageInfo();
-const target = (json('resume', 'rubric.json') || {}).target || '';
-const c = people ? coach(L, { target, ...pi }) : null;
+const rubric = json('resume', 'rubric.json') || {}; const target = rubric.target || '';
+const c = people ? coach(L, { target, counts: rubric.coach?.counts !== false, ...pi }) : null;
 add(c && pi.pages > (pi.limit || 2), `Fit your PDF on ${pi.limit || 2} pages (it's ${pi.pages})`, 'Screeners expect two pages at most.', 'Make my résumé stronger');
 
 // 2. Getting it out
 const last = lastArchive();
 add(people && built && !last, 'Put your résumé online', 'A link you can share, and the version LinkedIn and job matches build on.', 'Put my résumé online');
-const pkt = P('dist', 'linkedin-packet.md'); const synced = P('archive', 'linkedin-synced.md');
-const liChanged = fs.existsSync(pkt) && (!fs.existsSync(synced) || hash(pkt) !== hash(synced));
-add(people && built && liChanged, fs.existsSync(synced) ? 'Update the LinkedIn fields that changed' : 'Update your LinkedIn to match', 'Recruiters check LinkedIn first. You paste only what changed.', 'Update my LinkedIn');
+const li = linkedinChanges();
+const liChanged = !!li && li.changed.length > 0;
+add(people && built && liChanged, li?.before ? 'Update the LinkedIn fields that changed' : 'Update your LinkedIn to match', 'Recruiters check LinkedIn first. You paste only what changed.', 'Update my LinkedIn');
 
 // 3. Keep it working for you
 const inbox = list('inbox').filter((f) => f.endsWith('.json')).map((f) => json('inbox', f)).filter((x) => x && x.status === 'new');

@@ -158,4 +158,13 @@ test('next: one step at a time, from where the user is', () => {
   const after = cli(['next'], { dir }).out;
   assert.match(after, /NEXT: Put your résumé online/); assert.match(after, /Also waiting:[\s\S]*LinkedIn/);
   const j = JSON.parse(cli(['next', '--json'], { dir }).out); assert.ok(j.next && j.next.say);
+  // Once LinkedIn is synced, a rebuild (new date, new change notes) or a renamed field label is not a LinkedIn change.
+  cli(['linkedin', '--done'], { dir });
+  assert.doesNotMatch(cli(["next"], { dir }).out, /Update (your|the) LinkedIn/);
+  const synced = path.join(dir, 'archive', 'linkedin-synced.md');
+  fs.writeFileSync(synced, fs.readFileSync(synced, 'utf8').replace(/^# LinkedIn update packet · .*/m, '# LinkedIn update packet · 2020-01-01').replace(/^## Experience: (.+?) at .+? \(\d{4}\) (title|description)/gm, '## Experience: $1 $2'));
+  assert.doesNotMatch(cli(["next"], { dir }).out, /Update (your|the) LinkedIn/);
+  assert.match(cli(['linkedin'], { dir }).out, /Nothing on LinkedIn needs to change/);
+  fs.writeFileSync(synced, fs.readFileSync(synced, 'utf8').replace(/```\n([^`]+?)\n```/, '```\nAn older headline\n```'));
+  assert.match(cli(['next'], { dir }).out, /Update the LinkedIn fields that changed/);
 });

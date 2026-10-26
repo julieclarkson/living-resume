@@ -18,6 +18,11 @@ const linkify = (text, url) => {
   const u = safeUrl(url); const host = hostOf(u);
   return u && host ? esc(text).replace(new RegExp(`${reEsc(esc(host))}(?=\\.?$)`), `<a href="${esc(u)}">${esc(host)}</a>`) : esc(text);
 };
+/** "Ran a marathon. Golf, tennis, and travel." → ["Ran a marathon", "Golf", "tennis", "travel"] */
+export const interestList = (t) => String(t || '').split(/\.\s+/).flatMap((sent) => sent.replace(/\.$/, '').split(/,\s*(?:and\s+)?/)).map((x) => x.trim()).filter(Boolean);
+/** Certificates are a list. A person can choose ledger "certStyle": "line" for "Certificates in A and B" (one or two only). */
+const andList = (xs) => (xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')}, and ${xs.at(-1)}`);
+const certLine = (L, S, edu) => { const c = (L.certifications || []).filter((i) => shows(i, S)).map((x) => mdPlain(x.text)); return L.certStyle === 'line' && edu && c.length && c.length <= 2 ? `Certificates in ${andList(c)}` : ''; };
 const H = (L, k, d) => esc((L.headings && L.headings[k]) || d);
 const place = (p) => [p.location?.city, p.location?.region].filter(Boolean).join(', ');
 // The school only when the education line doesn't already name it ("BS Biology, UT Austin" + "UT Austin").
@@ -68,10 +73,10 @@ ${shows(L.summary, S) ? L.summary.text.split(/\n\n/).map((t) => `<p class="summa
 ${roles}
 ${how ? `<section><h2>${H(L, 'howIWork', 'How I work')}</h2><ul>${how}</ul>${L.howIWork.note ? `<p class="note" style="margin-top:4px">${linkify(L.howIWork.note, L.howIWork.noteLink)}</p>` : ''}</section>` : ''}
 ${skills ? `<section><h2>${H(L, 'skills', 'Skills')}</h2><dl>${skills}</dl></section>` : ''}
-${edu || certs.length ? `<section class="edu"><h2>${H(L, 'education', 'Education')}</h2>${edu}${certs.length ? `${edu ? '<p><b>Certificates</b></p>' : ''}<ul class="certs">${certs.join('')}</ul>` : ''}</section>` : ''}
+${edu || certs.length ? `<section class="edu"><h2>${H(L, 'education', 'Education')}</h2>${edu}${certLine(L, S, edu) ? `<p class="note">${esc(certLine(L, S, edu))}</p>` : certs.length ? `${edu ? '<p><b>Certificates</b></p>' : ''}<ul class="certs">${certs.join('')}</ul>` : ''}</section>` : ''}
 ${pubSectionHtml(L, S, { links: S === 'web', wrap: true })}
 ${vol ? `<section><h2>${H(L, 'community', 'Community and volunteer')}</h2><ul class="vol">${vol}</ul></section>` : ''}
-${S === 'web' && shows(L.interests, S) ? `<section><h2>${H(L, 'interests', 'Outside of work')}</h2><p>${esc(L.interests.text)}</p></section>` : ''}
+${shows(L.interests, S) ? `<section class="interests"><h2>${H(L, 'interests', 'Outside of work')}</h2><p>${esc(L.interests.text)}</p></section>` : ''}
 </body></html>`;
 }
 
@@ -93,11 +98,12 @@ export function printModel(L, { surface = 'pdf' } = {}) {
   if (skills.length) sections.push({ title: L.headings?.skills || 'Skills', kind: 'dl', rows: skills });
   const edu = (L.education || []).filter((i) => shows(i, S)).map((e) => ({ strong: mdPlain(e.text), rest: school(e) ? `, ${school(e)}` : '', note: e.note || '' }));
   const certs = (L.certifications || []).filter((i) => shows(i, S)).map((c) => mdPlain(c.text));
-  if (edu.length || certs.length) sections.push({ title: L.headings?.education || 'Education', kind: 'edu', rows: edu, certList: certs, certsLabel: edu.length && certs.length ? 'Certificates' : '' });
+  if (edu.length || certs.length) sections.push({ title: L.headings?.education || 'Education', kind: 'edu', rows: edu, ...(certLine(L, S, edu.length) ? { certLine: certLine(L, S, edu.length), certList: [], certsLabel: '' } : { certList: certs, certsLabel: edu.length && certs.length ? 'Certificates' : '' }) });
   const pubs = publications(L, S).map((x) => x.text);
   if (pubs.length) sections.push({ title: pubHeading(L), kind: 'list', items: pubs, note: '' });
   const vol = (L.volunteer || []).filter((i) => shows(i, S)).map((v) => mdPlain(v.text));
   if (vol.length) sections.push({ title: L.headings?.community || 'Community and volunteer', kind: 'cols', items: vol });
+  if (shows(L.interests, S)) sections.push({ title: L.headings?.interests || 'Outside of work', kind: 'para', text: mdPlain(L.interests.text) });
   return {
     name: p.name || '', title: `${p.name || ''} - Résumé`,
     headline: shows(p.headline, S) ? p.headline.text : '', subline: shows(p.subline, S) ? p.subline.text : '',
@@ -137,7 +143,7 @@ export function jsonResume(L, { site } = {}) {
     education: pub(L.education).map((e) => ({ institution: e.institution, studyType: e.studyType, area: e.area, ...(e.note ? { 'x-note': e.note } : {}) })),
     certificates: pub(L.certifications).map((c) => ({ name: c.text })),
     skills: pub(L.skills).map((s) => ({ name: s.name, keywords: s.text.replace(/,? and more$/, '').split(/,\s*(?![^()]*\))/) })),
-    interests: shows(L.interests, S) ? [{ name: 'Outside of work', keywords: L.interests.text.replace(/\.$/, '').replace(', and ', ', ').split(', ') }] : [],
+    interests: shows(L.interests, S) ? [{ name: 'Outside of work', keywords: interestList(L.interests.text) }] : [],
     'x-interests-text': shows(L.interests, S) ? L.interests.text : undefined,
     'x-skills-text': pub(L.skills).map((s) => ({ name: s.name, text: s.text })),
     'x-how-i-work': { items: pub(L.howIWork?.items).map((i) => i.text), note: L.howIWork?.note, noteLink: safeUrl(L.howIWork?.noteLink) || undefined },
@@ -279,7 +285,7 @@ ${shows(L.summary, S) ? `<div class="summary">${L.summary.text.split(/\n\n/).map
 ${roles ? `<h2>${H(L, 'experience', 'Experience')}</h2>\n${roles}` : ''}
 ${how ? `<h2>${H(L, 'howIWork', 'How I work')}</h2><ul>${how}</ul>${L.howIWork.note ? `<p class="muted" style="margin-top:10px">${linkify(L.howIWork.note, L.howIWork.noteLink)}</p>` : ''}` : ''}
 ${skills ? `<h2>${H(L, 'skills', 'Skills')}</h2><dl>${skills}</dl>` : ''}
-${edu || certs.length ? `<h2>${H(L, 'education', 'Education')}</h2><div class="edu">${edu}${certs.length ? `${edu ? '<p><b>Certificates</b></p>' : ''}<ul class="certs">${certs.join('')}</ul>` : ''}</div>` : ''}
+${edu || certs.length ? `<h2>${H(L, 'education', 'Education')}</h2><div class="edu">${edu}${certLine(L, S, edu) ? `<p class="muted">${esc(certLine(L, S, edu))}</p>` : certs.length ? `${edu ? '<p><b>Certificates</b></p>' : ''}<ul class="certs">${certs.join('')}</ul>` : ''}</div>` : ''}
 ${pubSectionHtml(L, S, { links: true })}
 ${vol ? `<h2>${H(L, 'community', 'Community and volunteer')}</h2><ul class="vol">${vol}</ul>` : ''}
 ${shows(L.interests, S) ? `<h2>${H(L, 'interests', 'Outside of work')}</h2><p>${esc(L.interests.text)}</p>` : ''}
