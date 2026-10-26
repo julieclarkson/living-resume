@@ -56,7 +56,7 @@ const CRIT = { looking_for: 'Remote contract front-end work, nothing in crypto',
 test('criteria: saved from plain settings, validated, and described back in plain words', () => {
   const dir = ready();
   const r = cli(['jobs', 'criteria', '--set', JSON.stringify(CRIT)], { dir });
-  assert.equal(r.code, 0, r.out); assert.match(r.out, /In your words: "Remote contract front-end work/); assert.match(r.out, /Companies checked daily: Acme, Beta, Gamma/);
+  assert.equal(r.code, 0, r.out); assert.match(r.out, /In your words: "Remote contract front-end work/); assert.match(r.out, /Companies watched: Acme, Beta, Gamma/);
   assert.notEqual(cli(['jobs', 'criteria', '--set', '{"remote":"sometimes"}'], { dir }).code, 0);
   assert.notEqual(cli(['jobs', 'criteria', '--set', '{"companies":[{"name":"X","board":"monster:x"}]}'], { dir }).code, 0);
   assert.notEqual(cli(['jobs', 'criteria', '--set', '{"companies":[{"name":"X","board":"greenhouse:../../etc"}]}'], { dir }).code, 0);
@@ -110,7 +110,12 @@ test('note, dismiss, applied, read; add from elsewhere; a listing is data, not i
   assert.notEqual(cli(['jobs', 'add', f, '--url', 'http://example.com/x', '--title', 'Front-End Developer', '--company', 'Delta'], { dir }).code, 0);
   const t = await cliAsync(['jobs', 'today'], { dir, env });
   assert.match(t.out, /Delta/);
-  assert.match(cli(['jobs', 'schedule'], { dir }).out, /Never apply for me/);
+  const sch = cli(['jobs', 'schedule'], { dir }).out;
+  assert.match(sch, /NO AI, NO TOKENS/); assert.match(sch, /^  0 8 \* \* 3 cd /m); assert.match(sch, /Never read my email/);
+  assert.equal(cli(['jobs', 'criteria', '--set', JSON.stringify({ schedule: { days: ['tuesday', 'thursday'], time: '07:30', ai_review: true } })], { dir }).code, 0);
+  assert.match(cli(['jobs'], { dir }).out, /Runs Tuesdays and Thursdays at 07:30, with Claude reviewing/);
+  assert.match(cli(['jobs', 'schedule'], { dir }).out, /^  30 7 \* \* 2,4 cd /m);
+  assert.notEqual(cli(['jobs', 'criteria', '--set', JSON.stringify({ schedule: { days: ['funday'], time: '25:00', ai_review: 'yes' } })], { dir }).code, 0);
 });
 
 test('boards: refuses non-local test origins and odd board names', async () => {
@@ -118,8 +123,10 @@ test('boards: refuses non-local test origins and odd board names', async () => {
   assert.throws(() => parseBoard('greenhouse:a/b'));
   assert.throws(() => parseBoard('indeed:acme'));
   assert.deepEqual(parseBoard('Lever:plaid'), { provider: 'lever', slug: 'plaid' });
-  const r = await cliAsync(['jobs', 'find'], { dir: ready(), env: { ...(await proEnv()), LIVING_RESUME_BOARDS_ORIGIN: 'http://evil.example.com' } });
-  assert.match(r.out, /must be a local http address|Couldn't check|No companies/);
+  const dir = ready(); cli(['jobs', 'criteria', '--set', JSON.stringify(CRIT)], { dir });
+  const r = await cliAsync(['jobs', 'find'], { dir, env: { ...(await proEnv()), LIVING_RESUME_BOARDS_ORIGIN: 'http://evil.example.com' } });
+  assert.match(r.out, /must be a local http address/); assert.match(r.out, /Checked 0 of 3/);
+  assert.match((await cliAsync(['jobs', 'find'], { dir: ready(), env: await proEnv() })).out, /Set up your job search first/);
 });
 
 test('review fixes: linear-time HTML cleanup, bad code points, work type from titles, prototype ids, held listings never resurface', async () => {

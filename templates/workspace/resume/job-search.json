@@ -17,5 +17,6 @@
   "companies": [],
   "companies_about": "Companies to check every day. Each is { \"name\": \"Vercel\", \"board\": \"greenhouse:vercel\" }. The board is the provider and the last part of their careers page address: boards.greenhouse.io/<slug>, jobs.lever.co/<slug>, or jobs.ashbyhq.com/<slug>.",
   "daily_limit": 10,
-  "min_fit": 40
+  "min_fit": 40,
+  "schedule_about": "Optional. { \"days\": [\"wednesday\"], \"time\": \"08:00\", \"ai_review\": false }. Most new listings go up Monday to Wednesday. Without AI review a run uses no AI tokens."
 }
