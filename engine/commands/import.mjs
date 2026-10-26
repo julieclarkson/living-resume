@@ -53,5 +53,6 @@ console.log(`✓ Imported your ${draft.source} (${got.kind === 'linkedin' ? 'str
 const basics = proposals.find((x) => x.kind === 'basics'); if (basics) console.log(`  Contact details to confirm: ${basics.text}`);
 console.log(`  Roles outlined: ${roles.length} (hidden until one of their lines is approved)`);
 console.log(`  Lines waiting for your review: ${proposals.length}`);
-if (draft.unplaced?.length) console.log(`  ${draft.unplaced.length} line(s) couldn't be placed; see imports/${stamp}.draft.json`);
+if (draft.unplacedHeadings?.length) console.log(`  Not placed (check these): ${draft.unplacedHeadings.join(', ')}`);
+else if (draft.unplaced?.length) console.log(`  ${draft.unplaced.length} line(s) couldn't be placed; see imports/${stamp}.draft.json`);
 console.log(`\nNothing is public yet. Next: living-resume review   (or ask your AI tool: "review my résumé updates")`);

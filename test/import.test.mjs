@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { parseCsv, parseDate, readZip, fromText, fromLinkedInFiles } from '../engine/lib/importer.mjs';
-import { cli, workspace, zip, tmp } from './helpers.mjs';
+import { cli, workspace, zip, tmp, ROOT } from './helpers.mjs';
 
 test('CSV: quotes, doubled quotes, newlines in fields, BOM', () => {
   assert.deepEqual(parseCsv('﻿a,b\n"x, y","say ""hi""\nthere"\n'), [['a', 'b'], ['x, y', 'say "hi"\nthere']]);
@@ -116,4 +116,56 @@ test('role headers with the dates on the same line split into title and org', ()
 test('a title line above a date line that holds the org keeps both', () => {
   const d = fromText(['Maya Lee', 'Marketer', '', 'Experience', 'Freelance Marketing Consultant', 'Okafor-Reyes Marketing (self-employed)    Mar 2021 - Present', '- Run email marketing for retainer clients'].join('\n'));
   assert.deepEqual([d.roles[0].title, d.roles[0].org, d.roles[0].start], ['Freelance Marketing Consultant', 'Okafor-Reyes Marketing (self-employed)', '2021-03']);
+});
+
+// Loop 2: location on the date line, strong separators, and the cases 04d3af0 handled.
+test('role headers: city or Remote on the date line is the location, never the title or org', () => {
+  const R = (t) => fromText(`Pat Example\nOps Lead\n\nEXPERIENCE\n${t}`).roles.map((r) => [r.title, r.org, r.location, r.bullets.length]);
+  assert.deepEqual(R('Senior Project Manager\nAcme Health\nAustin, TX    Jan 2019 - Mar 2021\n- Led the rollout of a new EHR\n- Ran weekly status\nProject Coordinator\nBeta Clinics\nDallas, TX    2016 - 2018\n- Kept schedules\n'),
+    [['Senior Project Manager', 'Acme Health', 'Austin, TX', 2], ['Project Coordinator', 'Beta Clinics', 'Dallas, TX', 1]]);
+  assert.deepEqual(R('Senior Project Manager\nAcme Health, Austin, TX    2019 - 2021\n- Led the rollout\n'), [['Senior Project Manager', 'Acme Health', 'Austin, TX', 1]]);
+  assert.deepEqual(R('Vice President, Operations — Acme Health, Austin, TX   2019 – 2021\n- Led the rollout\n'), [['Vice President, Operations', 'Acme Health', 'Austin, TX', 1]]);
+  assert.deepEqual(R('VP, Operations — Acme, Austin, TX  2019 – 2021\n- Led the rollout\n'), [['VP, Operations', 'Acme', 'Austin, TX', 1]]);
+  assert.deepEqual(R('Product Designer\nNorthwind\nRemote    2020 - Present\n- Designed things\n'), [['Product Designer', 'Northwind', 'Remote', 1]]);
+});
+
+test('a line that starts with a bullet marker is always a new bullet', () => {
+  const d = fromText('Maya Lee\nMarketer\n\nExperience\nConsultant, Maya Lee Marketing 2021 - Present\n- Social media management, Canva templates, Mailchimp, Squarespace sites\n- misc. one-off projects (event flyers, grant application copy)\n- Wrote the long\nwrapped line here.\n');
+  assert.deepEqual(d.roles[0].bullets, ['Social media management, Canva templates, Mailchimp, Squarespace sites', 'misc. one-off projects (event flyers, grant application copy)', 'Wrote the long wrapped line here.']);
+});
+
+test('executive résumé (Elena): summary kept, board lines in volunteer, only the degrees in education, the rest reported', () => {
+  const src = path.join(ROOT, 'test', 'fixtures', 'elena.txt');
+  const d = fromText(fs.readFileSync(src, 'utf8'));
+  assert.equal(d.person.name, 'Elena Marchetti'); // ALL-CAPS name title-cased
+  assert.match(d.summary, /^Operations executive with 24 years/);
+  assert.equal(d.roles.length, 8);
+  assert.deepEqual(d.roles.map((r) => [r.title, r.org]), [
+    ['Chief Operating Officer', 'Carolina Outpatient Partners'], ['Senior Vice President, Operations', 'Carolina Outpatient Partners'],
+    ['Vice President, Regional Operations', 'Atrium Ridge Health Services'], ['Regional Director', 'Atrium Ridge Health Services'],
+    ['Director of Operations, Physical Therapy Division', 'Bluestone Rehab Group'], ['Operations Manager', 'Bluestone Rehab Group'],
+    ['Practice Manager', 'Peachtree Orthopedic Associates'], ['Patient Services Coordinator', 'Grady Health System']]);
+  assert.equal(d.roles[0].location, 'Charlotte, NC');
+  assert.deepEqual(d.education.map((e) => e.text.slice(0, 4)), ['MBA,', 'B.S.']);
+  assert.equal(d.volunteer.length, 2); assert.ok(d.volunteer.every((v) => /Board/.test(v.text)));
+  assert.deepEqual(d.unplacedHeadings, ['SPEAKING & PUBLICATIONS']);
+  assert.ok(d.unplaced.some((l) => /MGMA/.test(l)));
+});
+
+test('import says which headings it did not place', () => {
+  const dir = workspace('unplaced');
+  const r = cli(['import', path.join(ROOT, 'test', 'fixtures', 'elena.txt')], { dir }); assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /Not placed \(check these\): SPEAKING & PUBLICATIONS/);
+});
+
+test('an employer name in capitals above its dates is not a section heading', () => {
+  const d = fromText('Pat Lee\nOps\n\nExperience\nACME CORP\nOperations Lead    2019 - 2021\n- Ran the warehouse\n');
+  assert.equal(d.roles.length, 1); assert.deepEqual(d.unplacedHeadings, []);
+});
+
+test('LinkedIn certifications read "Name, Issuer, Year"', async () => {
+  const { toProposals } = await import('../engine/lib/importer.mjs');
+  const d = fromLinkedInFiles(readZip(zip({ ...LI, 'Certifications.csv': 'Name,Url,Authority,Started On,Finished On,License Number\nProject Management Professional (PMP),,Project Management Institute,Aug 2016,,\n' })));
+  const { proposals } = toProposals(d, { ledger: { person: {} }, prefix: 't', evidence: 'x' });
+  assert.ok(proposals.some((p) => p.section === 'certifications' && p.text === 'Project Management Professional (PMP), Project Management Institute, 2016'));
 });
