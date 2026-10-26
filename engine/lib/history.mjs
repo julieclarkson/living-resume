@@ -1,5 +1,5 @@
 // Archive + changelog: every publish keeps the PDF, the ledger snapshot, and a
-// line in CHANGELOG.md, so Julie can see exactly what was public on any date.
+// line in CHANGELOG.md, so the user can see exactly what was public on any date.
 import fs from 'node:fs';
 import path from 'node:path';
 import { P, readJSON, writeJSON, allItems, today, confined, mdPlain } from './util.mjs';

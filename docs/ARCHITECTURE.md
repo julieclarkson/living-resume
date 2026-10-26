@@ -29,8 +29,8 @@ The product code (`PRODUCT`) and the user's résumé workspace (`ROOT`) are sepa
 - Publishing copies files only; the user commits.
 - The MCP server has no tool that writes outside the workspace or publishes.
 
-## Extracted from the personal instance
-`julie-clarkson-resume` is the first workspace. On its ledger, the product's renderers produce byte-identical print HTML, JSON Resume, LinkedIn packet, and capability statement to the personal engine (checked during the build). Workspace-specific strings (portfolio link, canonical URLs, Open to Work, one-time LinkedIn fixes) moved into the ledger and `resume/settings.json`.
+## Extracted from a working instance
+The engine was extracted from a résumé workspace already in daily use. On that ledger, the product's renderers produce byte-identical print HTML, JSON Resume, LinkedIn packet, and capability statement to the personal engine (checked during the build). Workspace-specific strings (portfolio link, canonical URLs, Open to Work, one-time LinkedIn fixes) moved into the ledger and `resume/settings.json`.
 
 ## 1.2: working without Chrome, and getting the résumé online
 - `render.printModel()` turns the ledger into plain sections; `print.renderPdf()` uses Chrome when present, otherwise `engine/pdf/fallback.py` (Python reportlab) reads that model on stdin. Same content, same two-page check. Cowork workspaces have Python and reportlab but no Chrome.
