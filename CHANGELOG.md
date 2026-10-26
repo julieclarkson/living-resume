@@ -1,6 +1,11 @@
 # Changelog
 
 ## 1.3.0 · 2026-10-26 (unreleased)
+- **Claude and ChatGPT, equal footing.** OpenAI plugin packaging (root `plugin.json`, `mcp.json`, `.agents/plugins/marketplace.json`) for the ChatGPT desktop app and Codex. Marketing page, guide, README, and llms.txt show Claude Cowork and ChatGPT desktop side by side.
+- MCP `resume_init` keeps the workspace in the folder the user picked (`folder`), or `LIVING_RESUME_DIR`.
+- Import splits one-line role headers that hold the dates ("Title, Org 2017 - 2021"). LinkedIn packet fields are unique per role (promotions, blank orgs). Certificates render as a list; the school isn't repeated; a "Skills" group under "Skills" has no label.
+- Clearer messages: plain-voice failures say how to reword, deciding an already-decided proposal says so, and a missing Word converter says what to do instead. Pre-launch unlocks extra role profiles; `status` says "Pro (pre-launch)".
+- Rubric for any job: "Accountability" (owning results, handling data or money carefully, fixing mistakes); first run sets the target role.
 - **Positioning: never update your résumé again.** Claude does the talking and browsing; Living Résumé does the remembering, checking, and building. Every reply ends with one next step.
 - **Catch up my résumé:** the host AI suggests items from what it already knows; only the ones you confirm go in.
 - **Next-step card:** for a job you pick, the posting, your warm path, the likely person (public sources, linked), and one short note you send. Saved to `jobs/next/` for you or any personal agent.

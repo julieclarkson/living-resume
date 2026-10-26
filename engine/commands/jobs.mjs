@@ -79,7 +79,7 @@ function describe(c) {
     c.avoid_companies?.length ? `Skip companies: ${c.avoid_companies.join(', ')}` : null,
     `Companies watched: ${c.companies?.length ? c.companies.map((x) => x.name).join(', ') : 'none yet'}`,
     `Up to ${c.daily_limit} matches per run, at ${c.min_fit}% fit or better.`,
-    c.schedule ? `Runs ${listDays(c.schedule.days)} at ${c.schedule.time}, ${c.schedule.ai_review ? 'with Claude reviewing each match (about 3–5k tokens per match)' : 'without AI (no tokens)'}.` : 'Schedule: not set (say "find me jobs" any time).',
+    c.schedule ? `Runs ${listDays(c.schedule.days)} at ${c.schedule.time}, ${c.schedule.ai_review ? 'with your AI tool reviewing each match (about 3–5k tokens per match)' : 'without AI (no tokens)'}.` : 'Schedule: not set (say "find me jobs" any time).',
   ].filter(Boolean).join('\n');
 }
 

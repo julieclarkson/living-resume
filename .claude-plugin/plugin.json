@@ -1,7 +1,7 @@
 {
   "name": "living-resume",
   "displayName": "Living Résumé",
-  "description": "Never update your résumé again. Turn your LinkedIn or old résumé into a current résumé (PDF, Word, web page) and keep it updated. Say \"add this to my résumé\" and it decides what belongs, makes a true version for each kind of job, finds the jobs that fit you best every week, and walks you through LinkedIn. No coding needed; your data stays on your computer.",
+  "description": "Never update your résumé again. Turn your LinkedIn or old résumé into a current résumé (PDF, Word, web page) and keep it updated. Say \"add this to my résumé\" and it decides what belongs, makes a true version for each kind of job, finds the jobs that fit you best every week, and walks you through LinkedIn. Works in Claude and ChatGPT. No coding needed; your data stays on your computer.",
   "version": "1.3.0",
   "author": {
     "name": "Jacobus Company, LLC",

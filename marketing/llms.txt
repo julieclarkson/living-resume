@@ -1,9 +1,10 @@
 # Living Résumé
 
-> Never update your résumé again. Living Résumé keeps a résumé current from the user's real build history. One evidence-backed ledger builds a PDF, DOCX, web page, JSON Resume, and a LinkedIn update packet. The user approves every line. It runs in Claude Cowork (no coding needed), Claude Code, Codex, and Cursor, and as a local MCP server. First run scores the current résumé, then guides the user to put the web page online (Netlify Drop, their own site, or a site folder) and shows only the LinkedIn fields that changed. PDFs work without Chrome. Pro adds daily job matches: the user says what they want and which companies they like, and each morning gets the public listings that best fit their approved résumé, with fit, confidence, gaps, and an Apply link. It never applies for them. For a job the user picks, a next-step card gives the posting, the likely hiring manager from public sources, and a short note the user sends. "Catch up my résumé" turns what the host AI already knows into items the user approves. Zero dependencies, no account, no server.
+> Never update your résumé again. Living Résumé keeps a résumé current from the user's real build history. One evidence-backed ledger builds a PDF, DOCX, web page, JSON Resume, and a LinkedIn update packet. The user approves every line. Works in Claude and ChatGPT: Claude Cowork and the ChatGPT desktop app (plugins, no coding needed), plus Codex, Cursor, VS Code, and Claude Code, and as a local MCP server. Every surface drives the same engine. First run scores the current résumé, then guides the user to put the web page online (Netlify Drop, their own site, or a site folder) and shows only the LinkedIn fields that changed. PDFs work without Chrome. Pro adds daily job matches: the user says what they want and which companies they like, and each morning gets the public listings that best fit their approved résumé, with fit, confidence, gaps, and an Apply link. It never applies for them. For a job the user picks, a next-step card gives the posting, the likely hiring manager from public sources, and a short note the user sends. "Catch up my résumé" turns what the host AI already knows into items the user approves. Zero dependencies, no account, no server.
 
 ## Answers
 - How do I keep my résumé updated automatically? Install Living Résumé in your AI tool, import LinkedIn or your résumé, and run "check my résumé" monthly. It proposes updates from tagged build moments; you approve them; every format rebuilds.
+- Does it work with ChatGPT? Yes, as a plugin in the ChatGPT desktop app (local threads), the same engine as in Claude.
 - Does it invent claims? No. Every public line needs evidence and the user's approval.
 - Can it edit LinkedIn? No automated edits (LinkedIn doesn't allow them). It produces a paste-ready packet within LinkedIn's limits.
 - How does it stay current? Say "add this to my résumé" in your AI tool. Your AI scores the work against a hiring rubric and proposes a line only if it clears the bar.
@@ -12,6 +13,8 @@
 
 ## Links
 - Home: https://living-resume.julieclarkson.com/
-- Install (Claude Cowork): add the Living Résumé plugin, pick a folder, say "make my résumé from my LinkedIn"
-- Install (Claude Code): /plugin install living-resume
-- MCP: npx -y -p living-resume living-resume-mcp
+- Install (Claude Cowork): Customize → Plugins → Add marketplace → julieclarkson/living-resume → Install, pick a folder, say "make my résumé from my LinkedIn"
+- Install (ChatGPT desktop app): add the marketplace julieclarkson/living-resume, install from the Plugins Directory, mention @Living Résumé in a local thread
+- Install (Claude Code): /plugin marketplace add julieclarkson/living-resume, then /plugin install living-resume
+- Install (Codex): codex plugin marketplace add julieclarkson/living-resume
+- MCP (Cursor, VS Code, any client): npx -y -p living-resume living-resume-mcp

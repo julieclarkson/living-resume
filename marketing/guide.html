@@ -54,8 +54,9 @@ nav{display:flex;gap:22px;flex-wrap:wrap}nav a{text-decoration:none;color:var(--
 section{padding-block:56px;border-top:1px solid var(--rule)}
 .intro{display:grid;gap:10px;margin-bottom:32px}
 
-/* Install: three ways in, Cowork first */
-.ways{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:18px}
+/* Install: Claude Cowork and ChatGPT desktop side by side (same size, same tag), then the technical ways */
+.ways{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.ways.more{grid-template-columns:repeat(3,1fr);margin-top:18px}
 .way{border:1px solid var(--rule);border-radius:14px;padding:22px;background:var(--card);display:grid;gap:12px;align-content:start;min-width:0}
 .way.main{border-color:var(--accent)}
 .way ol{margin:0;padding-left:20px;display:grid;gap:6px}
@@ -110,7 +111,7 @@ pre{margin:0;background:var(--paper);border:1px solid var(--rule);border-radius:
 footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--muted);font-size:.9rem;display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
 
 @media (max-width:880px){
-  .ways,.loop,.faq{grid-template-columns:1fr}
+  .ways,.ways.more,.loop,.faq{grid-template-columns:1fr}
   .stop{grid-template-columns:44px 1fr;gap:16px 14px}
   .stop .shot{grid-column:2}
   nav{display:none}
@@ -128,34 +129,56 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
   <div class="hero">
     <span class="label">Guide · about 30 minutes the first time</span>
     <h1>Never update your résumé again. Here's how.</h1>
-    <p>From your LinkedIn to a finished résumé, then kept current as you work. You talk to Claude in plain words; Living Résumé does the work in a folder on your computer and hands you the files. No coding, no account to create.</p>
+    <p>From your LinkedIn to a finished résumé, then kept current as you work. You talk to your AI (Claude or ChatGPT) in plain words; Living Résumé does the work in a folder on your computer and hands you the files. No coding, no account to create.</p>
     <div class="toc"><a href="#install">Install</a><a href="#first">First résumé</a><a href="#online">Put it online</a><a href="#linkedin">LinkedIn</a><a href="#current">Keep it current</a><a href="#jobs">Job matches</a></div>
   </div>
 
   <section id="install">
-    <div class="intro"><span class="label">Install</span><h2>Add Living Résumé to Claude.</h2></div>
+    <div class="intro"><span class="label">Install</span><h2>Add Living Résumé to Claude or ChatGPT.</h2><p>Same Living Résumé, same files, same checks. Pick the app you already use.</p></div>
     <div class="ways">
       <div class="way main">
         <span class="tag">No coding · Claude Cowork</span>
         <h3>Claude desktop app</h3>
         <ol>
-          <li>Open Claude and add the <b>Living Résumé</b> plugin.</li>
-          <li>Choose a folder for your résumé, for example <span class="mono">Documents/Résumé</span>.</li>
+          <li>Open <b>Customize</b>, then <b>Plugins</b>, then <b>Add marketplace</b>.</li>
+          <li>Enter <span class="mono">julieclarkson/living-resume</span> and install <b>Living Résumé</b>.</li>
+          <li>Then pick a folder (<span class="mono">Documents/Résumé</span>) when asked.</li>
           <li>Say <span class="mono">make my résumé from my LinkedIn</span>.</li>
         </ol>
         <p class="note" style="font-size:.9rem;color:var(--muted)">Everything stays in that folder on your computer.</p>
       </div>
+      <!-- ChatGPT desktop wording follows OpenAI's plugin docs (2026-10-26): verify each step in the app before launch. -->
+      <div class="way main">
+        <span class="tag">No coding · ChatGPT desktop</span>
+        <h3>ChatGPT desktop app</h3>
+        <ol>
+          <li>Add the marketplace <span class="mono">julieclarkson/living-resume</span>.</li>
+          <li>Open the <b>Plugins Directory</b> and install <b>Living Résumé</b>.</li>
+          <li>Then pick a folder (<span class="mono">Documents/Résumé</span>) when asked.</li>
+          <li>In a local thread, mention <span class="mono">@Living Résumé</span> and say <span class="mono">make my résumé from my LinkedIn</span>.</li>
+        </ol>
+        <p class="note" style="font-size:.9rem;color:var(--muted)">Everything stays in that folder on your computer.</p>
+      </div>
+    </div>
+    <div class="ways more">
       <div class="way">
         <span class="tag">Claude Code</span>
         <h3>In your terminal</h3>
         <pre>/plugin marketplace add julieclarkson/living-resume
 /plugin install living-resume</pre>
       </div>
+      <!-- Codex plugin commands follow OpenAI's docs (2026-10-26): verify before launch. -->
       <div class="way">
-        <span class="tag">Codex · Cursor · MCP</span>
+        <span class="tag">Codex</span>
+        <h3>OpenAI plugin</h3>
+        <pre>codex plugin marketplace add julieclarkson/living-resume</pre>
+        <p style="font-size:.9rem;color:var(--muted)">Then install Living Résumé from the plugins list and mention it with <span class="mono">$</span>.</p>
+      </div>
+      <div class="way">
+        <span class="tag">Cursor · VS Code · MCP</span>
         <h3>Any MCP client</h3>
         <pre>npx -y -p living-resume living-resume-mcp</pre>
-        <p style="font-size:.9rem;color:var(--muted)">Needs Node.js 18 or newer.</p>
+        <p style="font-size:.9rem;color:var(--muted)">After the npm package is published. Needs Node.js 18 or newer.</p>
       </div>
     </div>
   </section>
@@ -182,7 +205,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
         <div class="words">
           <h3>Ask for your résumé</h3>
           <p class="say">Say <b>make my résumé from my LinkedIn</b></p>
-          <p>Every file is scanned before Claude reads it. Then each line becomes a suggestion, and nothing is final until you approve it.</p>
+          <p>Every file is scanned before your AI reads it. Then each line becomes a suggestion, and nothing is final until you approve it.</p>
         </div>
         <div class="shot">
           <div class="you">Make my résumé from my LinkedIn</div>
@@ -194,7 +217,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
         <span class="num" aria-hidden="true"></span>
         <div class="words">
           <h3>See your score</h3>
-          <p>Claude grades your résumé against what employers look for: results, scope, judgment, and how current it is. You get your strongest lines and the three weakest spots, each with a concrete fix.</p>
+          <p>Your AI grades your résumé against what employers look for, for the job you want next: results, scope, judgment, and how current it is. You get your strongest lines and the three weakest spots, each with a concrete fix.</p>
         </div>
         <div class="shot">
           <dl class="score">
@@ -210,7 +233,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
         <span class="num" aria-hidden="true"></span>
         <div class="words">
           <h3>Approve every line</h3>
-          <p>For each line: <b>Approve</b>, <b>Edit</b>, <b>Reject</b>, or <b>Later</b>. Claude never invents a title, a number, or a client. If you didn't say it, it doesn't go on your résumé.</p>
+          <p>For each line: <b>Approve</b>, <b>Edit</b>, <b>Reject</b>, or <b>Later</b>. Your AI never invents a title, a number, or a client. If you didn't say it, it doesn't go on your résumé.</p>
         </div>
         <div class="shot">
           <div class="line">
@@ -236,7 +259,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
         <span class="num" aria-hidden="true"></span>
         <div class="words">
           <h3>Put it online</h3>
-          <p>Claude asks where your résumé should live and walks you through it:</p>
+          <p>Your AI asks where your résumé should live and walks you through it:</p>
           <ul style="margin:0;padding-left:18px;display:grid;gap:4px">
             <li><b>A free link:</b> drag your <span class="mono">site</span> folder onto Netlify Drop. No account needed to start.</li>
             <li><b>Your own site</b> (Squarespace, Wix, WordPress): upload the PDF and add a "Résumé" link.</li>
@@ -253,7 +276,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
   </section>
 
   <section id="linkedin">
-    <div class="intro"><span class="label">LinkedIn</span><h2>Update only what changed.</h2><p>LinkedIn doesn't let apps edit your profile, so Claude shows you each field to update and the exact text to paste. The first time, it also helps you add your résumé link and PDF to Featured.</p></div>
+    <div class="intro"><span class="label">LinkedIn</span><h2>Update only what changed.</h2><p>LinkedIn doesn't let apps edit your profile, so your AI shows you each field to update and the exact text to paste. The first time, it also helps you add your résumé link and PDF to Featured.</p></div>
     <div class="route">
       <div class="stop">
         <span class="num" aria-hidden="true" style="visibility:hidden"></span>
@@ -270,13 +293,13 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
   </section>
 
   <section id="current">
-    <div class="intro"><span class="label">Keep it current</span><h2>Say "add this to my résumé" when you finish something.</h2><p>It goes into your résumé inbox, and nothing on your résumé changes yet. Claude scores it honestly. Work that clears the bar becomes a suggested line, often replacing a weaker one so your résumé stays at two pages. Anything else gets a plain "not yet, and here's why."</p></div>
+    <div class="intro"><span class="label">Keep it current</span><h2>Say "add this to my résumé" when you finish something.</h2><p>It goes into your résumé inbox, and nothing on your résumé changes yet. Your AI scores it honestly. Work that clears the bar becomes a suggested line, often replacing a weaker one so your résumé stays at two pages. Anything else gets a plain "not yet, and here's why."</p></div>
     <div class="route">
       <div class="stop">
         <span class="num" aria-hidden="true" style="visibility:hidden"></span>
         <div class="words">
           <p class="say">Say <b>add this to my résumé</b></p>
-          <p class="say">Say <b>catch up my résumé</b> <span style="color:var(--muted)">and Claude suggests items from what it already knows</span></p>
+          <p class="say">Say <b>catch up my résumé</b> <span style="color:var(--muted)">and your AI suggests items from what it already knows</span></p>
           <p class="say">Say <b>set up my design engineer résumé</b> <span style="color:var(--muted)">for a version per kind of job</span></p>
           <p class="note">Each version only chooses and orders your approved lines. It never writes anything new, so every version stays true.</p>
         </div>
@@ -289,7 +312,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
   </section>
 
   <section id="jobs">
-    <div class="intro"><span class="label">Job matches · Pro</span><h2>A short list of jobs that fit, every week.</h2><p>Say <span class="mono">set up my job search</span>. Claude asks nine quick questions: titles, contract or full-time, remote, pay, dealbreakers, which companies to watch, and how often. Then you get a page of the jobs that fit your approved résumé best, with an Apply button on each.</p></div>
+    <div class="intro"><span class="label">Job matches · Pro</span><h2>A short list of jobs that fit, every week.</h2><p>Say <span class="mono">set up my job search</span>. Your AI asks nine quick questions: titles, contract or full-time, remote, pay, dealbreakers, which companies to watch, and how often. Then you get a page of the jobs that fit your approved résumé best, with an Apply button on each.</p></div>
     <div class="route">
       <div class="stop">
         <span class="num" aria-hidden="true" style="visibility:hidden"></span>
@@ -297,7 +320,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
           <p>The search runs on your computer and reads only the public job listings of companies you choose. It never reads your email and never applies for you.</p>
           <p class="say">Say <b>prepare</b> on a match <span style="color:var(--muted)">for a version tailored to that job</span></p>
           <p class="say">Say <b>help me reach someone there</b> <span style="color:var(--muted)">for the posting, the likely person, and a short note you send</span></p>
-          <p class="note">Running it on your computer's own timer uses no AI at all. Claude's optional one-line review of each match uses a small amount.</p>
+          <p class="note">Running it on your computer's own timer uses no AI at all. Your AI's optional one-line review of each match uses a small amount.</p>
         </div>
         <div class="shot">
           <div class="match">
@@ -315,7 +338,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
   <section>
     <div class="intro"><span class="label">Your week</span><h2>What it looks like once you're set up.</h2></div>
     <div class="loop">
-      <div><span class="when">When you finish something</span><h3>Add it</h3><p>One sentence to Claude. It decides whether it belongs.</p></div>
+      <div><span class="when">When you finish something</span><h3>Add it</h3><p>One sentence to your AI. It decides whether it belongs.</p></div>
       <div><span class="when">Wednesday morning</span><h3>Read your matches</h3><p>A short list, ready when you open your laptop.</p></div>
       <div><span class="when">When one fits</span><h3>Prepare and reach out</h3><p>The best-fit version, plus who to contact and a short note to send.</p></div>
       <div><span class="when">After an update</span><h3>Publish and paste</h3><p>Refresh your page, then update only the LinkedIn fields that changed.</p></div>
@@ -325,7 +348,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
   <section>
     <div class="intro"><span class="label">Questions</span><h2>Before you start.</h2></div>
     <div class="faq">
-      <div><h3>Do I need to know how to code?</h3><p>No. In the Claude desktop app you only talk. Claude runs everything and hands you the files.</p></div>
+      <div><h3>Do I need to know how to code?</h3><p>No. In the Claude or ChatGPT desktop app you only talk. Your AI runs everything and hands you the files.</p></div>
       <div><h3>What do I do next?</h3><p>Every conversation ends with one clear next step, so you always know what to do.</p></div>
       <div><h3>Where is my data?</h3><p>In the folder you chose, on your computer. Nothing is published until you publish it.</p></div>
       <div><h3>Will it make things up?</h3><p>No. Every public line traces to something you said or a file you gave it, and you approve each one.</p></div>

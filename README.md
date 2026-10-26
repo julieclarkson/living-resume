@@ -1,6 +1,6 @@
 # Living Résumé
 
-**Never update your résumé again.** Living Résumé works on top of Claude: your AI does the talking and searching, Living Résumé does the remembering, checking, and building. One evidence-backed ledger builds your PDF, Word file, web page, JSON Resume, and LinkedIn packet, and you approve every line. It runs inside Claude Code, Codex, and Cursor (skill + MCP server) or from the command line. Zero dependencies. No account, no server.
+**Never update your résumé again.** Living Résumé works on top of Claude and ChatGPT: your AI does the talking and searching, Living Résumé does the remembering, checking, and building. One evidence-backed ledger builds your PDF, Word file, web page, JSON Resume, and LinkedIn packet, and you approve every line. Works in Claude Cowork and the ChatGPT desktop app with no coding, and in Codex, Cursor, VS Code, and Claude Code (skill + MCP server), or from the command line. Zero dependencies. No account, no server.
 
 ## Quick start
 ```bash
@@ -12,10 +12,13 @@ npx living-resume build && npx living-resume check       # every format → ~/Li
 In an AI tool, just say "start my résumé", "add this to my résumé", "assess my résumé inbox", "set up my design engineer résumé", "I'm applying to this job", or "publish my résumé".
 
 ## Install in your AI tool
-- **Claude Cowork (no coding):** install the plugin, pick a folder for your résumé, and say "make my résumé from my LinkedIn". Claude runs everything and hands you the files. PDFs work without Chrome (a built-in fallback).
+- **Claude Cowork (no coding):** Customize → Plugins → Add marketplace → `julieclarkson/living-resume` → Install. Pick a folder for your résumé when asked, then say "make my résumé from my LinkedIn". Claude runs everything and hands you the files. PDFs work without Chrome (a built-in fallback).
+- **ChatGPT desktop app (no coding):** add the marketplace `julieclarkson/living-resume`, install Living Résumé from the Plugins Directory, then in a local thread mention @Living Résumé and say "make my résumé from my LinkedIn". Packaged as an OpenAI plugin: root `plugin.json`, `mcp.json`, `skills/`, and `.agents/plugins/marketplace.json` (verify the marketplace format in the ChatGPT desktop app before launch).
 - **Claude Code:** `/plugin marketplace add julieclarkson/living-resume` then `/plugin install living-resume` (skill, slash commands, and MCP server).
-- **Codex:** `codex mcp add living-resume -- npx -y -p living-resume living-resume-mcp`, and copy `AGENTS.md` guidance or the `.codex/prompts/`.
-- **Cursor / any MCP client:** add `{"mcpServers":{"living-resume":{"command":"npx","args":["-y","-p","living-resume","living-resume-mcp"]}}}`.
+- **Codex:** `codex plugin marketplace add julieclarkson/living-resume`, then install it from the plugins list and mention it with `$`. Or add only the MCP server: `codex mcp add living-resume -- npx -y -p living-resume living-resume-mcp`, with `AGENTS.md` or `.codex/prompts/` for guidance.
+- **Cursor / any MCP client** (after the npm package is published): `{"mcpServers":{"living-resume":{"command":"npx","args":["-y","-p","living-resume","living-resume-mcp"]}}}`. VS Code (`.vscode/mcp.json`) uses a `servers` key: `{"servers":{"living-resume":{"type":"stdio","command":"npx","args":["-y","-p","living-resume","living-resume-mcp"]}}}`.
+
+All of these drive the same engine (CLI + MCP server); only install and wording differ.
 
 ## Commands
 | Command | What it does |
@@ -43,7 +46,7 @@ Use `--dir <folder>` or `LIVING_RESUME_DIR` to point at a workspace elsewhere.
 Free: import, the résumé inbox and rubric, review, every format, one role profile, checks, publish, LinkedIn packet; a small credit link on the web page (never on the PDF). Pro (yearly, via Polar): unlimited role profiles, job-by-job versions (`apply`), the scout, capability statement and vendor kit, no credit link. The license is checked against Polar's public license-key endpoint, cached locally, and works offline for 30 days between checks.
 
 ## Requirements
-Node 18.17+. PDF: Google Chrome, Chromium, Edge, or Brave (or `CHROME_PATH`). DOCX: macOS `textutil` or `pandoc`. Optional: poppler (`pdftotext`) for PDF import and the PDF text check.
+Node 18.17+. PDF: Google Chrome, Chromium, Edge, or Brave (or `CHROME_PATH`), else Python with reportlab. DOCX: macOS `textutil` or `pandoc` (without them, your AI makes the Word file from `dist/resume-print.html`). Optional: poppler (`pdftotext`) for PDF import and the PDF text check.
 
 ## Development
 `npm test` runs the suite (node:test, no dependencies). See `docs/ARCHITECTURE.md`.

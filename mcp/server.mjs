@@ -113,7 +113,7 @@ const TOOLS = [
     args: (a) => { const id = needId(a.id, 'listing id'); if (a.action === 'note') return ['jobs', 'note', id, needText(a.text, 'note', 300)]; if (a.action === 'dismiss') return ['jobs', 'dismiss', id, ...(a.text ? [needText(a.text, 'reason', 200)] : [])]; if (a.action === 'applied') return ['jobs', 'applied', id]; throw new Error('action must be note, dismiss, or applied'); } },
   { name: 'resume_jobs_prep', description: '(Pro) Make the best-fit résumé version for one match (PDF and Word, private) and show the coverage report.', inputSchema: S({ id: { type: 'string' } }, ['id']), args: (a) => ['jobs', 'prep', needId(a.id, 'listing id')] },
   { name: 'resume_applications', description: "What the user has applied to and prepared, newest first.", inputSchema: S(), args: () => ['jobs', 'applied'] },
-  { name: 'resume_jobs_schedule', description: "How to run the search on a schedule: a no-AI timer line for the user's computer (no tokens), or scheduled-task text with Claude's review.", inputSchema: S(), args: () => ['jobs', 'schedule'] },
+  { name: 'resume_jobs_schedule', description: "How to run the search on a schedule: a no-AI timer line for the user's computer (no tokens), or scheduled-task text with the AI tool's review.", inputSchema: S(), args: () => ['jobs', 'schedule'] },
   { name: 'license_status', description: 'Show Free or Pro, and what Pro adds.', inputSchema: S(), args: () => ['license', 'status'] },
 ];
 

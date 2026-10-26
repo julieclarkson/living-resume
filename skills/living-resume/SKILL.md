@@ -26,7 +26,7 @@ Most users don't code. Never show commands, file paths, or JSON unless they ask.
 2. **Résumé check:** first set the rubric's `target` to the work they want next, in their words (for example "Office manager roles at dental or medical practices"), read it back, and save it in `resume/rubric.json` once they confirm. Then score their current résumé against `resume/rubric.json` and show a short score card: total, the three strongest lines, the three weakest spots, and one concrete fix for each. Be honest and specific. This is the "aha" moment; then offer to fix the weak spots together.
 3. Review the imported lines (Approve · Edit · Reject · Later), build, and send them the PDF. If `build` says the Word file wasn't made (no pandoc here, common in Claude Cowork and ChatGPT), make the .docx with your own document tool from `dist/resume-print.html` (same approved content, nothing added), or send the PDF.
 4. **"Where should your résumé live?"** (once):
-   - **A web link, no setup:** if your environment can publish a hosted page (Claude artifacts), publish `dist/site/index.html` as their page and give them the link. Downloads don't work inside that page, so also give them the PDF to attach where needed.
+   - **A web link, no setup:** if your environment can publish a hosted page (for example Claude artifacts), publish `dist/site/index.html` as their page and give them the link. Downloads don't work inside that page, so also give them the PDF to attach where needed.
    - **Their own free link:** walk them through Netlify Drop: open https://app.netlify.com/drop and drag the `dist/site` folder onto it (no account needed to start; sign up to keep the link and update it by dragging the folder again).
    - **Their existing site** (Squarespace, Wix, WordPress): upload the PDF and add a "Résumé" link. Builders with a site repo: set `publish.repo` in settings and use `publish --write`.
    After they've put it online, run `publish --mark` to archive the version.
@@ -98,7 +98,7 @@ A short list of open jobs that fit, scored against the user's approved résumé,
 6. **Anything a job must mention, and any dealbreakers** (words, industries, companies to skip)? → `must_have`, `avoid`, `avoid_companies`
 7. **Which companies should it watch?** They name some; offer a few more from their field, clearly marked as suggestions they can drop. For each, find its careers page and its public board: `boards.greenhouse.io/<slug>` → `greenhouse:<slug>`, `jobs.lever.co/<slug>` → `lever:<slug>`, `jobs.ashbyhq.com/<slug>` → `ashby:<slug>`, `apply.workable.com/<slug>` → `workable:<slug>`, `jobs.smartrecruiters.com/<slug>` → `smartrecruiters:<slug>`. Tell them plainly which companies can't be checked automatically (other hiring systems, or their own careers site). → `companies`
 8. **How many matches per run, and how strong?** Default 10 at 40% fit. → `daily_limit`, `min_fit`
-9. **How often, and should Claude review each match?** Suggest weekly on Wednesday morning: most new listings are posted Monday to Wednesday, and applying early helps. Twice a week (Tuesday and Thursday) if speed matters most. A review means Claude reads each match and writes a one-line take, about 3–5k tokens per match, so roughly 30–50k tokens for 10 matches. Without a review the run costs no tokens: they get the page, and Claude only steps in when they say "prepare" for a job. → `schedule: { "days": [...], "time": "08:00", "ai_review": true|false }`
+9. **How often, and should I (their AI tool) review each match?** Suggest weekly on Wednesday morning: most new listings are posted Monday to Wednesday, and applying early helps. Twice a week (Tuesday and Thursday) if speed matters most. A review means you read each match and write a one-line take, about 3–5k tokens per match, so roughly 30–50k tokens for 10 matches. Without a review the run costs no tokens: they get the page, and you only step in when they say "prepare" for a job. → `schedule: { "days": [...], "time": "08:00", "ai_review": true|false }`
 
 Save with `jobs criteria --set '<json>'` (MCP: `resume_jobs_criteria`), filling only what they said. Values must use these exact formats (anything else is refused):
 - `looking_for`, `min_pay`: short text in their words (`"$90k a year"`, `"$60 an hour"`)
@@ -119,7 +119,7 @@ Save with `jobs criteria --set '<json>'` (MCP: `resume_jobs_criteria`), filling 
 
 **On a schedule.** Run `jobs schedule`. It prints two ways, using their `schedule` settings:
 - **No AI (no tokens):** a line for their computer's own timer (cron). Offer to explain how to add it; they paste it themselves. The page is waiting in `jobs/` after each run.
-- **With Claude's review:** text for a scheduled task. If this tool can create scheduled tasks, create one with that text after they say yes.
+- **With your review:** text for a scheduled task. If this tool can create scheduled tasks, create one with that text after they say yes.
 Otherwise they can say "find me jobs" whenever they like.
 
 **When they pick one.** "Prepare <id>" → `jobs prep <id>` (the best-fit version as PDF and Word, private, with the coverage report). Offer a cover note (rules in "I'm applying to this job"). When they say they applied, `jobs applied <id>`. When they say "not for me", `jobs dismiss <id> "<their reason>"`; if the same reason keeps coming up, suggest a criteria change.

@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Living Résumé</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Never update your résumé again. Living Résumé turns what your AI knows about your work into a résumé you own and can prove: PDF, Word, web page, and LinkedIn updates, plus weekly job matches. Works on top of Claude. You approve every line.">
+<meta name="description" content="Never update your résumé again. Living Résumé turns what your AI knows about your work into a résumé you own and can prove: PDF, Word, web page, and LinkedIn updates, plus weekly job matches. Works on top of Claude and ChatGPT. You approve every line.">
 <link rel="canonical" href="https://living-resume.julieclarkson.com/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Living Résumé","applicationCategory":"BusinessApplication","operatingSystem":"macOS, Windows, Linux (Node.js 18+)","description":"An evidence-backed résumé you approve line by line. Import LinkedIn or your résumé, review each line, and build a PDF, DOCX, web page, JSON Resume, and LinkedIn packet from one source. Runs inside Claude, Codex, and Cursor, with an MCP server.","url":"https://living-resume.julieclarkson.com/","publisher":{"@type":"Organization","name":"Jacobus Company, LLC"},"offers":[{"@type":"Offer","name":"Free","price":"0","priceCurrency":"USD"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Living Résumé","applicationCategory":"BusinessApplication","operatingSystem":"macOS, Windows, Linux (Node.js 18+)","description":"An evidence-backed résumé you approve line by line. Import LinkedIn or your résumé, review each line, and build a PDF, DOCX, web page, JSON Resume, and LinkedIn packet from one source. Works in Claude and ChatGPT (Claude Cowork and the ChatGPT desktop app), plus Codex, Cursor, VS Code, and Claude Code, with an MCP server.","url":"https://living-resume.julieclarkson.com/","publisher":{"@type":"Organization","name":"Jacobus Company, LLC"},"offers":[{"@type":"Offer","name":"Free","price":"0","priceCurrency":"USD"}]}</script>
 <style>
 /* Layout: one reading column; the hero is a single ledger line traced to every format it builds. */
 :root{
@@ -81,10 +81,19 @@ ul.plain{margin:0;padding-left:18px;display:grid;gap:6px}
 pre{margin:0;background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:.82rem;color:var(--ink);line-height:1.7}
 .faq{display:grid;gap:26px}.faq div{display:grid;gap:6px}
 
+/* Install: Claude Cowork and ChatGPT desktop side by side, same size, same tag */
+.ways{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.way{border:1px solid var(--accent);border-radius:14px;padding:26px;background:var(--card);display:grid;gap:12px;align-content:start;min-width:0}
+.way ol{margin:0;padding-left:20px;display:grid;gap:6px}
+.tag{justify-self:start;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:var(--accent);color:var(--accent-ink)}
+.more{display:grid;grid-template-columns:repeat(2,1fr);gap:20px 28px;margin-top:36px}
+.more > div{display:grid;gap:10px;align-content:start;min-width:0}
+.works b{color:var(--ink);font-weight:600}
+
 footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--muted);font-size:.9rem;display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
 
 @media (max-width:880px){
-  .hero,.split,.plans{grid-template-columns:1fr}
+  .hero,.split,.plans,.ways,.more{grid-template-columns:1fr}
   .hero{gap:40px;padding-block:32px 56px}
   .steps{grid-template-columns:1fr 1fr}
   nav{display:none}
@@ -103,12 +112,13 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
   <div class="hero">
     <div>
       <h1>Never update your résumé again.</h1>
-      <p class="lede">Your résumé keeps up with your latest work, so you're never stalled when the right job shows up. Living Résumé works on top of Claude: it turns what your AI knows about your work into a résumé you own and can prove, and you approve every line.</p>
+      <p class="lede">Your résumé keeps up with your latest work, so you're never stalled when the right job shows up. Living Résumé works on top of Claude and ChatGPT: it turns what your AI knows about your work into a résumé you own and can prove, and you approve every line.</p>
       <div class="actions">
         <a class="btn" href="#install">Start free</a>
         <a href="guide">See how it works</a>
-        <span class="works">Works in Claude Cowork, Claude Code, Codex, and Cursor. No coding needed.</span>
+        <span class="works">Works in Claude and ChatGPT. No coding needed.</span>
       </div>
+      <p class="works" style="margin-top:14px"><b>Claude Cowork · ChatGPT desktop</b> · Codex · Cursor · VS Code · Claude Code</p>
     </div>
 
     <figure class="ledger" aria-label="Example ledger line">
@@ -139,8 +149,8 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
       <div><span class="label">Why it stays current</span><h2>Say "add this to my résumé." It decides if it belongs.</h2></div>
       <div>
         <p>When you ship something, make a hard call, or fix a serious problem, tell your AI tool in one sentence. It lands in your résumé inbox. Nothing changes yet.</p>
-        <p>Then your AI scores it against a hiring rubric: outcome, ownership, rigor, security and accountability, judgment, and whether it's in demand. Only work that clears the bar becomes a proposed line, often replacing a weaker one, so the résumé stays sharp at two pages. Everything else gets an honest "not yet, and here's why."</p>
-        <p>Or say "catch up my résumé." Claude suggests items from what it already knows about your recent work, and only the ones you confirm go in.</p>
+        <p>Then your AI scores it against a hiring rubric: outcome, ownership, rigor, accountability, judgment, and whether it's in demand. Only work that clears the bar becomes a proposed line, often replacing a weaker one, so the résumé stays sharp at two pages. Everything else gets an honest "not yet, and here's why."</p>
+        <p>Or say "catch up my résumé." Your AI suggests items from what it already knows about your recent work, and only the ones you confirm go in.</p>
         <p>Paste one paragraph into your other projects and the agents you already work with will ask "add this to your résumé?" at the right moments. No accounts to connect.</p>
       </div>
     </div>
@@ -162,7 +172,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
       <div>
         <p>Tell your AI tool what you want in your own words: "remote contract work as a design engineer, nothing in crypto." Name the companies you'd love to work with. Before it searches, it asks a few questions so you can be specific. Then, every week (or as often as you choose), it checks their open listings, screens out what doesn't fit, and scores the rest against your approved résumé.</p>
         <p>You get one short page. Each match shows how much of the listing your résumé already covers, how confident that fit is, what the listing asks for that your résumé doesn't show, and which version of your résumé to send. Then Apply. It never applies for you, and it never adds a skill to your résumé to look like a better fit.</p>
-        <p>Pick a match and say "help me reach someone there." Claude finds the posting, asks who you already know at the company, looks up the likely hiring manager from public sources, and drafts one short note from your approved lines. You send it.</p>
+        <p>Pick a match and say "help me reach someone there." Your AI finds the posting, asks who you already know at the company, looks up the likely hiring manager from public sources, and drafts one short note from your approved lines. You send it.</p>
       </div>
     </div>
   </section>
@@ -171,7 +181,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
     <div class="split">
       <div><span class="label">Built on your AI</span><h2>Your AI knows your work. Living Résumé makes it something you can show.</h2></div>
       <div>
-        <p>Claude does the talking, writing, and searching. Living Résumé does the remembering, checking, and building: one approved record of your work, rules against invented claims, files that read cleanly in hiring software, and a job search that runs on its own.</p>
+        <p>Claude or ChatGPT does the talking, writing, and searching. Living Résumé does the remembering, checking, and building: one approved record of your work, rules against invented claims, files that read cleanly in hiring software, and a job search that runs on its own.</p>
         <p>Your AI's memory stays private. Your résumé is the part you chose to share, in formats that travel to employers, LinkedIn, and recruiters' own AI tools. Every conversation ends with one clear next step.</p>
       </div>
     </div>
@@ -226,16 +236,48 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
   </section>
 
   <section id="install">
-    <div class="split">
-      <div><span class="label">Install</span><h2>Add it to Claude, then say "make my résumé from my LinkedIn".</h2></div>
-      <div style="display:grid;gap:14px;min-width:0">
-        <p><a href="guide">See the step-by-step guide</a>, with pictures of each step.</p>
-        <p>Claude Cowork (no coding): install Living Résumé from the plugins menu, pick a folder for your résumé, and start talking. Your PDF, Word file, and web page come back as downloads, and Claude helps you put the page online and update LinkedIn.</p>
+    <div class="intro"><span class="label">Install</span><h2>Add it to Claude or ChatGPT, then say "make my résumé from my LinkedIn".</h2><p><a href="guide#install">See the step-by-step guide</a>, with pictures of each step.</p></div>
+    <div class="ways">
+      <div class="way">
+        <span class="tag">No coding · Claude Cowork</span>
+        <h3>Claude desktop app</h3>
+        <ol>
+          <li>Open <b>Customize</b>, then <b>Plugins</b>, then <b>Add marketplace</b>.</li>
+          <li>Enter <span class="mono">julieclarkson/living-resume</span> and install <b>Living Résumé</b>.</li>
+          <li>Pick a folder for your résumé when asked, for example <span class="mono">Documents/Résumé</span>.</li>
+          <li>Say <span class="mono">make my résumé from my LinkedIn</span>.</li>
+        </ol>
+      </div>
+      <!-- ChatGPT desktop wording follows OpenAI's plugin docs (2026-10-26): verify each step in the app before launch. -->
+      <div class="way">
+        <span class="tag">No coding · ChatGPT desktop</span>
+        <h3>ChatGPT desktop app</h3>
+        <ol>
+          <li>Add the marketplace <span class="mono">julieclarkson/living-resume</span>.</li>
+          <li>Open the <b>Plugins Directory</b> and install <b>Living Résumé</b>.</li>
+          <li>Pick a folder for your résumé when asked, for example <span class="mono">Documents/Résumé</span>.</li>
+          <li>In a local thread, mention <span class="mono">@Living Résumé</span> and say <span class="mono">make my résumé from my LinkedIn</span>.</li>
+        </ol>
+      </div>
+    </div>
+    <p style="margin-top:18px">Either way, your PDF, Word file, and web page come back as downloads, and your AI helps you put the page online and update LinkedIn. Everything stays in that folder on your computer.</p>
+    <div class="more">
+      <div>
         <p>Claude Code</p>
         <pre>/plugin marketplace add julieclarkson/living-resume
 /plugin install living-resume</pre>
-        <p>Codex, Cursor, or any MCP client</p>
+      </div>
+      <!-- Codex plugin commands follow OpenAI's docs (2026-10-26): verify before launch. -->
+      <div>
+        <p>Codex</p>
+        <pre>codex plugin marketplace add julieclarkson/living-resume</pre>
+      </div>
+      <!-- npx works once the npm package is published. -->
+      <div>
+        <p>Cursor, VS Code, or any MCP client</p>
         <pre>npx -y -p living-resume living-resume-mcp</pre>
+      </div>
+      <div>
         <p>Or the command line</p>
         <pre>npx living-resume init
 npx living-resume import ~/Downloads/linkedin.zip</pre>
@@ -246,8 +288,8 @@ npx living-resume import ~/Downloads/linkedin.zip</pre>
   <section>
     <div class="intro"><span class="label">Questions</span><h2>Straight answers.</h2></div>
     <div class="faq">
-      <div><h3>How do I keep my résumé updated without doing it myself?</h3><p>Say "add this to my résumé" when you finish something, or "catch up my résumé" and Claude suggests items from what it already knows. You approve them in a minute, and every format rebuilds from the same source.</p></div>
-      <div><h3>Does it work with ChatGPT?</h3><p>It works in Claude today, including the Claude desktop app with no coding. ChatGPT support is next.</p></div>
+      <div><h3>How do I keep my résumé updated without doing it myself?</h3><p>Say "add this to my résumé" when you finish something, or "catch up my résumé" and your AI suggests items from what it already knows. You approve them in a minute, and every format rebuilds from the same source.</p></div>
+      <div><h3>Does it work with ChatGPT?</h3><p>Yes. Install it as a plugin in the ChatGPT desktop app and use it in a local thread, with no coding. It's the same Living Résumé as in Claude: the same files, the same checks, and you approve every line.</p></div>
       <div><h3>Can it find jobs for me?</h3><p>Yes, with Pro. Say what you're looking for and which companies you like. On the schedule you choose, you get the listings that fit your approved résumé best, with an Apply button on each. The search itself runs on your computer with no AI tokens. It reads public job listings only, never your email, and never logs in to a job site for you.</p></div>
       <div><h3>Will it make things up?</h3><p>No. Every public line needs evidence, and new lines are proposals until you approve them.</p></div>
       <div><h3>Can it update LinkedIn for me?</h3><p>LinkedIn doesn't allow automated profile edits, so you get a paste-ready packet trimmed to LinkedIn's limits, with what changed since last time.</p></div>

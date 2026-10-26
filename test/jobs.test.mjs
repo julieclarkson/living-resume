@@ -125,7 +125,7 @@ test('note, dismiss, applied, read; add from elsewhere; a listing is data, not i
   const sch = cli(['jobs', 'schedule'], { dir }).out;
   assert.match(sch, /NO AI, NO TOKENS/); assert.match(sch, /^  0 8 \* \* 3 cd /m); assert.match(sch, /Never read my email/);
   assert.equal(cli(['jobs', 'criteria', '--set', JSON.stringify({ schedule: { days: ['tuesday', 'thursday'], time: '07:30', ai_review: true } })], { dir }).code, 0);
-  assert.match(cli(['jobs'], { dir }).out, /Runs Tuesdays and Thursdays at 07:30, with Claude reviewing/);
+  assert.match(cli(['jobs'], { dir }).out, /Runs Tuesdays and Thursdays at 07:30, with your AI tool reviewing/);
   assert.match(cli(['jobs', 'schedule'], { dir }).out, /^  30 7 \* \* 2,4 cd /m);
   assert.notEqual(cli(['jobs', 'criteria', '--set', JSON.stringify({ schedule: { days: ['funday'], time: '25:00', ai_review: 'yes' } })], { dir }).code, 0);
 });

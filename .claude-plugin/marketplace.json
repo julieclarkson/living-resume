@@ -1,12 +1,12 @@
 {
   "name": "living-resume-marketplace",
   "owner": { "name": "Jacobus Company, LLC", "url": "https://julieclarkson.com" },
-  "metadata": { "description": "Living Résumé: an evidence-backed résumé you approve line by line", "version": "1.3.0" },
+  "metadata": { "description": "Living Résumé: a résumé you approve line by line, kept current for you. Works in Claude and ChatGPT.", "version": "1.3.0" },
   "plugins": [
     {
       "name": "living-resume",
       "source": "./",
-      "description": "Keep your résumé current from your real build history. One ledger builds every format; you approve every line.",
+      "description": "Never update your résumé again. One ledger builds every format; you approve every line. Works in Claude and ChatGPT.",
       "version": "1.3.0",
       "homepage": "https://living-resume.julieclarkson.com",
       "license": "SEE LICENSE IN LICENSE",
