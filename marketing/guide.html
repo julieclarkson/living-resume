@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Living Résumé Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="How to install Living Résumé and use it: from your LinkedIn export to a finished PDF, web page, LinkedIn update, and weekly job matches. No coding needed.">
+<link rel="canonical" href="https://living-resume.julieclarkson.com/guide">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: same system as the marketing page. A numbered route down the left; each stop pairs
+   "what you do" with a small picture of what you'll see in Claude. */
+:root{
+  --paper:#F7F8F6; --ink:#15181B; --body:#3B4148; --muted:#69717A; --rule:#D9DDD8;
+  --accent:#1F5E8C; --accent-ink:#FFFFFF; --ok:#2C7A4B; --chip:#E8EEF2; --card:#FFFFFF;
+  --you:#1F5E8C; --you-ink:#FFFFFF; --warn:#9A6A14;
+  --sans:'Instrument Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#111416; --ink:#EEF1F3; --body:#C7CDD3; --muted:#8F98A1; --rule:#2A3036;
+  --accent:#7DB4DE; --accent-ink:#0D1114; --ok:#6CC08E; --chip:#1C2329; --card:#171B1F;
+  --you:#2D6A98; --you-ink:#FFFFFF; --warn:#D9A84E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111416; --ink:#EEF1F3; --body:#C7CDD3; --muted:#8F98A1; --rule:#2A3036;
+  --accent:#7DB4DE; --accent-ink:#0D1114; --ok:#6CC08E; --chip:#1C2329; --card:#171B1F;
+  --you:#2D6A98; --you-ink:#FFFFFF; --warn:#D9A84E; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--body);font:17px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+a{color:var(--ink);text-underline-offset:3px;text-decoration-color:var(--rule)}a:hover{text-decoration-color:var(--accent)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+h1,h2,h3{color:var(--ink);text-wrap:balance;margin:0}
+h1{font-size:clamp(2.2rem,5.4vw,3.6rem);line-height:1.04;letter-spacing:-.035em;font-weight:600;max-width:17ch}
+h2{font-size:clamp(1.5rem,3vw,2rem);line-height:1.15;letter-spacing:-.02em;font-weight:600}
+h3{font-size:1.15rem;font-weight:600;letter-spacing:-.01em}
+p{margin:0;max-width:62ch}
+.label{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.mono{font-family:var(--mono);font-size:.82rem}
+
+header.top{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-block:22px}
+.brand{font-weight:700;color:var(--ink);text-decoration:none;letter-spacing:-.01em}
+nav{display:flex;gap:22px;flex-wrap:wrap}nav a{text-decoration:none;color:var(--muted);font-size:.95rem}nav a:hover,nav a[aria-current]{color:var(--ink)}
+
+.hero{display:grid;gap:18px;padding-block:40px 48px}
+.hero p{font-size:1.15rem}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.toc a{font-family:var(--mono);font-size:.78rem;text-decoration:none;background:var(--chip);color:var(--ink);padding:6px 12px;border-radius:999px}
+.toc a:hover{background:var(--rule)}
+
+section{padding-block:56px;border-top:1px solid var(--rule)}
+.intro{display:grid;gap:10px;margin-bottom:32px}
+
+/* Install: three ways in, Cowork first */
+.ways{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:18px}
+.way{border:1px solid var(--rule);border-radius:14px;padding:22px;background:var(--card);display:grid;gap:12px;align-content:start;min-width:0}
+.way.main{border-color:var(--accent)}
+.way ol{margin:0;padding-left:20px;display:grid;gap:6px}
+.tag{justify-self:start;font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:var(--chip);color:var(--ink)}
+.way.main .tag{background:var(--accent);color:var(--accent-ink)}
+pre{margin:0;background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:12px 14px;overflow-x:auto;font-family:var(--mono);font-size:.78rem;color:var(--ink);line-height:1.7}
+
+/* The route: numbered stops; each = words on the left, a picture of Claude on the right */
+.route{display:grid;gap:0;counter-reset:stop}
+.stop{display:grid;grid-template-columns:56px 1fr 1.05fr;gap:0 28px;padding-block:28px;border-top:1px dashed var(--rule)}
+.stop:first-child{border-top:0;padding-top:0}
+.num{counter-increment:stop;width:40px;height:40px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);display:grid;place-items:center;font-family:var(--mono);font-size:.9rem;font-weight:500}
+.num::before{content:counter(stop)}
+.words{display:grid;gap:10px;align-content:start;min-width:0}
+.words .say{font-family:var(--mono);font-size:.82rem;color:var(--ink)}
+.words .say b{font-weight:500;background:var(--chip);padding:2px 6px;border-radius:6px}
+.words .note{font-size:.92rem;color:var(--muted)}
+
+/* A small picture of a Claude conversation */
+.shot{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:16px;display:grid;gap:10px;align-content:start;min-width:0;font-size:.9rem}
+.you{justify-self:end;max-width:88%;background:var(--you);color:var(--you-ink);padding:8px 13px;border-radius:14px 14px 4px 14px}
+.cl{max-width:96%;color:var(--body);display:grid;gap:8px}
+.cl p{max-width:none}
+.file{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--rule);border-radius:8px;padding:6px 10px;font-family:var(--mono);font-size:.76rem;color:var(--ink);background:var(--paper)}
+.file i{font-style:normal;font-size:.62rem;letter-spacing:.06em;padding:2px 5px;border-radius:4px;background:var(--accent);color:var(--accent-ink)}
+.files{display:flex;flex-wrap:wrap;gap:8px}
+.score{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-family:var(--mono);font-size:.76rem;border:1px solid var(--rule);border-radius:10px;padding:10px 12px;background:var(--paper)}
+.score dt{color:var(--muted)}.score dd{margin:0;color:var(--ink);min-width:0}
+.big{font-size:1.5rem;font-weight:600;color:var(--ink);font-family:var(--sans);letter-spacing:-.02em}
+.line{border:1px solid var(--rule);border-radius:10px;padding:10px 12px;background:var(--paper);display:grid;gap:8px}
+.line q{color:var(--ink);quotes:none}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+.btns span{font-size:.78rem;padding:4px 10px;border:1px solid var(--rule);border-radius:999px;color:var(--ink)}
+.btns span.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.diff{display:grid;gap:4px;font-family:var(--mono);font-size:.74rem}
+.diff .was{color:var(--muted);text-decoration:line-through}
+.diff .now{color:var(--ok)}
+.match{border:1px solid var(--rule);border-radius:10px;padding:10px 12px;background:var(--paper);display:grid;gap:6px}
+.match b{color:var(--ink)}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:.72rem;padding:2px 9px;border-radius:999px;border:1px solid var(--rule);color:var(--ink)}
+.pill.hi{background:color-mix(in srgb,var(--ok) 16%,transparent);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
+.apply{justify-self:start;font-size:.78rem;font-weight:600;padding:5px 14px;border-radius:999px;background:var(--accent);color:var(--accent-ink)}
+.drop{border:1.5px dashed var(--accent);border-radius:10px;padding:16px;text-align:center;color:var(--accent);font-family:var(--mono);font-size:.78rem}
+
+/* Weekly loop */
+.loop{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.loop div{border-top:2px solid var(--accent);padding-top:12px;display:grid;gap:6px;align-content:start}
+.loop .when{font-family:var(--mono);font-size:.74rem;color:var(--muted)}
+
+.faq{display:grid;grid-template-columns:1fr 1fr;gap:26px 40px}.faq div{display:grid;gap:6px}
+footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--muted);font-size:.9rem;display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
+
+@media (max-width:880px){
+  .ways,.loop,.faq{grid-template-columns:1fr}
+  .stop{grid-template-columns:44px 1fr;gap:16px 14px}
+  .stop .shot{grid-column:2}
+  nav{display:none}
+}
+@media (max-width:480px){.stop{grid-template-columns:1fr}.stop .shot{grid-column:1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./">Living Résumé</a>
+    <nav><a href="./#how">How it works</a><a href="./#plans">Plans</a><a href="./guide" aria-current="page">Guide</a></nav>
+  </header>
+
+  <div class="hero">
+    <span class="label">Guide · about 30 minutes the first time</span>
+    <h1>From your LinkedIn to a finished résumé, step by step.</h1>
+    <p>You talk to Claude in plain words. Living Résumé does the work in a folder on your computer and hands you the files. No coding, no account to create.</p>
+    <div class="toc"><a href="#install">Install</a><a href="#first">First résumé</a><a href="#online">Put it online</a><a href="#linkedin">LinkedIn</a><a href="#current">Keep it current</a><a href="#jobs">Job matches</a></div>
+  </div>
+
+  <section id="install">
+    <div class="intro"><span class="label">Install</span><h2>Add Living Résumé to Claude.</h2></div>
+    <div class="ways">
+      <div class="way main">
+        <span class="tag">No coding · Claude Cowork</span>
+        <h3>Claude desktop app</h3>
+        <ol>
+          <li>Open Claude and add the <b>Living Résumé</b> plugin.</li>
+          <li>Choose a folder for your résumé, for example <span class="mono">Documents/Résumé</span>.</li>
+          <li>Say <span class="mono">make my résumé from my LinkedIn</span>.</li>
+        </ol>
+        <p class="note" style="font-size:.9rem;color:var(--muted)">Everything stays in that folder on your computer.</p>
+      </div>
+      <div class="way">
+        <span class="tag">Claude Code</span>
+        <h3>In your terminal</h3>
+        <pre>/plugin marketplace add julieclarkson/living-resume
+/plugin install living-resume</pre>
+      </div>
+      <div class="way">
+        <span class="tag">Codex · Cursor · MCP</span>
+        <h3>Any MCP client</h3>
+        <pre>npx -y -p living-resume living-resume-mcp</pre>
+        <p style="font-size:.9rem;color:var(--muted)">Needs Node.js 18 or newer.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="first">
+    <div class="intro"><span class="label">Your first résumé</span><h2>Six steps, one conversation.</h2></div>
+    <div class="route">
+
+      <div class="stop">
+        <span class="num" aria-hidden="true"></span>
+        <div class="words">
+          <h3>Download your LinkedIn data</h3>
+          <p>On LinkedIn: <b>Settings &amp; Privacy</b>, then <b>Data privacy</b>, then <b>Get a copy of your data</b>. LinkedIn emails you a .zip within about 10 minutes. An old résumé (PDF, Word, or text) works too.</p>
+          <p class="note">You don't need to unzip it.</p>
+        </div>
+        <div class="shot" aria-label="Example">
+          <div class="files"><span class="file"><i>ZIP</i>Basic_LinkedInDataExport.zip</span></div>
+          <p class="note" style="color:var(--muted);font-size:.85rem">Drag it into the chat, or put it in your résumé folder.</p>
+        </div>
+      </div>
+
+      <div class="stop">
+        <span class="num" aria-hidden="true"></span>
+        <div class="words">
+          <h3>Ask for your résumé</h3>
+          <p class="say">Say <b>make my résumé from my LinkedIn</b></p>
+          <p>Every file is scanned before Claude reads it. Then each line becomes a suggestion, and nothing is final until you approve it.</p>
+        </div>
+        <div class="shot">
+          <div class="you">Make my résumé from my LinkedIn</div>
+          <div class="cl"><p>I read your export: 4 roles, 23 skills, 2 degrees. I've drafted 31 lines for you to review.</p></div>
+        </div>
+      </div>
+
+      <div class="stop">
+        <span class="num" aria-hidden="true"></span>
+        <div class="words">
+          <h3>See your score</h3>
+          <p>Claude grades your résumé against what employers look for: results, scope, judgment, and how current it is. You get your strongest lines and the three weakest spots, each with a concrete fix.</p>
+        </div>
+        <div class="shot">
+          <dl class="score">
+            <dt>Score</dt><dd><span class="big">62</span> / 100</dd>
+            <dt>Strongest</dt><dd>Led the redesign that cut support calls by a third</dd>
+            <dt>Fix first</dt><dd>3 bullets list duties, not results</dd>
+          </dl>
+          <div class="cl"><p>Want to fix the weak spots together?</p></div>
+        </div>
+      </div>
+
+      <div class="stop">
+        <span class="num" aria-hidden="true"></span>
+        <div class="words">
+          <h3>Approve every line</h3>
+          <p>For each line: <b>Approve</b>, <b>Edit</b>, <b>Reject</b>, or <b>Later</b>. Claude never invents a title, a number, or a client. If you didn't say it, it doesn't go on your résumé.</p>
+        </div>
+        <div class="shot">
+          <div class="line">
+            <q>Redesigned the scheduling flow for 40 clinics, from interviews to launch.</q>
+            <div class="btns"><span class="on">Approve</span><span>Edit</span><span>Reject</span><span>Later</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stop">
+        <span class="num" aria-hidden="true"></span>
+        <div class="words">
+          <h3>Get your files</h3>
+          <p>A two-page PDF that hiring software reads cleanly, a Word file, and a web page. They arrive as downloads in the chat and in your folder.</p>
+        </div>
+        <div class="shot">
+          <div class="cl"><p>Your résumé is ready. All 28 checks passed.</p></div>
+          <div class="files"><span class="file"><i>PDF</i>Sam_Rivera_Resume.pdf</span><span class="file"><i>DOCX</i>Sam_Rivera_Resume.docx</span><span class="file"><i>WEB</i>site/index.html</span></div>
+        </div>
+      </div>
+
+      <div class="stop" id="online">
+        <span class="num" aria-hidden="true"></span>
+        <div class="words">
+          <h3>Put it online</h3>
+          <p>Claude asks where your résumé should live and walks you through it:</p>
+          <ul style="margin:0;padding-left:18px;display:grid;gap:4px">
+            <li><b>A free link:</b> drag your <span class="mono">site</span> folder onto Netlify Drop. No account needed to start.</li>
+            <li><b>Your own site</b> (Squarespace, Wix, WordPress): upload the PDF and add a "Résumé" link.</li>
+            <li><b>A site you publish yourself:</b> Living Résumé copies the files in, and you publish them.</li>
+          </ul>
+        </div>
+        <div class="shot">
+          <div class="drop">Drag the <b>site</b> folder here<br>app.netlify.com/drop</div>
+          <div class="cl"><p>Done? Tell me and I'll remember this version, so next time only the changes need updating.</p></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="linkedin">
+    <div class="intro"><span class="label">LinkedIn</span><h2>Update only what changed.</h2><p>LinkedIn doesn't let apps edit your profile, so Claude shows you each field to update and the exact text to paste. The first time, it also helps you add your résumé link and PDF to Featured.</p></div>
+    <div class="route">
+      <div class="stop">
+        <span class="num" aria-hidden="true" style="visibility:hidden"></span>
+        <div class="words">
+          <p class="say">Say <b>update my LinkedIn</b></p>
+          <p>When you've pasted everything, say <b>done</b>. Next time you'll see only the fields that changed.</p>
+        </div>
+        <div class="shot">
+          <div class="cl"><p>1 field changed since you last updated LinkedIn:</p></div>
+          <div class="diff"><span class="label">Headline</span><span class="was">Product Designer</span><span class="now">Product Designer and Front-End Developer</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="current">
+    <div class="intro"><span class="label">Keep it current</span><h2>Say "add this to my résumé" when you finish something.</h2><p>It goes into your résumé inbox, and nothing on your résumé changes yet. Claude scores it honestly. Work that clears the bar becomes a suggested line, often replacing a weaker one so your résumé stays at two pages. Anything else gets a plain "not yet, and here's why."</p></div>
+    <div class="route">
+      <div class="stop">
+        <span class="num" aria-hidden="true" style="visibility:hidden"></span>
+        <div class="words">
+          <p class="say">Say <b>add this to my résumé</b></p>
+          <p class="say">Say <b>set up my design engineer résumé</b> <span style="color:var(--muted)">for a version per kind of job</span></p>
+          <p class="note">Each version only chooses and orders your approved lines. It never writes anything new, so every version stays true.</p>
+        </div>
+        <div class="shot">
+          <div class="you">Add this to my résumé: I shipped the checkout redesign and found 8 security issues before launch.</div>
+          <div class="cl"><p>Scored 9 of 14: results, care, and accountability. Here's a suggested line to approve.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="jobs">
+    <div class="intro"><span class="label">Job matches · Pro</span><h2>A short list of jobs that fit, every week.</h2><p>Say <span class="mono">set up my job search</span>. Claude asks nine quick questions: titles, contract or full-time, remote, pay, dealbreakers, which companies to watch, and how often. Then you get a page of the jobs that fit your approved résumé best, with an Apply button on each.</p></div>
+    <div class="route">
+      <div class="stop">
+        <span class="num" aria-hidden="true" style="visibility:hidden"></span>
+        <div class="words">
+          <p>The search runs on your computer and reads only the public job listings of companies you choose. It never reads your email and never applies for you.</p>
+          <p class="say">Say <b>prepare</b> on a match <span style="color:var(--muted)">for a version tailored to that job</span></p>
+          <p class="note">Running it on your computer's own timer uses no AI at all. Claude's optional one-line review of each match uses a small amount.</p>
+        </div>
+        <div class="shot">
+          <div class="match">
+            <b>Senior Front-End Developer, Design Systems</b>
+            <span style="color:var(--muted);font-size:.82rem">Northstar · Remote (US) · Contract</span>
+            <div class="pills"><span class="pill">82% fit</span><span class="pill hi">High confidence</span><span class="pill">Send your main résumé</span></div>
+            <span style="font-size:.8rem;color:var(--muted)">Not on your résumé: GraphQL, Next.js</span>
+            <span class="apply">Apply</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="intro"><span class="label">Your week</span><h2>What it looks like once you're set up.</h2></div>
+    <div class="loop">
+      <div><span class="when">When you finish something</span><h3>Add it</h3><p>One sentence to Claude. It decides whether it belongs.</p></div>
+      <div><span class="when">Wednesday morning</span><h3>Read your matches</h3><p>A short list, ready when you open your laptop.</p></div>
+      <div><span class="when">When you apply</span><h3>Prepare</h3><p>The best-fit version as a PDF and Word file.</p></div>
+      <div><span class="when">After an update</span><h3>Publish and paste</h3><p>Refresh your page, then update only the LinkedIn fields that changed.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="intro"><span class="label">Questions</span><h2>Before you start.</h2></div>
+    <div class="faq">
+      <div><h3>Do I need to know how to code?</h3><p>No. In the Claude desktop app you only talk. Claude runs everything and hands you the files.</p></div>
+      <div><h3>Where is my data?</h3><p>In the folder you chose, on your computer. Nothing is published until you publish it.</p></div>
+      <div><h3>Will it make things up?</h3><p>No. Every public line traces to something you said or a file you gave it, and you approve each one.</p></div>
+      <div><h3>What does it cost?</h3><p>Your résumé, every format, and one tailored version are free. Pro adds job matches, unlimited versions, and job-by-job tailoring.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Living Résumé · Jacobus Company, LLC</span>
+    <span><a href="./">Back to the main page</a></span>
+  </footer>
+</div>
+</body>
+</html>
