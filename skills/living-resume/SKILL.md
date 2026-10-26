@@ -23,7 +23,7 @@ Most users don't code. Never show commands, file paths, or JSON unless they ask.
 
 ## First run (new users)
 1. Start the workspace and import their LinkedIn export or résumé (below).
-2. **Résumé check:** score their current résumé against `resume/rubric.json` and show a short score card: total, the three strongest lines, the three weakest spots, and one concrete fix for each. Be honest and specific. This is the "aha" moment; then offer to fix the weak spots together.
+2. **Résumé check:** first set the rubric's `target` to the work they want next, in their words (for example "Office manager roles at dental or medical practices"), read it back, and save it in `resume/rubric.json` once they confirm. Then score their current résumé against `resume/rubric.json` and show a short score card: total, the three strongest lines, the three weakest spots, and one concrete fix for each. Be honest and specific. This is the "aha" moment; then offer to fix the weak spots together.
 3. Review the imported lines (Approve · Edit · Reject · Later), build, and send them the PDF. If `build` says the Word file wasn't made (no pandoc here, common in Claude Cowork and ChatGPT), make the .docx with your own document tool from `dist/resume-print.html` (same approved content, nothing added), or send the PDF.
 4. **"Where should your résumé live?"** (once):
    - **A web link, no setup:** if your environment can publish a hosted page (Claude artifacts), publish `dist/site/index.html` as their page and give them the link. Downloads don't work inside that page, so also give them the PDF to attach where needed.
@@ -68,7 +68,7 @@ To make this automatic in other projects, run `snippet` and give the user the pa
 4. Otherwise `inbox skip <id> "<honest reason, and what would make it résumé-worthy>"`. When you proposed, `inbox assessed <id> <proposal ids>`.
 5. Show the user a short table: item, score, verdict. Then walk through the proposals ("Review my résumé updates").
 6. After they approve something new, offer once (never post anything yourself): a short "What I shipped" LinkedIn post draft in their voice, facts only. If they want, it may end with how they keep their résumé current.
-Prefer depth over volume: decisions, tradeoffs, testing, security, accountability, and outcomes are what set a builder apart. Keep the résumé at two pages by replacing weaker lines rather than piling on.
+Prefer depth over volume: decisions, tradeoffs, care with quality, accountability, and outcomes are what set anyone apart, in any field. Keep the résumé at two pages by replacing weaker lines rather than piling on.
 
 Proposal format, one file each in `proposals/<id>.json`:
 `{ "id": "p-2026-11-01-short-name", "kind": "add|edit|remove|variant", "target": "<ledger id for edit/remove/variant>", "section": "experience.<role-id> | skills | education | certifications | volunteer | summary | howIWork | person.headline", "text": "proposed wording (two lines at most for PDF bullets)", "surfaces": ["web","pdf","linkedin","json"], "reason": "why it helps", "evidence": "source", "status": "proposed" }`
@@ -100,7 +100,15 @@ A short list of open jobs that fit, scored against the user's approved résumé,
 8. **How many matches per run, and how strong?** Default 10 at 40% fit. → `daily_limit`, `min_fit`
 9. **How often, and should Claude review each match?** Suggest weekly on Wednesday morning: most new listings are posted Monday to Wednesday, and applying early helps. Twice a week (Tuesday and Thursday) if speed matters most. A review means Claude reads each match and writes a one-line take, about 3–5k tokens per match, so roughly 30–50k tokens for 10 matches. Without a review the run costs no tokens: they get the page, and Claude only steps in when they say "prepare" for a job. → `schedule: { "days": [...], "time": "08:00", "ai_review": true|false }`
 
-Save with `jobs criteria --set '<json>'` (MCP: `resume_jobs_criteria`), filling only what they said. Read it back with `jobs` and confirm before the first run. Then `jobs boards` checks every company's board; fix or remove any that aren't found. If this tool has no internet access to job boards ("couldn't connect"), say so plainly: the no-AI timer on their computer can reach them, and here you can add listings from web search with `jobs add`.
+Save with `jobs criteria --set '<json>'` (MCP: `resume_jobs_criteria`), filling only what they said. Values must use these exact formats (anything else is refused):
+- `looking_for`, `min_pay`: short text in their words (`"$90k a year"`, `"$60 an hour"`)
+- `titles`, `locations`, `must_have`, `avoid`, `avoid_companies`: lists of short phrases
+- `work_type`: a list holding only `"contract"`, `"full-time"`, `"part-time"`
+- `remote`: `"required"` (remote only), `"preferred"` (remote or near them, with `locations`), or `"any"`
+- `companies`: `[{ "name": "Linear", "board": "greenhouse:<slug>" }]` (or `lever:`, `ashby:`, `workable:`, `smartrecruiters:`)
+- `daily_limit`: whole number 1–100; `min_fit`: whole number 1–100 (40 means 40%)
+- `schedule`: `{ "days": ["wednesday"], "time": "08:00", "ai_review": false }` (days as full lowercase weekday names, time as 24-hour "HH:MM", ai_review true or false)
+ Read it back with `jobs` and confirm before the first run. Then `jobs boards` checks every company's board; fix or remove any that aren't found. If this tool has no internet access to job boards ("couldn't connect"), say so plainly: the no-AI timer on their computer can reach them, and here you can add listings from web search with `jobs add`.
 
 **Never read the user's email or messages for this,** and never log in to a job site or scrape one. Sources are the public boards of the companies they chose, plus listings from public web pages and web search only if they ask for that.
 

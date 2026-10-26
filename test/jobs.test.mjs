@@ -167,3 +167,12 @@ test('work type: a full-time "Contract Manager" is not a contract job', async ()
   const g = path.join(dir, 'm.txt'); fs.writeFileSync(g, 'Project manager for a six-month engagement.');
   assert.match(cli(['jobs', 'add', g, '--url', 'https://example.com/j/2', '--title', 'Project Manager (Contract)', '--company', 'Echo'], { dir }).out, /doesn't pass/);
 });
+
+test('the job criteria formats the skill documents are the ones the validator accepts', () => {
+  const skill = fs.readFileSync(path.join(ROOT, 'skills', 'living-resume', 'SKILL.md'), 'utf8');
+  for (const s of ['"required"', '"preferred"', '"any"', '"contract"', '"full-time"', '"part-time"', 'greenhouse:<slug>', 'whole number 1–100', '"wednesday"', '"08:00"', 'full lowercase weekday names']) assert.ok(skill.includes(s), s);
+  const dir = workspace('crit-doc');
+  const ok = cli(['jobs', 'criteria', '--set', JSON.stringify({ remote: 'preferred', locations: ['Charlotte, NC'], work_type: ['full-time', 'part-time'], min_fit: 40, daily_limit: 10, min_pay: '$60 an hour', schedule: { days: ['tuesday', 'thursday'], time: '08:00', ai_review: false } })], { dir });
+  assert.equal(ok.code, 0, ok.out);
+  for (const bad of [{ remote: 'yes' }, { min_fit: 0.4 }, { schedule: { days: ['Wed'], time: '8am', ai_review: 'no' } }, { work_type: ['fulltime'] }]) assert.notEqual(cli(['jobs', 'criteria', '--set', JSON.stringify(bad)], { dir }).code, 0, JSON.stringify(bad));
+});

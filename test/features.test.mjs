@@ -50,6 +50,10 @@ test('inbox: assessed and skip record the verdict; the rubric ships with every w
   assert.notEqual(cli(['inbox', 'skip', '../ledger', 'x'], { dir }).code, 0);
   const rubric = JSON.parse(fs.readFileSync(path.join(dir, 'resume', 'rubric.json'), 'utf8'));
   assert.ok(rubric.criteria.length >= 5 && rubric.bar.propose_at > 0);
+  // Written for any job, not only software builders.
+  assert.equal(rubric.criteria.find((c) => c.id === 'trust').name, 'Accountability');
+  assert.match(rubric.criteria.find((c) => c.id === 'trust').ask, /handling data or money carefully/);
+  assert.match(rubric.target, /Change this to the work you want next/);
 });
 
 test('snippet prints the paste-in instructions', () => {

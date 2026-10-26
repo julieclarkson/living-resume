@@ -1,11 +1,11 @@
 {
   "about": "How your AI tool decides whether a piece of work belongs on your résumé. Each item in your inbox is scored 0, 1, or 2 on every criterion. Edit the target and the criteria to match the work you want next.",
-  "target": "Contract and full-time roles building products, where hiring teams want proof of outcomes, judgment, and reliability.",
+  "target": "Roles where hiring teams want proof of results, good judgment, and reliability. Change this to the work you want next, in your own words.",
   "criteria": [
     { "id": "outcome", "name": "Outcome", "ask": "Did something ship, get used, or change a result? Is there a fact you could point to (users, issues found and fixed, time saved, launch)?" },
     { "id": "scope", "name": "Scope and ownership", "ask": "How much did the person own: an idea to launch, a full system, a team or client relationship?" },
-    { "id": "rigor", "name": "Rigor and quality", "ask": "Testing, evaluation, reviews, accessibility, measured improvement. Evidence of diligence, not just speed." },
-    { "id": "trust", "name": "Security and accountability", "ask": "Privacy, security, safe handling of data, human approval, owning mistakes and fixing them." },
+    { "id": "rigor", "name": "Rigor and quality", "ask": "Checking work, testing, reviews, accessibility, measured improvement. Evidence of care, not just speed." },
+    { "id": "trust", "name": "Accountability", "ask": "Owning results, handling data or money carefully, fixing mistakes." },
     { "id": "judgment", "name": "Judgment", "ask": "A real decision or tradeoff, explained: what was chosen over what, and why." },
     { "id": "current", "name": "Current and in demand", "ask": "Does it show skills or tools hiring teams are asking for now?" },
     { "id": "new", "name": "Adds something new", "ask": "Does the résumé already say this? Would it replace or strengthen an existing line?" }
