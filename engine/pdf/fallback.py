@@ -2,11 +2,13 @@
 
 Reads the print model (JSON, from render.mjs printModel) on stdin and writes a
 single-column, text-based PDF that screening software can read. Same content and
-order as the Chrome version; Helvetica instead of Instrument Sans.
+order as the Chrome version; Helvetica instead of Instrument Sans. When the text has letters
+Helvetica can't draw (Vietnamese, Polish, Greek, Cyrillic…), the bundled DejaVu Sans is used
+instead, and any character still missing is reported on stdout as MISSING_GLYPHS:<chars>.
 Needs only reportlab (preinstalled in Cowork and ChatGPT; else: pip install reportlab).
 Usage: python3 fallback.py out.pdf < model.json
 """
-import json, sys
+import json, os, sys, unicodedata
 from xml.sax.saxutils import escape
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
@@ -70,9 +72,42 @@ def section(title):
     return [Spacer(1, 10), Paragraph(e(title), st['h2']),
             HRFlowable(width='100%', thickness=0.7, color=ACCENT, spaceBefore=2, spaceAfter=5)]
 
+INVISIBLE = dict.fromkeys(map(ord, '\u200b\u200c\u200d\u2060\ufeff\u00ad'))
+def clean(v):
+    # Invisible characters out; typographic ligatures (\ufb00-\ufb06) back to plain letters.
+    if isinstance(v, str): return ''.join(unicodedata.normalize('NFKC', c) if '\ufb00' <= c <= '\ufb06' else c for c in v.translate(INVISIBLE))
+    if isinstance(v, list): return [clean(x) for x in v]
+    if isinstance(v, dict): return {k: clean(x) for k, x in v.items()}
+    return v
+
+def strings(v):
+    if isinstance(v, str): yield v
+    elif isinstance(v, list):
+        for x in v: yield from strings(x)
+    elif isinstance(v, dict):
+        for x in v.values(): yield from strings(x)
+
+def use_unicode_font(text):
+    """Switch every style to DejaVu Sans when Helvetica (WinAnsi) can't draw some letter. Returns missing chars."""
+    global F, FB, FI
+    try: text.encode('cp1252'); return ''
+    except UnicodeEncodeError: pass
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    d = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fonts')
+    for name, f in (('DejaVu', 'DejaVuSans.ttf'), ('DejaVu-Bold', 'DejaVuSans-Bold.ttf'), ('DejaVu-Oblique', 'DejaVuSans-Oblique.ttf')):
+        pdfmetrics.registerFont(TTFont(name, os.path.join(d, f)))
+    swap = {F: 'DejaVu', FB: 'DejaVu-Bold', FI: 'DejaVu-Oblique'}
+    for style in st.values(): style.fontName = swap.get(style.fontName, style.fontName)
+    F, FB, FI = 'DejaVu', 'DejaVu-Bold', 'DejaVu-Oblique'
+    have = pdfmetrics.getFont('DejaVu').face.charToGlyph
+    return ''.join(sorted({c for c in text if not c.isspace() and ord(c) not in have}))
+
 def main():
     out = sys.argv[1]
-    m = json.load(sys.stdin)
+    m = clean(json.load(sys.stdin))
+    missing = use_unicode_font(''.join(strings(m)))
+    if missing: print('MISSING_GLYPHS:' + missing)
     doc = SimpleDocTemplate(out, pagesize=letter, leftMargin=0.65 * inch, rightMargin=0.65 * inch, topMargin=0.55 * inch, bottomMargin=0.55 * inch,
                             title=m.get('title', ''), author=m.get('name', ''))
     s = [Paragraph(e(m['name']), st['name'])]

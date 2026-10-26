@@ -32,8 +32,8 @@ const stripTags = (h) => h.replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<
 const html = printHtml(L);
 const htmlPath = `${work}/resume-print.html`; writeText(htmlPath, html);
 const pdfTmp = `${work}/${R.pdf_filename}`;
-let pdfOk = false;
-try { const how = renderPdf(printModel(L), htmlPath, pdfTmp); pdfOk = true; if (how === 'fallback') report.push('· PDF made without Chrome (simplified styling, same content)'); } catch (e) { report.push(`! PDF not made here. Open dist/resume-print.html in a browser and choose Print, then Save as PDF.\n  (Technical detail: ${e.message})`); }
+let pdfOk = false; let missingGlyphs = '';
+try { const how = renderPdf(printModel(L), htmlPath, pdfTmp); pdfOk = true; if (how === 'fallback') report.push('· PDF made without Chrome (simplified styling, same content)'); if (renderPdf.missing) { missingGlyphs = renderPdf.missing; report.push(`! The PDF can't draw these characters without Chrome: ${[...renderPdf.missing].join(' ')}. They show as boxes. Reword those lines, or build on a computer with Google Chrome.`); } } catch (e) { report.push(`! PDF not made here. Open dist/resume-print.html in a browser and choose Print, then Save as PDF.\n  (Technical detail: ${e.message})`); }
 if (pdfOk) {
   const pages = pdfPageCount(pdfTmp);
   if (pages > R.limits.pdf_max_pages) report.push(`! PDF is ${pages} pages (limit ${R.limits.pdf_max_pages})`);
@@ -94,7 +94,7 @@ if (pdfOk && !held.length) {
 fs.rmSync(work, { recursive: true, force: true });
 // Stamp: check refuses a dist/ that was built from a different ledger or rules.
 const hash = (f) => crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
-if (!held.length && pdfOk) writeText(P('dist', '.build.json'), JSON.stringify({ ledger: hash(P('resume', 'ledger.json')), rules: hash(P('resume', 'rules.json')), builtAt: new Date().toISOString() }) + '\n');
+if (!held.length && pdfOk) writeText(P('dist', '.build.json'), JSON.stringify({ ledger: hash(P('resume', 'ledger.json')), rules: hash(P('resume', 'rules.json')), builtAt: new Date().toISOString(), ...(missingGlyphs ? { missingGlyphs } : {}) }) + '\n');
 console.log(report.join('\n'));
 if (!pdfOk) { console.error('\n✗ The PDF could not be built, so nothing in dist/ is ready to publish.'); process.exit(1); }
 if (held.length) { console.error(`\n${held.length} file(s) held in quarantine/out. Fix the ledger and rebuild.`); process.exit(1); }

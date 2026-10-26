@@ -35,6 +35,9 @@ const rubric = json('resume', 'rubric.json') || {}; const target = rubric.target
 const c = people ? coach(L, { target, counts: rubric.coach?.counts !== false, ...pi }) : null;
 add(c && pi.pages > (pi.limit || 2), `Fit your PDF on ${pi.limit || 2} pages (it's ${pi.pages})`, 'Screeners expect two pages at most.', 'Make my résumé stronger');
 
+const pub = (i) => !!i && i.visibility === 'public' && i.status === 'verified';
+add(people && !pub(L.person?.headline), 'Add a headline under your name', 'It is the first thing a reader sees, and LinkedIn needs it before anything else.', 'Help me write my headline');
+
 // 2. Getting it out
 const last = lastArchive();
 add(people && built && !last, 'Put your résumé online', 'A link you can share, and the version LinkedIn and job matches build on.', 'Put my résumé online');
@@ -59,7 +62,8 @@ add(pick, `Look at your top match: ${pick?.title} at ${pick?.company}`, `${pick?
 const apps = json('applications', 'applications.json') || [];
 const stale = [...apps].reverse().find((a) => a.status === 'applied' && days(a.date) >= 7 && days(a.date) <= 30 && !a.followedUp);
 add(stale, `Follow up on ${stale?.company}`, `You applied ${days(stale?.date)} days ago. A short, friendly note keeps you in mind.`, `Draft a follow-up for ${stale?.company}`);
-add(c && c.score < 70 && c.lifts.length, `Make your résumé stronger (${c?.score}/100)`, `Biggest lift: ${c?.lifts[0]?.title}`, 'Make my résumé stronger');
+const approved = [...(L.experience || []).flatMap((r) => (r.groups || []).flatMap((g) => g.items || [])), ...(L.skills || [])].some(pub);
+add(approved && c && c.score < 70 && c.lifts.length, `Make your résumé stronger (${c?.score}/100)`, `Biggest lift: ${c?.lifts[0]?.title}`, 'Make my résumé stronger');
 
 const out = steps.slice(0, 4);
 if (process.argv.includes('--json')) { console.log(JSON.stringify({ next: out[0] || null, also: out.slice(1) }, null, 2)); process.exit(0); }

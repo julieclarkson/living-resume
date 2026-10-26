@@ -14,7 +14,7 @@ const LONG = 200; // about two lines at PDF width
 const DENSE = 28;  // words in one sentence before it reads as a run-on
 const JARGON = /\b(leverag\w*|utiliz\w*|synerg\w*|spearhead\w*|best[- ]in[- ]class|cutting[- ]edge|world[- ]class|bleeding[- ]edge|results[- ]driven|detail[- ]oriented|go[- ]getter|self[- ]starter|think(ing)? outside the box|paradigm\w*|robust|seamless(ly)?|dynamic|innovative|passionate|rockstar|ninja|guru)\b/i;
 // Contract and freelance work: who the clients were, whether they came back, how work was scoped.
-const CONTRACT = /\b(contract(or|ing)?|freelance\w*|consult(ant|ing)?|self[- ]employed|independent|sole proprietor|principal|owner|founder)\b/i;
+const CONTRACT = /\b(contract(or|ing)?|freelance\w*|consult(ant|ing)?|self[- ]employed|independent|sole proprietor)\b/i;
 const CLIENTS = /\b(clients?|customers?|companies|businesses|organizations|agencies|startups|nonprofits|firms|brands|practices|schools|teams)\b/i;
 const REPEAT = /\b(returned|return(ing)? clients?|repeat|stayed|referr\w*|renew\w*|retain\w*|long[- ]term|for years|again|extended|re-?hired|ongoing)\b/i;
 const SCOPE = /\b(scope[ds]?|scoping|statements? of work|SOWs?|contracts?|engagements?|estimates?|fixed[- ](fee|price|bid)|retainers?|proposals?|deliver\w* against|budgets?|deadlines?)\b/i;
@@ -105,6 +105,11 @@ function topSuggestions(L, target) {
   const sum = pub(L.summary) ? mdPlain(L.summary.text) : '';
   if (!sum) out.push({ id: 'summary', where: 'Summary', kinds: ['summary'], weight: 2, why: 'No summary. Two or three plain sentences aimed at your target help a reader place you.', questions: ['What do you want a hiring manager to know first?', 'What are you best at, with one example?'] });
   else if (FIRST.test(sum)) out.push({ id: L.summary.id, where: 'Summary', text: clip(sum), kinds: ['first-person'], weight: 3, why: 'Written in the first person ("I", "my"). Résumés read better without it, with the same facts.', questions: ['Is it okay to write it without "I" or "my", same facts?'] });
+  if (sum) {
+    const runOn = sum.split(/(?<=[.!?])\s+/).some((x) => x.split(/\s+/).length > DENSE + 7);
+    if (runOn) out.push({ id: L.summary.id, where: 'Summary', text: clip(sum), kinds: ['dense'], weight: 2, why: 'A summary sentence over 35 words. Two or three short sentences read faster.', questions: Q.dense });
+    if (JARGON.test(sum)) out.push({ id: L.summary.id, where: 'Summary', text: clip(sum), kinds: ['jargon'], weight: 1, why: WHY.jargon, questions: Q.jargon });
+  }
   if (sum && VAGUE.test(sum)) out.push({ id: L.summary.id, where: 'Summary', text: clip(sum), kinds: ['vague'], weight: 1, why: WHY.vague, questions: Q.vague });
   return out;
 }
@@ -136,7 +141,7 @@ function shapeSuggestions(roles, { pages = 0, limit = 2, L = {} } = {}) {
       why: `Your PDF is ${pages} pages; screeners expect ${limit} at most. Shorten older roles and long bullets first${trim.length ? ` (${trim.slice(0, 6).join(', ')}${trim.length > 6 ? ', …' : ''})` : ''}, or move them to the web page only.${keep.length ? ` Keep your recent leadership and community lines (${keep.slice(0, 6).join(', ')}${keep.length > 6 ? ', …' : ''}): they show who you are now.` : ''}`,
       questions: ['Which older lines matter least for the work you want next?', 'Should any of them stay on your web page only, off the PDF?'] });
   }
-  for (const r of paid.filter((x) => isRecent(x) && CONTRACT.test(`${x.title || ''} ${x.contract === true ? 'contract' : ''}`)).slice(0, 2)) {
+  for (const r of paid.filter((x) => isRecent(x) && (x.contract === true || (x.contract !== false && CONTRACT.test(`${x.title || ''} ${x.org || ''}`)))).slice(0, 2)) {
     const text = r.items.map((i) => mdPlain(i.text)).join(' ');
     const where = `${r.title}${r.org ? `, ${r.org}` : ''}`;
     if (!CLIENTS.test(text)) out.push({ id: r.id, where, kinds: ['clients'], weight: 3, why: WHY.clients, questions: Q.clients });

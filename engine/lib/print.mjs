@@ -41,12 +41,15 @@ export function htmlToPdf(htmlPath, pdfPath) {
 // The résumé PDF: Chrome when it's available (exact design), otherwise the Python fallback
 // (engine/pdf/fallback.py, reportlab), which Claude Cowork and ChatGPT workspaces can run.
 // Returns 'chrome' or 'fallback'; throws with a plain explanation when neither works.
+/** renderPdf.missing: characters the no-Chrome PDF could not draw (empty when all were drawn). */
 export function renderPdf(model, htmlPath, pdfPath) {
+  renderPdf.missing = '';
   if (findChrome()) { htmlToPdf(htmlPath, pdfPath); return 'chrome'; }
   const script = new URL('../pdf/fallback.py', import.meta.url).pathname;
   for (const py of ['python3', 'python']) {
     try {
-      execFileSync(py, [script, pdfPath], { input: JSON.stringify(model), stdio: ['pipe', 'pipe', 'pipe'], timeout: 60_000 });
+      const so = execFileSync(py, [script, pdfPath], { input: JSON.stringify(model), stdio: ['pipe', 'pipe', 'pipe'], timeout: 60_000 }).toString('utf8');
+      renderPdf.missing = (so.match(/^MISSING_GLYPHS:(.*)$/m) || [])[1] || '';
       if (fs.existsSync(pdfPath)) return 'fallback';
     } catch (e) {
       if (/No module named .?reportlab/.test(String(e.stderr || ''))) throw new Error('No Chrome found, and the PDF fallback needs reportlab: pip install reportlab (or install Google Chrome).');

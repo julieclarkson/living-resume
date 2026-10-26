@@ -1,6 +1,12 @@
 # Changelog
 
-## 1.3.0 · 2026-10-26 (unreleased)
+## 1.3.0 · 2026-10-26 (release build, not yet published)
+- **Every name prints right without Chrome.** The no-Chrome PDF (Claude Cowork, ChatGPT) switches to a bundled Unicode font (DejaVu Sans) when a résumé has letters like ễ, Ł, or ź, drops invisible characters, and turns "ﬁ" back into "fi". Anything it still can't draw (Japanese, emoji) is named in `build`, and `check` fails until it's reworded or built with Chrome.
+- **Markdown résumés import.** `#` headings, `**bold**`, `*` bullets and links are cleaned up first, so a résumé your AI hands over as Markdown keeps every role and line.
+- **LinkedIn never asks you to paste a blank or your own name.** With no approved headline or summary, the packet says "not ready yet" and `next` offers "Add a headline" first.
+- **`style`** (MCP `resume_style`): dates, certificates, and coach counts, each on the person's word. `fix-role` takes `contract: true|false`.
+- Coach: the contractor lens reads the org too ("Self-employed") and no longer fires on "Principal" job titles; the summary gets the readability lens. `next` doesn't offer "make it stronger" before anything is approved.
+- `check` fails when nothing is approved yet, so a publish never goes ahead empty. `--help` no longer prints developer notes.
 - **Role versions in that role's words:** a Design Engineer or Product Designer version (any role) reorders the same approved lines and can use an approved alternate headline or summary (`variant` proposals). Each builds to `dist/roles/<slug>/` and is checked like the main résumé.
 - **Coach, sharper and kinder:** reads for readability (run-on sentences, stock words like "leveraged") and, on recent contract or freelance roles, for who the clients were, whether they came back, and how work was scoped. Any "how many?" also offers a safe floor ("10+"). Set `"coach": { "counts": false }` in the rubric and it never asks for numbers. Awards count as results. Page-fit advice never suggests trimming recent community or leadership; it lists what to keep and points at older roles and long bullets instead.
 - **`next` stays quiet when nothing changed:** after you update LinkedIn, a rebuild alone (new date, renamed field labels) no longer says "Update your LinkedIn". `next` and `linkedin` use the same rule.

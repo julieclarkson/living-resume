@@ -22,6 +22,7 @@ check('ledger: unique ids', !dupes.length, dupes.join(', '));
 const bad = items.filter((i) => !['public', 'application', 'private'].includes(i.visibility) || !['verified', 'interpretation', 'needs-clarification'].includes(i.status) || !Array.isArray(i.surfaces) || !i.text);
 check('ledger: every item has text, surfaces, visibility, status', !bad.length, bad.map((b) => b.id).join(', '));
 check('ledger: has a name', !!L.person?.name);
+check('ledger: has approved lines to publish (approve some in review first)', items.some((i) => i.visibility === 'public' && i.status === 'verified' && !['basics'].includes(i.id)));
 if (!R.privacy?.allow_phone) check('ledger: no phone stored', !L.person?.phone);
 const unverifiedPublic = items.filter((i) => i.visibility === 'public' && i.status !== 'verified');
 check('ledger: public items are verified (others are skipped on export)', true, unverifiedPublic.length ? `${unverifiedPublic.length} held back: ${unverifiedPublic.map((i) => i.id).join(', ')}` : '');
@@ -56,6 +57,7 @@ const dist = (f) => P('dist', f);
   const stamp = (() => { try { return JSON.parse(fs.readFileSync(dist('.build.json'), 'utf8')); } catch { return null; } })();
   const hash = (f) => crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
   check('dist/ was built from the current ledger and rules (run build after every change)', stamp && stamp.ledger === hash(P('resume', 'ledger.json')) && stamp.rules === hash(P('resume', 'rules.json')));
+  check('PDF: every character drawn (none show as boxes)', !stamp?.missingGlyphs, stamp?.missingGlyphs ? `can't draw ${[...stamp.missingGlyphs].join(' ')} without Chrome; reword those lines or build where Google Chrome is installed` : '');
 }
 if (fs.existsSync(dist(R.pdf_filename))) {
   const pages = pdfPageCount(dist(R.pdf_filename));

@@ -209,3 +209,19 @@ test('coach page fit never suggests trimming recent leadership or community; poi
   assert.doesNotMatch(fit.why, /volunteer work/); assert.match(fit.why, /Keep your recent leadership and community/);
   assert.match(coachText(r), /Never trim \(recent leadership and community\): .*v-coach/);
 });
+
+test('loop 4: contractor lens reads the org too, ignores "Principal" job titles, and follows the contract flag', () => {
+  const L = (r) => ({ person: { name: 'Sam Rivera', headline: item('hl', 'Bookkeeper') }, summary: item('sum', 'Bookkeeper.'), experience: [r] });
+  const lens = (r) => coach(L(r)).suggestions.some((s) => s.kinds.includes('clients'));
+  assert.ok(lens(role('a', 'Bookkeeper', 'Self-employed', '2020', null, ['Closed the books monthly, on time'])));
+  assert.ok(!lens(role('b', 'Principal Accountant', 'Acme', '2020', null, ['Closed the books monthly, on time'])));
+  assert.ok(lens({ ...role('c', 'Bookkeeper', 'Rivera Books', '2020', null, ['Closed the books monthly, on time']), contract: true }));
+  assert.ok(!lens({ ...role('d', 'Freelance Bookkeeper', 'Rivera Books', '2020', null, ['Closed the books monthly, on time']), contract: false }));
+});
+
+test('loop 4: summary gets the readability lens', () => {
+  const sum = `Operations leader who leveraged ${'strong systems and steady teams across many sites and '.repeat(4)}shifts.`;
+  const r = coach({ person: { name: 'Sam', headline: item('hl', 'Ops') }, summary: item('sum', sum), experience: [] });
+  const ks = r.suggestions.filter((s) => s.id === 'sum').flatMap((s) => s.kinds);
+  assert.ok(ks.includes('dense') && ks.includes('jargon'), ks.join(','));
+});

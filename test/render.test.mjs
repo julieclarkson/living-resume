@@ -119,3 +119,19 @@ test('certStyle "line" writes one or two certificates as one line; three stay a 
   const three = { ...L, certifications: [...L.certifications, item('c3', 'Forklift')] };
   assert.doesNotMatch(printHtml(three), /Certificates in/);
 });
+
+test('loop 4: no-Chrome PDF draws Vietnamese and Polish letters, strips invisible characters, reports what it cannot draw', { skip: !hasReportlab && 'reportlab not installed' }, () => {
+  const L = { person: { name: 'Zoë Ångström-Nguyễn' }, experience: [role('r', 'Engineer', 'Łódź Café', '2020', 'Shipped of​fline mode ﬁrst, used in 日本')] };
+  const out = path.join(tmp('uni'), 'r.pdf');
+  const so = execFileSync('python3', [path.join(ROOT, 'engine', 'pdf', 'fallback.py'), out], { input: JSON.stringify(printModel(L)), encoding: 'utf8' });
+  assert.match(so, /MISSING_GLYPHS:.*日/); assert.doesNotMatch(so, /MISSING_GLYPHS:.*[ễŁź]/);
+  try { const t = execFileSync('pdftotext', [out, '-'], { encoding: 'utf8' }); assert.match(t, /Nguyễn/); assert.match(t, /Łódź/); assert.match(t, /offline mode first/); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+  const plain = path.join(tmp('uni2'), 'r.pdf');
+  const so2 = execFileSync('python3', [path.join(ROOT, 'engine', 'pdf', 'fallback.py'), plain], { input: JSON.stringify(printModel({ person: { name: 'Sam Rivera' }, experience: [] })), encoding: 'utf8' });
+  assert.equal(so2, '');
+});
+
+test('loop 4: certificate line falls back to a list when a name already says Certified or Certificate', () => {
+  const L = { ...base(), certStyle: 'line', education: [item('e1', 'BA English', { institution: 'Smith College' })], certifications: [item('c1', 'Certified Payroll Professional')] };
+  assert.doesNotMatch(printHtml(L), /Certificates in Certified/);
+});

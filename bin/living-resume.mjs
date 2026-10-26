@@ -16,7 +16,8 @@
 //   check                                    every check (run before publishing)
 //   coach [--json]                           read-only: strength score, 3 biggest lifts, questions to ask
 //   publish [--write]                        dry run, or copy files to your site (never commits)
-//   heading [<section> "Text" | --reset]  rename a section heading for this person only
+//   heading [<section> "Text" | <section> --reset]   rename a section heading for this person only
+//   style [dates years|months|auto | certs list|line | counts on|off]   this person's date, certificate, and coach choices
 //   linkedin                                 which LinkedIn fields changed, with the text to paste
 //   roles [new <slug> "Name" | show <slug>]  a version of your résumé per kind of role (Free: one)
 //   apply <posting> [--role …] [--company …] (Pro)  best-fit role version for one job, logged privately
@@ -35,12 +36,12 @@ const di = argv.indexOf('--dir');
 if (di >= 0) { if (!argv[di + 1]) { console.error('--dir needs a folder'); process.exit(2); } process.env.LIVING_RESUME_DIR = path.resolve(argv[di + 1]); argv.splice(di, 2); }
 
 const ALIASES = { 'gate:test': 'check', test: 'check', tailor: 'apply' };
-const COMMANDS = ['next', 'init', 'import', 'add', 'inbox', 'snippet', 'status', 'review', 'propose', 'fix-role', 'target', 'roles', 'build', 'check', 'coach', 'publish', 'linkedin', 'heading', 'apply', 'jobs', 'scout', 'license'];
+const COMMANDS = ['next', 'init', 'import', 'add', 'inbox', 'snippet', 'status', 'review', 'propose', 'fix-role', 'target', 'roles', 'build', 'check', 'coach', 'publish', 'linkedin', 'heading', 'style', 'apply', 'jobs', 'scout', 'license'];
 const cmd = ALIASES[argv[0]] || argv[0];
 
 if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h') {
   const fs = await import('node:fs');
-  console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').filter((l) => l.startsWith('//')).slice(1).map((l) => l.slice(3)).join('\n'));
+  console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1).filter((l, i, a) => a.slice(0, i + 1).every((x) => x.startsWith('//'))).slice(1).map((l) => l.slice(3)).join('\n'));
   process.exit(0);
 }
 if (cmd === '--version' || cmd === 'version') {
@@ -51,7 +52,7 @@ if (cmd === '--version' || cmd === 'version') {
 if (!COMMANDS.includes(cmd)) { console.error(`Unknown command "${argv[0]}". Run: living-resume help`); process.exit(2); }
 
 // Commands that change the workspace run one at a time.
-if (['import', 'add', 'inbox', 'review', 'propose', 'fix-role', 'target', 'roles', 'build', 'publish', 'apply', 'jobs', 'scout'].includes(cmd) && !((cmd === 'target' && !argv[1]) || ['review', 'inbox', 'roles', 'jobs'].includes(cmd) && (!argv[1] || ['all', 'list', 'show', 'schedule', 'read', 'boards'].concat(cmd === 'jobs' && argv[1] === 'applied' && !argv[2] ? ['applied'] : []).includes(argv[1]) || (cmd === 'jobs' && argv[1] === 'criteria' && !argv.includes('--set'))))) {
+if (['import', 'add', 'inbox', 'review', 'propose', 'fix-role', 'target', 'style', 'roles', 'build', 'publish', 'apply', 'jobs', 'scout'].includes(cmd) && !(((cmd === 'target' || cmd === 'style') && !argv[1]) || ['review', 'inbox', 'roles', 'jobs'].includes(cmd) && (!argv[1] || ['all', 'list', 'show', 'schedule', 'read', 'boards'].concat(cmd === 'jobs' && argv[1] === 'applied' && !argv[2] ? ['applied'] : []).includes(argv[1]) || (cmd === 'jobs' && argv[1] === 'criteria' && !argv.includes('--set'))))) {
   const { lockWorkspace, isWorkspace } = await import('../engine/lib/util.mjs');
   if (isWorkspace()) { try { lockWorkspace(); } catch (e) { console.error(`✗ ${e.message}`); process.exit(4); } }
 }

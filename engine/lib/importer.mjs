@@ -162,7 +162,25 @@ function headerAbove(pending) {
   return -1;
 }
 const titleCase = (s) => s.toLowerCase().replace(/(^|[\s'-])(\p{L})/gu, (m, a, b) => a + b.toUpperCase());
+/** Markdown and invisible characters out, plain résumé text in. Host AIs often hand over a PDF's text as Markdown. */
+export function plainText(text) {
+  return String(text)
+    .replace(/[\u200B-\u200D\u2060\uFEFF\u00AD]/g, '')
+    .replace(/\u00A0/g, ' ')
+    .split('\n').map((l) => l
+      .replace(/^\s{0,3}#{1,6}\s+/, '')
+      .replace(/^\s{0,3}(?:-{3,}|\*{3,}|_{3,})\s*$/, '')
+      .replace(/^(\s*)\*\s+/, '$1- ')
+      .replace(/!?\[([^\]]+)\]\((https?:[^)\s]+)\)/g, (m, t, u) => (t === u ? u : `${t} (${u})`))
+      .replace(/(\*\*|__)(?=\S)(.+?)(?<=\S)\1/g, '$2')
+      .replace(/(^|[\s(])([*_])(?=\S)([^*_\n]+?)(?<=\S)\2(?=$|[\s).,;:])/g, '$1$3')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/^\s*>\s?/, ''))
+    .join('\n');
+}
+
 export function fromText(text, source = 'résumé') {
+  text = plainText(text);
   const lines = String(text).replace(/\r/g, '').split('\n').map((l) => l.replace(/\s+$/, '')).filter((l) => !/^\s*page \d+ of \d+\s*$/i.test(l));
   const linkedinPdf = /linkedin\.com\/in\//i.test(text) && /\bTop Skills\b/.test(text);
   const draft = { source, person: {}, roles: [], education: [], skills: [], certifications: [], volunteer: [], publications: [], unplaced: [], unplacedHeadings: [], unplacedLines: [] };

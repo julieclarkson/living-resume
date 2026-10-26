@@ -168,3 +168,29 @@ test('next: one step at a time, from where the user is', () => {
   fs.writeFileSync(synced, fs.readFileSync(synced, 'utf8').replace(/```\n([^`]+?)\n```/, '```\nAn older headline\n```'));
   assert.match(cli(['next'], { dir }).out, /Update the LinkedIn fields that changed/);
 });
+
+test('loop 4: Markdown résumé imports its roles; LinkedIn never offers the name as headline or a blank About; style command', () => {
+  const dir = workspace('md');
+  const md = path.join(dir, 'r.md');
+  fs.writeFileSync(md, '# Sam Rivera\nDurham, NC · sam.rivera@example.com\n\n## Summary\nProject manager who ships on time.\n\n## Experience\n**Project Manager, Acme Health, Durham, NC   Apr 2021 – Present**\n- Led the rollout across **14 clinics**, on time.\n* Cut intake time from 20 to 12 minutes.\n\n## Skills\nScheduling, budgets\n');
+  const imp = cli(['import', md], { dir }).out;
+  assert.match(imp, /Roles outlined: 1/, imp);
+  const prefix = fs.readdirSync(path.join(dir, 'proposals'))[0].replace(/-\d{3}\.json$/, '');
+  const list = cli(['review'], { dir }).out;
+  assert.doesNotMatch(list, /##|\*\*/); assert.match(list, /Led the rollout across 14 clinics/);
+  cli(['review', 'approve-all', prefix], { dir });
+  cli(['build'], { dir, env: { LIVING_RESUME_NO_CHROME: '1' } });
+  const pkt = fs.readFileSync(path.join(dir, 'dist', 'linkedin-packet.md'), 'utf8');
+  assert.doesNotMatch(pkt, /## Headline \(/); assert.match(pkt, /## Headline: not ready yet/);
+  assert.match(cli(['next'], { dir }).out, /Add a headline/);
+  assert.match(cli(['style', 'dates', 'years'], { dir }).out, /dates\s+years/);
+  assert.match(cli(['style', 'counts', 'off'], { dir }).out, /counts\s+off/);
+  assert.equal(cli(['style', 'dates', 'weekly'], { dir }).code, 1);
+});
+
+test('loop 4: an empty résumé fails check, so publish never goes ahead with nothing approved', () => {
+  const dir = workspace('empty');
+  cli(['build'], { dir, env: { LIVING_RESUME_NO_CHROME: '1' } });
+  const out = cli(['check'], { dir }).out;
+  assert.match(out, /✗ ledger: has approved lines to publish/);
+});

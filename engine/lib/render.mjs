@@ -22,7 +22,7 @@ const linkify = (text, url) => {
 export const interestList = (t) => String(t || '').split(/\.\s+/).flatMap((sent) => sent.replace(/\.$/, '').split(/,\s*(?:and\s+)?/)).map((x) => x.trim()).filter(Boolean);
 /** Certificates are a list. A person can choose ledger "certStyle": "line" for "Certificates in A and B" (one or two only). */
 const andList = (xs) => (xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')}, and ${xs.at(-1)}`);
-const certLine = (L, S, edu) => { const c = (L.certifications || []).filter((i) => shows(i, S)).map((x) => mdPlain(x.text)); return L.certStyle === 'line' && edu && c.length && c.length <= 2 ? `Certificates in ${andList(c)}` : ''; };
+const certLine = (L, S, edu) => { const c = (L.certifications || []).filter((i) => shows(i, S)).map((x) => mdPlain(x.text)); return L.certStyle === 'line' && edu && c.length && c.length <= 2 && !c.some((x) => /\bcertifi(ed|cate)\b/i.test(x)) ? `Certificates in ${andList(c)}` : ''; };
 const H = (L, k, d) => esc((L.headings && L.headings[k]) || d);
 const place = (p) => [p.location?.city, p.location?.region].filter(Boolean).join(', ');
 // The school only when the education line doesn't already name it ("BS Biology, UT Austin" + "UT Austin").
@@ -167,22 +167,24 @@ export function linkedinPacket(L, rules, changes = [], settings = {}) {
   const p = L.person;
   out.push(`# LinkedIn update packet · ${new Date().toISOString().slice(0, 10)}\n\nPaste each block into the matching LinkedIn field. LinkedIn doesn't allow automated edits, so this is copy-and-paste by design.\n`);
   if (changes.length) out.push(`## What changed since the last publish\n\n${changes.map((c) => `- ${c}`).join('\n')}\n`);
-  const hl = shows(p.linkedinHeadline, S) ? p.linkedinHeadline.text : shows(p.headline, S) ? p.headline.text : p.name;
-  sec('Headline', hl, lim.headline);
+  // A field with nothing approved is never offered for pasting (no name-as-headline, no blank About).
+  const notYet = (title, why) => out.push(`## ${title}: not ready yet\n\n${why}\n`);
+  const hl = shows(p.linkedinHeadline, S) ? p.linkedinHeadline.text : shows(p.headline, S) ? p.headline.text : '';
+  if (hl) sec('Headline', hl, lim.headline); else notYet('Headline', 'Approve a headline first (the job title a reader should see under your name). Leave your LinkedIn headline as it is until then.');
   const how = (L.howIWork?.items || []).filter((i) => shows(i, S)).map((i) => `• ${i.text}`).join('\n');
   const about = [shows(L.summary, S) ? L.summary.text : '', how ? `How I work\n${how}` : '', shows(p.availability, S) ? p.availability.text + '.' : ''].filter(Boolean).join('\n\n');
-  sec('About', about, lim.about);
+  if (about) sec('About', about, lim.about); else notYet('About', 'Approve a summary first. Leave your LinkedIn About as it is until then.');
   for (const r of rolesInOrder(L).filter((x) => roleShows(x, S))) {
     // One key per role (title, org, start year), so a promotion at the same company or a blank org never collides.
     const role = `Experience: ${r.title || '—'} at ${r.org || '—'} (${String(r.start || '').slice(0, 4) || '—'})`;
-    sec(`${role} title`, r.title || '', lim.position_title);
+    if (r.title) sec(`${role} title`, r.title, lim.position_title);
     const desc = (r.groups || []).flatMap((g) => (g.items || []).filter((i) => shows(i, S))).map((i) => `• ${mdPlain(i.text)}`).join('\n');
-    sec(`${role} description`, desc, lim.position_description);
+    if (desc) sec(`${role} description`, desc, lim.position_description);
   }
   const skills = (L.skills || []).filter((i) => shows(i, S)).flatMap((s) => s.text.replace(/,? and more$/, '').split(/,\s*(?![^()]*\))/)).slice(0, 50);
-  out.push(`## Skills (add any missing; LinkedIn allows up to 100)\n\n${skills.map((s) => `- ${s}`).join('\n')}\n`);
+  if (skills.length) out.push(`## Skills (add any missing; LinkedIn allows up to 100)\n\n${skills.map((s) => `- ${s}`).join('\n')}\n`);
   const pubs = publications(L, S); if (pubs.length) out.push(`## Publications and talks (add under Publications or Featured)\n\n${pubs.map((x) => `- ${x.text}${x.link ? ` (${x.link})` : ''}`).join('\n')}\n`);
-  out.push(`## Volunteer (check each exists)\n\n${(L.volunteer || []).filter((i) => shows(i, S)).map((v) => `- ${v.text}`).join('\n')}\n`);
+  const vol = (L.volunteer || []).filter((i) => shows(i, S)); if (vol.length) out.push(`## Volunteer (check each exists)\n\n${vol.map((v) => `- ${v.text}`).join('\n')}\n`);
   const li = settings.linkedin || {};
   out.push(`## Featured\n\n${links(L).resumePage ? `- Link: ${links(L).resumePage} (always current)\n` : ''}- Media: upload dist/${rules.pdf_filename} (replace the old copy whenever this packet says the PDF changed)\n`);
   const otw = li.openToWork;
