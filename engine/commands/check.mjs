@@ -117,4 +117,5 @@ check('quarantine out: blocks an unapproved email', scanOut('Write to someone.el
 const failed = results.filter((r) => !r.ok);
 for (const r of results) console.log(`${r.ok ? '✓' : '✗'} ${r.name}${r.detail ? `  (${r.detail})` : ''}`);
 console.log(`\n${results.length - failed.length}/${results.length} checks passed.`);
+{ const { preLaunch } = await import('../lib/license.mjs'); if (preLaunch()) console.log('· Pre-launch: Pro features are unlocked until the Polar store is configured in product.config.json.'); }
 process.exit(failed.length ? 1 : 0);

@@ -144,8 +144,12 @@ export async function deactivate() {
 }
 
 // Gate for a Pro feature. Re-checks online when the cache is over a day old.
+// Before launch (no Polar store in product.config.json) Pro features are unlocked, with a reminder
+// on every use. Filling store.organizationId turns licensing on; `check` warns until then.
+export const preLaunch = (cfg = productConfig()) => !cfg.store?.organizationId;
 export async function requirePro(feature) {
   const cfg = productConfig();
+  if (preLaunch(cfg)) { console.error('· Pre-launch: Pro features are unlocked because no Polar store is configured in product.config.json. Configure it before release.'); return { ok: true }; }
   let s = licenseState();
   if (s.tier === 'pro' && s.stale) { await validate(); s = licenseState(); }
   if (s.tier === 'pro') return { ok: true };

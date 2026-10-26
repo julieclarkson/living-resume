@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { cli, workspace, ROOT, hasChrome } from './helpers.mjs';
+import { cli, workspace, ROOT, hasChrome, storeConfig } from './helpers.mjs';
 
 const SAMPLE = path.join(ROOT, 'examples', 'sample-resume.txt');
 const chrome = await hasChrome();
@@ -107,10 +107,11 @@ test('check fails when a private name reaches a public line', () => {
 });
 
 test('Pro features say so on Free and change nothing', () => {
-  const dir = workspace('gate');
+  const dir = workspace('gate'); const env = { LIVING_RESUME_PRODUCT_CONFIG: storeConfig(dir) };
   fs.writeFileSync(path.join(dir, 'posting.txt'), 'We are hiring a product designer.');
-  const s = cli(['scout'], { dir }); assert.equal(s.code, 3); assert.match(s.out, /part of Living Résumé Pro/);
-  const t = cli(['apply', path.join(dir, 'posting.txt'), '--company', 'Acme'], { dir }); assert.equal(t.code, 3);
+  const s = cli(['scout'], { dir, env }); assert.equal(s.code, 3); assert.match(s.out, /part of Living Résumé Pro/);
+  const t = cli(['apply', path.join(dir, 'posting.txt'), '--company', 'Acme'], { dir, env }); assert.equal(t.code, 3);
+  const pre = cli(['license', 'status'], { dir }); assert.match(pre.out, /Pre-launch: Pro features are unlocked/);
   assert.ok(!fs.existsSync(path.join(dir, 'applications')));
   assert.ok(!fs.existsSync(path.join(dir, 'scout', 'state.json')));
 });
