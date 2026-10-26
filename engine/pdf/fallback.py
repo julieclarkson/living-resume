@@ -13,34 +13,62 @@ from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, ListFlowable, ListItem
-from reportlab.platypus.flowables import HRFlowable
+from reportlab.platypus.flowables import HRFlowable, Flowable
+from reportlab.pdfbase.pdfmetrics import stringWidth
 
 INK, BODY, MUTED, RULE = colors.HexColor('#1A1917'), colors.HexColor('#3A3733'), colors.HexColor('#635E56'), colors.HexColor('#D6D1C8')
-F, FB = 'Helvetica', 'Helvetica-Bold'
+ACCENT = colors.HexColor('#A34526')
+F, FB, FI = 'Helvetica', 'Helvetica-Bold', 'Helvetica-Oblique'
 st = {
-    'name': ParagraphStyle('name', fontName=FB, fontSize=21, leading=25, textColor=INK, spaceAfter=4),
-    'title': ParagraphStyle('title', fontName=FB, fontSize=11.5, leading=15, textColor=INK),
-    'sub': ParagraphStyle('sub', fontName=F, fontSize=9.6, leading=13, textColor=MUTED, spaceBefore=2),
-    'avail': ParagraphStyle('avail', fontName=FB, fontSize=9.6, leading=13, textColor=INK, spaceBefore=9, spaceAfter=5),
-    'contact': ParagraphStyle('contact', fontName=F, fontSize=9, leading=12, textColor=MUTED),
-    'body': ParagraphStyle('body', fontName=F, fontSize=9.6, leading=13.4, textColor=BODY),
-    'summary': ParagraphStyle('summary', fontName=F, fontSize=9.6, leading=13.4, textColor=BODY, spaceBefore=8),
-    'h2': ParagraphStyle('h2', fontName=FB, fontSize=10.2, leading=13, textColor=INK, spaceBefore=4, spaceAfter=5),
-    'role': ParagraphStyle('role', fontName=FB, fontSize=10, leading=13, textColor=INK),
-    'when': ParagraphStyle('when', fontName=F, fontSize=9.2, leading=13, textColor=MUTED, alignment=2),
-    'org': ParagraphStyle('org', fontName=F, fontSize=9.2, leading=12, textColor=MUTED, spaceAfter=2),
+    'name': ParagraphStyle('name', fontName=FB, fontSize=22, leading=26, textColor=INK, spaceAfter=3),
+    'title': ParagraphStyle('title', fontName=FB, fontSize=11.5, leading=15, textColor=ACCENT),
+    'sub': ParagraphStyle('sub', fontName=F, fontSize=9.6, leading=13, textColor=MUTED, spaceBefore=1),
+    'avail': ParagraphStyle('avail', fontName=FB, fontSize=9.6, leading=13, textColor=INK, spaceBefore=6),
+    'contact': ParagraphStyle('contact', fontName=F, fontSize=9, leading=12, textColor=MUTED, spaceBefore=4),
+    'body': ParagraphStyle('body', fontName=F, fontSize=9.6, leading=13.2, textColor=BODY),
+    'summary': ParagraphStyle('summary', fontName=F, fontSize=9.8, leading=13.8, textColor=BODY, spaceBefore=6),
+    'h2': ParagraphStyle('h2', fontName=FB, fontSize=10.4, leading=13, textColor=INK),
+    'role': ParagraphStyle('role', fontName=FB, fontSize=10.2, leading=13, textColor=INK),
+    'org': ParagraphStyle('org', fontName=FI, fontSize=9.2, leading=12, textColor=MUTED, spaceAfter=2),
     'note': ParagraphStyle('note', fontName=F, fontSize=9.2, leading=12.5, textColor=MUTED, spaceBefore=3),
-    'term': ParagraphStyle('term', fontName=FB, fontSize=9.6, leading=13.4, textColor=INK),
+    'term': ParagraphStyle('term', fontName=FB, fontSize=9.6, leading=13.2, textColor=INK),
 }
 e = lambda s: escape(str(s or ''))
 W = letter[0] - 1.3 * inch - 12  # frame width minus the frame's 6pt padding on each side
+WHEN_SIZE = 9.2
+
+
+class RoleLine(Flowable):
+    """Role title on the left and its dates right-aligned on the same baseline (one text line, so
+    text extraction keeps "Title  Mar 2021 to present" together and in order)."""
+
+    def __init__(self, title, when):
+        Flowable.__init__(self)
+        self.when = when or ''
+        self.dw = stringWidth(self.when, F, WHEN_SIZE) + 10
+        self.p = Paragraph(e(title), st['role'])
+
+    def wrap(self, aw, ah):
+        self.aw = aw
+        _, self.ph = self.p.wrap(aw - self.dw, ah)
+        return aw, self.ph
+
+    def draw(self):
+        self.p.drawOn(self.canv, 0, 0)
+        self.canv.setFont(F, WHEN_SIZE)
+        self.canv.setFillColor(MUTED)
+        self.canv.drawRightString(self.aw, self.ph - st['role'].leading + 3, self.when)
+
 
 def bullets(items, small=False):
-    return ListFlowable([ListItem(Paragraph(e(t), st['body']), leftIndent=12, bulletColor=MUTED) for t in items],
-                        bulletType='bullet', start='•', leftIndent=12, bulletFontSize=7, spaceBefore=1)
+    return ListFlowable([ListItem(Paragraph(e(t), st['body']), leftIndent=11, bulletColor=MUTED) for t in items],
+                        bulletType='bullet', start='\u2022', leftIndent=11, bulletFontName=F, bulletFontSize=8.5, bulletOffsetY=-0.6, spaceBefore=1)
+
 
 def section(title):
-    return [Spacer(1, 9), HRFlowable(width='100%', thickness=0.6, color=RULE, spaceBefore=0, spaceAfter=6), Paragraph(e(title), st['h2'])]
+    """Section head: a bold label with a thin accent rule under it (text kept as written, for the check)."""
+    return [Spacer(1, 10), Paragraph(e(title), st['h2']),
+            HRFlowable(width='100%', thickness=0.7, color=ACCENT, spaceBefore=2, spaceAfter=5)]
 
 def main():
     out = sys.argv[1]
@@ -51,7 +79,8 @@ def main():
     if m.get('headline'): s.append(Paragraph(e(m['headline']), st['title']))
     if m.get('subline'): s.append(Paragraph(e(m['subline']), st['sub']))
     if m.get('availability'): s.append(Paragraph(e(m['availability']), st['avail']))
-    if m.get('contact'): s.append(Paragraph('&nbsp;&nbsp;&nbsp;&nbsp;'.join(e(c) for c in m['contact']), st['contact']))
+    if m.get('contact'): s.append(Paragraph('&nbsp;&nbsp;\u00b7&nbsp;&nbsp;'.join(e(c) for c in m['contact']), st['contact']))
+    s.append(HRFlowable(width='100%', thickness=0.5, color=RULE, spaceBefore=8, spaceAfter=2))
     for t in m.get('summary', []): s.append(Paragraph(e(t), st['summary']))
     for sec in m.get('sections', []):
         head = section(sec['title'])
@@ -59,11 +88,9 @@ def main():
         if k == 'jobs':
             first = True
             for j in sec['jobs']:
-                row = Table([[Paragraph(e(j['title']), st['role']), Paragraph(e(j['when']), st['when'])]], colWidths=[W * 0.75, W * 0.25])
-                row.setStyle(TableStyle([('LEFTPADDING', (0, 0), (-1, -1), 0), ('RIGHTPADDING', (0, 0), (-1, -1), 0), ('TOPPADDING', (0, 0), (-1, -1), 0), ('BOTTOMPADDING', (0, 0), (-1, -1), 0), ('VALIGN', (0, 0), (-1, -1), 'BOTTOM')]))
-                block = [row, Paragraph(e(j['org']), st['org'])]
+                block = [RoleLine(j['title'], j['when']), Paragraph(e(j['org']), st['org'])]
                 if j['bullets']: block.append(bullets(j['bullets']))
-                block.append(Spacer(1, 6))
+                block.append(Spacer(1, 7))
                 s.append(KeepTogether((head if first else []) + block[:2]))
                 s.extend(block[2:])
                 first = False
@@ -89,6 +116,8 @@ def main():
             s.append(KeepTogether(head + body))
         elif k == 'cols':
             items = sec['items']; half = (len(items) + 1) // 2
+            if len(items) <= 2:  # one or two lines read better as a plain list than as two columns
+                s.append(KeepTogether(head + [bullets(items)])); continue
             col = lambda xs: bullets(xs) if xs else Spacer(1, 1)
             t = Table([[col(items[:half]), col(items[half:])]], colWidths=[W / 2, W / 2])
             t.setStyle(TableStyle([('LEFTPADDING', (0, 0), (-1, -1), 0), ('RIGHTPADDING', (0, 0), (-1, -1), 8), ('VALIGN', (0, 0), (-1, -1), 'TOP')]))
