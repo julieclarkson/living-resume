@@ -1,11 +1,12 @@
 // check: every check must pass before anything can be published.
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-import { P, loadLedger, loadRules, allItems, mdPlain, requireWorkspace, roleShows } from '../lib/util.mjs';
+import { P, readJSON, loadLedger, loadRules, allItems, mdPlain, requireWorkspace, roleShows, httpsUrl } from '../lib/util.mjs';
 import { scanOut, scanIn } from '../lib/quarantine.mjs';
 import { pdfPageCount, pdfText } from '../lib/print.mjs';
 import { printHtml } from '../lib/render.mjs';
 import { listRoles, validateRole } from '../lib/roles.mjs';
+import { coach } from '../lib/coach.mjs';
 
 requireWorkspace();
 const L = loadLedger(); const R = loadRules();
@@ -25,7 +26,7 @@ const unverifiedPublic = items.filter((i) => i.visibility === 'public' && i.stat
 check('ledger: public items are verified (others are skipped on export)', true, unverifiedPublic.length ? `${unverifiedPublic.length} held back: ${unverifiedPublic.map((i) => i.id).join(', ')}` : '');
 
 // 2. Every public line passes the outbound scan (private names, framing, privacy, secrets)
-const pubText = items.filter((i) => i.visibility === 'public').map((i) => `${i.id}: ${mdPlain(i.text)} ${i.title || ''} ${i.label || ''}`).join('\n');
+const pubText = items.filter((i) => i.visibility === 'public').map((i) => `${i.id}: ${mdPlain(i.text)} ${i.title || ''} ${i.label || ''} ${i.link || ''}`).join('\n');
 const v = scanOut(pubText, R);
 check('outbound scan: public lines', !v.length, v.map((x) => `${x.rule}: ${x.detail}`).join('; '));
 
@@ -34,6 +35,9 @@ if (R.voice?.plain !== false) {
   const plain = items.filter((i) => i.visibility === 'public' && i.surfaces.length && /[;→]|[^\s/]:\s/.test(mdPlain(i.text)));
   check('plain voice: no colons, semicolons, or arrows in public lines', !plain.length, plain.length ? `${plain.map((i) => i.id).join(', ')}: reword without ; : → (use commas or "and", same meaning)` : '');
 }
+
+// 2b'. Proof links are public: one https address each (never http, javascript:, or a file).
+{ const badLinks = items.filter((i) => i.link !== undefined && i.link !== '' && !httpsUrl(i.link)); check('proof links: https only', !badLinks.length, badLinks.map((i) => i.id).join(', ')); }
 
 // 2c. Approved alternate wordings (used by role profiles) pass the same rules as public lines.
 const variants = items.flatMap((i) => (i.variants || []).filter((v) => v.status === 'verified').map((v) => ({ ...v, of: i.id })));
@@ -117,4 +121,9 @@ check('quarantine out: blocks an unapproved email', scanOut('Write to someone.el
 const failed = results.filter((r) => !r.ok);
 for (const r of results) console.log(`${r.ok ? '✓' : '✗'} ${r.name}${r.detail ? `  (${r.detail})` : ''}`);
 console.log(`\n${results.length - failed.length}/${results.length} checks passed.`);
+// Coach suggestions never fail the build: they are ways to make true lines stronger.
+try {
+  const c = coach(L, { target: readJSON(P('resume', 'rubric.json'), {}).target || '' });
+  if (c.lifts.length) console.log(`\nSuggestions (not failures). Résumé strength ${c.score}/100. Biggest lifts:\n${c.lifts.map((l, i) => `  ${i + 1}. ${l.title}`).join('\n')}\n${process.env.LIVING_RESUME_VIA === 'mcp' ? 'Details: resume_coach.' : 'Details: living-resume coach'}`);
+} catch {}
 process.exit(failed.length ? 1 : 0);

@@ -118,7 +118,8 @@ const HEAD = [
   ['certifications', /^(certifications|licenses (?:&|and) certifications|certificates|licenses)$/],
   ['volunteer', /^(volunteer|volunteering|volunteer experience|community|community involvement|boards?|board service|board (?:&|and) community|community (?:&|and) board service)$/],
   ['contact', /^(contact|contact information|contact info)$/],
-  ['other', /^(projects|languages|honors|honors (?:&|and) awards|awards|awards (?:&|and) honors|publications|speaking|speaking (?:&|and) publications|presentations|patents|interests|references)$/],
+  ['publications', /^(publications|speaking|talks|presentations|speaking engagements|publications (?:&|and) (?:speaking|talks|presentations)|(?:speaking|talks|presentations) (?:&|and) publications|publications,? talks(?:,? and presentations)?)$/],
+  ['other', /^(projects|languages|honors|honors (?:&|and) awards|awards|awards (?:&|and) honors|patents|interests|references)$/],
 ];
 // Locations: "Austin, TX", "Raleigh, North Carolina", "Remote", "Hybrid", "Austin, TX / Remote".
 const REGIONS = 'Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New Hampshire|New Jersey|New Mexico|New York|North Carolina|North Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode Island|South Carolina|South Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West Virginia|Wisconsin|Wyoming|Ontario|Quebec|British Columbia|Alberta|Canada|USA|United States|United Kingdom|England|Scotland|Ireland|Germany|France|India|Australia|Mexico';
@@ -164,7 +165,7 @@ const titleCase = (s) => s.toLowerCase().replace(/(^|[\s'-])(\p{L})/gu, (m, a, b
 export function fromText(text, source = 'résumé') {
   const lines = String(text).replace(/\r/g, '').split('\n').map((l) => l.replace(/\s+$/, '')).filter((l) => !/^\s*page \d+ of \d+\s*$/i.test(l));
   const linkedinPdf = /linkedin\.com\/in\//i.test(text) && /\bTop Skills\b/.test(text);
-  const draft = { source, person: {}, roles: [], education: [], skills: [], certifications: [], volunteer: [], unplaced: [], unplacedHeadings: [], unplacedLines: [] };
+  const draft = { source, person: {}, roles: [], education: [], skills: [], certifications: [], volunteer: [], publications: [], unplaced: [], unplacedHeadings: [], unplacedLines: [] };
   const sections = { top: [] }; let cur = 'top';
   // An ALL-CAPS line that matches no known heading starts an "other" section (not placed, reported),
   // unless a date range follows right below it (then it is an employer name).
@@ -255,6 +256,7 @@ export function fromText(text, source = 'résumé') {
   for (const l of (sections.skills || []).map((x) => x.trim()).filter(Boolean)) for (const s of l.split(/\s*[,;•·|]\s*/)) if (s.length > 1 && s.length < 60) draft.skills.push(s.replace(/^[-*]\s*/, ''));
   for (const l of (sections.certifications || []).map((x) => x.trim()).filter(Boolean)) draft.certifications.push({ name: l.replace(/^[-*•]\s*/, '') });
   for (const l of (sections.volunteer || []).map((x) => x.trim()).filter(Boolean)) draft.volunteer.push({ text: l.replace(/^[-*•]\s*/, '') });
+  for (const l of (sections.publications || []).map((x) => x.trim()).filter(Boolean)) draft.publications.push(l.replace(/^[-*•]\s*/, ''));
   return draft;
 }
 
@@ -320,6 +322,7 @@ export function toProposals(draft, { ledger, prefix, evidence }) {
   for (const e of draft.education) add('education', e.text || [e.degree, e.institution, String(e.end || '').slice(0, 4)].filter(Boolean).join(', '), { institution: e.institution || '', area: e.area || '', note: e.note || '' });
   if (draft.skills.length) add('skills', [...new Set(draft.skills)].join(', '), { name: 'Skills' }, `From your ${draft.source}. Split into groups as you like.`);
   for (const c of draft.certifications) add('certifications', [c.name, c.issuer, c.year].filter(Boolean).join(', '), { issuer: c.issuer || '' });
+  for (const t of draft.publications || []) add('publications', t);
   for (const v of draft.volunteer) add('volunteer', v.text || [v.role, v.org].filter(Boolean).join(', '), { role: v.role || '', org: v.org || '', start: v.start || '', end: v.end || '' });
   return { proposals, roles };
 }

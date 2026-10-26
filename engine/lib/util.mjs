@@ -117,6 +117,8 @@ export const mdHtml = (s = '') => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
 export const mdPlain = (s = '') => String(s).replace(/\*\*(.+?)\*\*/g, '$1');
 // Only http(s) and mailto links are ever written into HTML.
 export const safeUrl = (u = '') => (/^(https?:\/\/|mailto:)/i.test(String(u).trim()) ? String(u).trim() : '');
+// A public proof link on a ledger line: one https address, nothing else (never http, javascript:, data:).
+export const httpsUrl = (u = '') => { const s = String(u || '').trim(); if (!/^https:\/\/[^\s"'<>\\]{3,500}$/.test(s)) return ''; try { return new URL(s).protocol === 'https:' ? s : ''; } catch { return ''; } };
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 export function fmtMonth(ym) {
@@ -137,7 +139,7 @@ export const roleShows = (role, surface) => role.visibility === 'private' ? fals
   : role.visibility === 'auto' ? (role.groups || []).some((g) => (g.items || []).some((i) => shows(i, surface)))
   : true;
 
-export const SECTIONS = ['snippets', 'skills', 'education', 'certifications', 'volunteer', 'application_only'];
+export const SECTIONS = ['snippets', 'skills', 'education', 'certifications', 'publications', 'volunteer', 'application_only'];
 
 // Every text item in the ledger, flattened (for scans, status, review).
 export function allItems(ledger) {
@@ -154,13 +156,14 @@ export function allItems(ledger) {
 }
 
 // Experience newest first: by end date (present first), then start date; ties keep ledger order.
+// Roles the user marked volunteer (resume_fix_role volunteer: true) come after paid roles.
 // A role profile that orders roles itself (applyRole sets experienceOrder) is left as it is.
 const endKey = (r) => (!r.end ? (r.start ? '9999-99' : '0000-00') : /^\d{4}$/.test(r.end) ? `${r.end}-12` : String(r.end));
 const startKey = (r) => (!r.start ? '0000-00' : /^\d{4}$/.test(r.start) ? `${r.start}-01` : String(r.start));
 export function rolesInOrder(L) {
   const list = [...(L.experience || [])];
   if (L.experienceOrder === 'profile') return list;
-  return list.map((r, i) => [r, i]).sort(([a, i], [b, j]) => endKey(b).localeCompare(endKey(a)) || startKey(b).localeCompare(startKey(a)) || i - j).map(([r]) => r);
+  return list.map((r, i) => [r, i]).sort(([a, i], [b, j]) => (a.volunteer === true) - (b.volunteer === true) || endKey(b).localeCompare(endKey(a)) || startKey(b).localeCompare(startKey(a)) || i - j).map(([r]) => r);
 }
 
 export function findItem(ledger, id) {

@@ -2,15 +2,16 @@
 // For AI tools that can't write files (the MCP resume_propose tool runs this). The proposal still
 // waits for the user's Approve · Edit · Reject · Later in review; nothing in the ledger changes here.
 //   { "id"?, "kind": "add|edit|remove|variant|basics", "section"?, "target"?, "role"?, "newId"?,
-//     "text", "reason", "evidence", "fields"?, "surfaces"? }
+//     "text", "reason", "evidence", "fields"?, "surfaces"?, "link"? }
+// link: an optional public proof link (https only) shown on the web page; evidence stays private.
 import fs from 'node:fs';
-import { P, writeJSON, loadLedger, findItem, confined, requireWorkspace, safeId, today } from '../lib/util.mjs';
+import { P, writeJSON, loadLedger, findItem, confined, requireWorkspace, safeId, today, httpsUrl } from '../lib/util.mjs';
 
 requireWorkspace();
 const die = (m) => { console.error(`✗ ${m} Nothing was written.`); process.exit(1); };
 let p; try { p = JSON.parse(process.argv[2] || ''); } catch { die('Give the proposal as JSON.'); }
 if (!p || typeof p !== 'object' || Array.isArray(p)) die('Give the proposal as a JSON object.');
-const KEYS = ['id', 'kind', 'section', 'target', 'role', 'newId', 'text', 'reason', 'evidence', 'fields', 'surfaces'];
+const KEYS = ['id', 'kind', 'section', 'target', 'role', 'newId', 'text', 'reason', 'evidence', 'fields', 'surfaces', 'link'];
 const extra = Object.keys(p).filter((k) => !KEYS.includes(k)); if (extra.length) die(`Unknown key(s): ${extra.join(', ')}.`);
 const str = (v, what, max, need = true) => {
   if (v === undefined || v === null || v === '') { if (need) die(`${what} is required.`); return undefined; }
@@ -36,7 +37,7 @@ if (p.kind === 'variant') { if (p.role !== undefined) out.role = id(p.role, 'rol
 if (p.kind === 'add') {
   const sec = str(p.section, 'section', 120);
   const [s, r, ...g] = sec.split('.');
-  const simple = ['summary', 'skills', 'education', 'certifications', 'volunteer', 'snippets', 'howIWork', 'application_only', 'interests', 'skillsIntro'];
+  const simple = ['summary', 'skills', 'education', 'certifications', 'publications', 'volunteer', 'snippets', 'howIWork', 'application_only', 'interests', 'skillsIntro'];
   if (s === 'experience') {
     if (!(L.experience || []).some((x) => x.id === r)) die(`No role "${r}" in the ledger (section experience.<role id>).`);
     if (g.length && !/^[\w -]{1,60}$/.test(g.join('.'))) die('The group label after the role id must be plain words.');
@@ -60,6 +61,12 @@ if (p.surfaces !== undefined) {
   const SURF = ['web', 'pdf', 'linkedin', 'json'];
   if (!Array.isArray(p.surfaces) || !p.surfaces.length || p.surfaces.some((x) => !SURF.includes(x))) die(`surfaces must be a list of ${SURF.join(', ')}.`);
   out.surfaces = [...new Set(p.surfaces)];
+}
+if (p.link !== undefined && p.link !== '') {
+  if (!['add', 'edit'].includes(p.kind)) die('link goes only on an add or edit proposal.');
+  const u = typeof p.link === 'string' && p.link.length <= 500 ? httpsUrl(p.link) : '';
+  if (!u) die('link must be one public https:// address (not http, javascript:, or a file).');
+  out.link = u;
 }
 out.status = 'proposed';
 out.created = today();

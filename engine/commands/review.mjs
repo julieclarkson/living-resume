@@ -12,7 +12,7 @@
 //   { id, kind: "add"|"edit"|"remove", target, section, text, surfaces, reason, evidence, fields, status: "proposed" }
 import fs from 'node:fs';
 import path from 'node:path';
-import { P, readJSON, writeJSON, loadLedger, ledgerPath, rulesPath, findItem, today, mdPlain, confined, requireWorkspace, safeId } from '../lib/util.mjs';
+import { P, readJSON, writeJSON, loadLedger, ledgerPath, rulesPath, findItem, today, mdPlain, confined, requireWorkspace, safeId, httpsUrl } from '../lib/util.mjs';
 
 requireWorkspace();
 const dir = confined(P('proposals'));
@@ -28,6 +28,7 @@ function apply(L, p, text) {
     if (p.kind === 'remove') { f.list ? f.list.splice(f.list.indexOf(f.item), 1) : f.set({ ...f.item, visibility: 'private' }); return; }
     f.item.history = [...(f.item.history || []), { text: f.item.text, until: now }];
     f.item.text = text; f.item.updated = now; f.item.status = 'verified';
+    if (httpsUrl(p.link)) f.item.link = httpsUrl(p.link);
     if (p.evidence) f.item.evidence = [f.item.evidence, p.evidence].filter(Boolean).join(' | ');
     return;
   }
@@ -61,7 +62,7 @@ function apply(L, p, text) {
   const fields = Object.fromEntries(Object.entries(p.fields || {}).filter(([k, v]) => FIELD_KEYS.includes(k) && (typeof v === 'string' || v === null)));
   const SURF = ['web', 'pdf', 'linkedin', 'json'];
   const surfaces = (Array.isArray(p.surfaces) ? p.surfaces : SURF).filter((x) => SURF.includes(x));
-  const item = { ...fields, id: safeId(p.newId || p.id), text, surfaces, visibility: 'public', status: 'verified', evidence: p.evidence || '', updated: now, history: [] };
+  const item = { ...fields, id: safeId(p.newId || p.id), text, surfaces, visibility: 'public', status: 'verified', evidence: p.evidence || '', updated: now, history: [], ...(httpsUrl(p.link) ? { link: httpsUrl(p.link) } : {}) };
   const [sec, role, ...rest] = String(p.section || '').split('.'); const group = rest.join('.');
   if (findItem(L, item.id)) throw new Error(`Ledger already has an item "${item.id}"`);
   if (sec === 'person' && ['headline', 'subline', 'linkedinHeadline', 'availability'].includes(role)) { L.person[role] = item; return; }
@@ -72,7 +73,7 @@ function apply(L, p, text) {
     r.groups = r.groups || [];
     let g = r.groups.find((x) => (x.label || '') === (group || '')); if (!g) { g = { label: group || null, items: [] }; r.groups.push(g); }
     g.items.push(item);
-  } else if (['snippets', 'skills', 'education', 'certifications', 'volunteer', 'application_only'].includes(sec)) {
+  } else if (['snippets', 'skills', 'education', 'certifications', 'publications', 'volunteer', 'application_only'].includes(sec)) {
     if (sec === 'application_only') item.visibility = 'application';
     (L[sec] = L[sec] || []).push(item);
   }
@@ -108,7 +109,7 @@ if (!cmd || cmd === 'list') {
     console.log(`\n● ${p.id}  [${p.kind}${p.target ? ' ' + p.target : ''}${p.section ? ' → ' + p.section : ''}]  surfaces: ${(p.surfaces || ['web', 'pdf', 'linkedin', 'json']).join(', ')}`);
     // Contact basics show their fields, like an import's basics line ("city: Charlotte · region: NC").
     const fieldsLine = p.kind === 'basics' && p.fields && typeof p.fields === 'object' ? Object.entries(p.fields).filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join(' · ') : '';
-    console.log(`  ${mdPlain(fieldsLine || p.text || '(remove)')}`);
+    console.log(`  ${mdPlain(fieldsLine || p.text || '(remove)')}${p.link ? `\n  link (public, web page): ${p.link}` : ''}`);
     console.log(`  why: ${p.reason || '-'}`);
   }
   if (groups.later.length) console.log(`\nIncubating (later): ${groups.later.map((p) => p.id).join(', ')}`);

@@ -95,6 +95,8 @@ test('build + check pass on a fresh import (Free: credit link on the web page on
   assert.match(html, /Content-Security-Policy/);
   assert.doesNotMatch(fs.readFileSync(path.join(dir, 'dist', 'resume-print.html'), 'utf8'), /Living Résumé/);
   const c = cli(['check'], { dir }); assert.equal(c.code, 0, c.out);
+  // Coach suggestions show after the checks and never fail the build.
+  assert.match(c.out, /checks passed\.\n\nSuggestions \(not failures\)\. Résumé strength \d+\/100/);
 });
 
 test('check fails when a private name reaches a public line', () => {

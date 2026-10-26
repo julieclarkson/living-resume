@@ -148,14 +148,19 @@ test('executive résumé (Elena): summary kept, board lines in volunteer, only t
   assert.equal(d.roles[0].location, 'Charlotte, NC');
   assert.deepEqual(d.education.map((e) => e.text.slice(0, 4)), ['MBA,', 'B.S.']);
   assert.equal(d.volunteer.length, 2); assert.ok(d.volunteer.every((v) => /Board/.test(v.text)));
-  assert.deepEqual(d.unplacedHeadings, ['SPEAKING & PUBLICATIONS']);
-  assert.ok(d.unplaced.some((l) => /MGMA/.test(l)));
+  // Speaking and publications have a home of their own now ("Publications and talks").
+  assert.deepEqual(d.unplacedHeadings, []);
+  assert.equal(d.publications.length, 2); assert.match(d.publications[0], /MGMA Annual Conference, 2022/);
 });
 
-test('import says which headings it did not place', () => {
+test('import says which headings it did not place, and places publications', () => {
   const dir = workspace('unplaced');
-  const r = cli(['import', path.join(ROOT, 'test', 'fixtures', 'elena.txt')], { dir }); assert.equal(r.code, 0, r.out);
-  assert.match(r.out, /Not placed \(check these\): SPEAKING & PUBLICATIONS/);
+  const f = path.join(dir, 'cv.txt');
+  fs.writeFileSync(f, fs.readFileSync(path.join(ROOT, 'test', 'fixtures', 'elena.txt'), 'utf8') + '\nHONORS & AWARDS\nOperator of the Year, 2019\n');
+  const r = cli(['import', f], { dir }); assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /Not placed \(check these\): HONORS & AWARDS/);
+  const pubs = fs.readdirSync(path.join(dir, 'proposals')).map((x) => JSON.parse(fs.readFileSync(path.join(dir, 'proposals', x), 'utf8'))).filter((x) => x.section === 'publications');
+  assert.equal(pubs.length, 2);
 });
 
 test('an employer name in capitals above its dates is not a section heading', () => {

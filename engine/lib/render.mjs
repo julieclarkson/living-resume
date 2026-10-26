@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 // Renderers: ledger → print HTML, web preview HTML, JSON Resume, LinkedIn packet,
 // "What's public now" report, capability statement. One source, every format.
-import { rolesInOrder, esc, mdHtml, mdPlain, fmtRange, fmtMonth, fmtYears, shows, roleShows, monthYear, allItems, links, hostOf, safeUrl } from './util.mjs';
+import { rolesInOrder, esc, mdHtml, mdPlain, fmtRange, fmtMonth, fmtYears, shows, roleShows, monthYear, allItems, links, hostOf, safeUrl, httpsUrl } from './util.mjs';
+import { dateFormat, proofHtml, publications, pubHeading, pubSectionHtml } from './render-parts.mjs';
 
 // The site's font, embedded so the PDF looks the same on any machine (no network needed).
 // Instrument Sans, SIL Open Font License 1.1.
@@ -26,9 +27,10 @@ const skillLabel = (L, s) => { const n = String(s.name || '').trim().toLowerCase
 export function printHtml(L, { surface = 'pdf', title } = {}) {
   const p = L.person; const S = surface;
   const work = links(L).portfolio;
+  const when = dateFormat(L, S);
   const roles = rolesInOrder(L).filter((r) => roleShows(r, S)).map((r) => {
     const items = (r.groups || []).flatMap((g) => (g.items || []).filter((i) => shows(i, S)));
-    return `<div class="job"><h3 class="role"><span>${esc(r.title)}</span><span class="when">${fmtYears(r.start, r.end)}</span></h3><p class="org">${esc([r.org, r.location].filter(Boolean).join(', '))}</p><ul>${items.map((i) => `<li>${linkify(mdPlain(i.text), work)}</li>`).join('')}</ul></div>`;
+    return `<div class="job"><h3 class="role"><span>${esc(r.title)}</span><span class="when">${when(r)}</span></h3><p class="org">${esc([r.org, r.location].filter(Boolean).join(', '))}</p><ul>${items.map((i) => `<li>${linkify(mdPlain(i.text), work)}${S === 'web' ? proofHtml(i) : ''}</li>`).join('')}</ul></div>`;
   }).join('\n');
   const how = (L.howIWork?.items || []).filter((i) => shows(i, S)).map((i) => `<li>${esc(i.text)}</li>`).join('');
   const skills = (L.skills || []).filter((i) => shows(i, S)).map((s) => (skillLabel(L, s) ? `<dt>${esc(s.name)}</dt><dd>${esc(s.text)}</dd>` : `<dd class="wide">${esc(s.text)}</dd>`)).join('');
@@ -67,6 +69,7 @@ ${roles}
 ${how ? `<section><h2>${H(L, 'howIWork', 'How I work')}</h2><ul>${how}</ul>${L.howIWork.note ? `<p class="note" style="margin-top:4px">${linkify(L.howIWork.note, L.howIWork.noteLink)}</p>` : ''}</section>` : ''}
 ${skills ? `<section><h2>${H(L, 'skills', 'Skills')}</h2><dl>${skills}</dl></section>` : ''}
 ${edu || certs.length ? `<section class="edu"><h2>${H(L, 'education', 'Education')}</h2>${edu}${certs.length ? `${edu ? '<p><b>Certificates</b></p>' : ''}<ul class="certs">${certs.join('')}</ul>` : ''}</section>` : ''}
+${pubSectionHtml(L, S, { links: S === 'web', wrap: true })}
 ${vol ? `<section><h2>${H(L, 'community', 'Community and volunteer')}</h2><ul class="vol">${vol}</ul></section>` : ''}
 ${S === 'web' && shows(L.interests, S) ? `<section><h2>${H(L, 'interests', 'Outside of work')}</h2><p>${esc(L.interests.text)}</p></section>` : ''}
 </body></html>`;
@@ -78,8 +81,9 @@ export function printModel(L, { surface = 'pdf' } = {}) {
   const p = L.person || {}; const S = surface;
   const where = place(p); const remote = p.location?.remote !== false;
   const sections = [];
+  const when = dateFormat(L, S);
   const jobs = rolesInOrder(L).filter((r) => roleShows(r, S)).map((r) => ({
-    title: r.title || '', when: fmtYears(r.start, r.end), org: [r.org, r.location].filter(Boolean).join(', '),
+    title: r.title || '', when: when(r), org: [r.org, r.location].filter(Boolean).join(', '),
     bullets: (r.groups || []).flatMap((g) => (g.items || []).filter((i) => shows(i, S))).map((i) => mdPlain(i.text)),
   }));
   sections.push({ title: (L.headings?.experience) || 'Experience', kind: 'jobs', jobs });
@@ -90,6 +94,8 @@ export function printModel(L, { surface = 'pdf' } = {}) {
   const edu = (L.education || []).filter((i) => shows(i, S)).map((e) => ({ strong: mdPlain(e.text), rest: school(e) ? `, ${school(e)}` : '', note: e.note || '' }));
   const certs = (L.certifications || []).filter((i) => shows(i, S)).map((c) => mdPlain(c.text));
   if (edu.length || certs.length) sections.push({ title: L.headings?.education || 'Education', kind: 'edu', rows: edu, certList: certs, certsLabel: edu.length && certs.length ? 'Certificates' : '' });
+  const pubs = publications(L, S).map((x) => x.text);
+  if (pubs.length) sections.push({ title: pubHeading(L), kind: 'list', items: pubs, note: '' });
   const vol = (L.volunteer || []).filter((i) => shows(i, S)).map((v) => mdPlain(v.text));
   if (vol.length) sections.push({ title: L.headings?.community || 'Community and volunteer', kind: 'cols', items: vol });
   return {
@@ -122,9 +128,11 @@ export function jsonResume(L, { site } = {}) {
       'x-availability': shows(p.availability, S) ? p.availability.text : undefined,
     },
     work: rolesInOrder(L).filter((r) => roleShows(r, S)).map((r) => {
-      const highlights = (r.groups || []).flatMap((g) => pub(g.items)).map((i) => mdPlain(i.text));
-      return { name: r.org, position: r.title, location: r.location, startDate: r.start, ...(r.end ? { endDate: r.end } : {}), highlights };
+      const items = (r.groups || []).flatMap((g) => pub(g.items)); const highlights = items.map((i) => mdPlain(i.text));
+      const proof = items.filter((i) => httpsUrl(i.link)).map((i) => ({ highlight: mdPlain(i.text), url: httpsUrl(i.link) }));
+      return { name: r.org, position: r.title, location: r.location, startDate: r.start, ...(r.end ? { endDate: r.end } : {}), highlights, ...(proof.length ? { 'x-highlight-links': proof } : {}) };
     }),
+    publications: publications(L, S).map((x) => ({ name: x.text, ...(x.link ? { url: x.link } : {}) })),
     volunteer: pub(L.volunteer).map((v) => ({ organization: v.org, position: v.role, ...(v.start ? { startDate: v.start } : {}), ...(v.end ? { endDate: v.end } : {}) })),
     education: pub(L.education).map((e) => ({ institution: e.institution, studyType: e.studyType, area: e.area, ...(e.note ? { 'x-note': e.note } : {}) })),
     certificates: pub(L.certifications).map((c) => ({ name: c.text })),
@@ -167,6 +175,7 @@ export function linkedinPacket(L, rules, changes = [], settings = {}) {
   }
   const skills = (L.skills || []).filter((i) => shows(i, S)).flatMap((s) => s.text.replace(/,? and more$/, '').split(/,\s*(?![^()]*\))/)).slice(0, 50);
   out.push(`## Skills (add any missing; LinkedIn allows up to 100)\n\n${skills.map((s) => `- ${s}`).join('\n')}\n`);
+  const pubs = publications(L, S); if (pubs.length) out.push(`## Publications and talks (add under Publications or Featured)\n\n${pubs.map((x) => `- ${x.text}${x.link ? ` (${x.link})` : ''}`).join('\n')}\n`);
   out.push(`## Volunteer (check each exists)\n\n${(L.volunteer || []).filter((i) => shows(i, S)).map((v) => `- ${v.text}`).join('\n')}\n`);
   const li = settings.linkedin || {};
   out.push(`## Featured\n\n${links(L).resumePage ? `- Link: ${links(L).resumePage} (always current)\n` : ''}- Media: upload dist/${rules.pdf_filename} (replace the old copy whenever this packet says the PDF changed)\n`);
@@ -176,22 +185,7 @@ export function linkedinPacket(L, rules, changes = [], settings = {}) {
   return { text: out.join('\n'), warnings: warn };
 }
 
-// ── "What's public now" report ───────────────────────────────────────────
-export function publicReport(L) {
-  const items = allItems(L);
-  const surfaces = ['web', 'pdf', 'linkedin', 'json'];
-  const lines = [`# What's public now · ${new Date().toISOString().slice(0, 10)}\n`, `Every line below is live (or will be at the next publish) on the listed surfaces. Private evidence notes are never exported.\n`];
-  for (const s of surfaces) {
-    const list = items.filter((i) => shows(i, s));
-    lines.push(`## ${s.toUpperCase()} (${list.length} lines)\n`);
-    for (const i of list) lines.push(`- \`${i.id}\` ${mdPlain(i.text).slice(0, 160)}${i.text.length > 160 ? '…' : ''}`);
-    lines.push('');
-  }
-  const priv = items.filter((i) => i.visibility !== 'public' || i.status !== 'verified');
-  lines.push(`## Not public (${priv.length})\n`);
-  for (const i of priv) lines.push(`- \`${i.id}\` [${i.visibility}/${i.status}] ${mdPlain(i.text).slice(0, 120)}…`);
-  return lines.join('\n') + '\n';
-}
+export { publicReport } from './render-parts.mjs';
 
 // ── Capability statement (one page, for procurement / vendor lists) ──────
 export function capabilityHtml(L, vendor) {
@@ -220,9 +214,10 @@ ul{margin:2px 0 0;padding-left:16px}li{margin:0 0 4px}p{margin:0}table{border-co
 // Free tier adds one small credit link in the footer (never on the PDF).
 export function webPage(L, { credit = null, pdfHref = '', jsonHref = 'resume.json' } = {}) {
   const S = 'web'; const p = L.person || {}; const lk = links(L);
+  const when = dateFormat(L, S);
   const roles = rolesInOrder(L).filter((r) => roleShows(r, S)).map((r) => {
     const items = (r.groups || []).flatMap((g) => (g.items || []).filter((i) => shows(i, S)));
-    return `<article class="job"><header><h3>${esc(r.title)}</h3><span class="when">${fmtYears(r.start, r.end)}</span></header><p class="org">${esc([r.org, r.location].filter(Boolean).join(', '))}</p>${items.length ? `<ul>${items.map((i) => `<li>${linkify(mdPlain(i.text), lk.portfolio)}</li>`).join('')}</ul>` : ''}</article>`;
+    return `<article class="job"><header><h3>${esc(r.title)}</h3><span class="when">${when(r)}</span></header><p class="org">${esc([r.org, r.location].filter(Boolean).join(', '))}</p>${items.length ? `<ul>${items.map((i) => `<li>${linkify(mdPlain(i.text), lk.portfolio)}${proofHtml(i)}</li>`).join('')}</ul>` : ''}</article>`;
   }).join('\n');
   const how = (L.howIWork?.items || []).filter((i) => shows(i, S)).map((i) => `<li>${esc(i.text)}</li>`).join('');
   const skills = (L.skills || []).filter((i) => shows(i, S)).map((s) => (skillLabel(L, s) ? `<div><dt>${esc(s.name)}</dt><dd>${esc(s.text)}</dd></div>` : `<div class="wide"><dd>${esc(s.text)}</dd></div>`)).join('');
@@ -269,7 +264,7 @@ h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;color:var(--mut
 h3{font-size:1.1rem;color:var(--ink);font-weight:600;margin:0}.when,.org,.muted{color:var(--muted)}.when{white-space:nowrap;font-size:.95rem}.org{margin:2px 0 8px}
 ul{margin:0;padding-left:20px}li{margin:0 0 8px}p{margin:0}
 dl{margin:0;display:grid;gap:12px}dl div{display:grid;grid-template-columns:200px 1fr;gap:16px}dl div.wide{grid-template-columns:1fr}dt{font-weight:600;color:var(--ink)}dd{margin:0}
-.edu p{margin:0 0 10px}.vol{columns:2;column-gap:32px}.vol li{break-inside:avoid}
+.edu p{margin:0 0 10px}.vol{columns:2;column-gap:32px}.vol li{break-inside:avoid}.proof{color:var(--muted);font-size:.875rem;margin-left:6px;white-space:nowrap}
 footer{max-width:860px;margin:0 auto;padding:24px 24px 56px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}footer a{color:var(--muted)}
 @media (max-width:880px){main{padding-top:40px}dl div{grid-template-columns:1fr;gap:2px}.vol{columns:1}.job header{flex-direction:column;gap:0}}
 @media print{.actions .btn,footer{display:none}}
@@ -285,6 +280,7 @@ ${roles ? `<h2>${H(L, 'experience', 'Experience')}</h2>\n${roles}` : ''}
 ${how ? `<h2>${H(L, 'howIWork', 'How I work')}</h2><ul>${how}</ul>${L.howIWork.note ? `<p class="muted" style="margin-top:10px">${linkify(L.howIWork.note, L.howIWork.noteLink)}</p>` : ''}` : ''}
 ${skills ? `<h2>${H(L, 'skills', 'Skills')}</h2><dl>${skills}</dl>` : ''}
 ${edu || certs.length ? `<h2>${H(L, 'education', 'Education')}</h2><div class="edu">${edu}${certs.length ? `${edu ? '<p><b>Certificates</b></p>' : ''}<ul class="certs">${certs.join('')}</ul>` : ''}</div>` : ''}
+${pubSectionHtml(L, S, { links: true })}
 ${vol ? `<h2>${H(L, 'community', 'Community and volunteer')}</h2><ul class="vol">${vol}</ul>` : ''}
 ${shows(L.interests, S) ? `<h2>${H(L, 'interests', 'Outside of work')}</h2><p>${esc(L.interests.text)}</p>` : ''}
 </main>
