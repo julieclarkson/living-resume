@@ -10,6 +10,10 @@
     { "id": "current", "name": "Current and in demand", "ask": "Does it show skills or tools hiring teams are asking for now?" },
     { "id": "new", "name": "Adds something new", "ask": "Does the résumé already say this? Would it replace or strengthen an existing line?" }
   ],
+  "coach": {
+    "about": "Your choices for the résumé coach. counts: false if you don't want numbers on your résumé (for example no client or student counts); the coach then asks only about results, never \"how many\".",
+    "counts": true
+  },
   "bar": {
     "propose_at": 8,
     "max_proposals_per_item": 2,

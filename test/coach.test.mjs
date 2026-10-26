@@ -167,3 +167,45 @@ test('PDF fallback: publications section, dates on the role line, readable order
   assert.match(execFileSync('pdftotext', ['-layout', out, '-'], { encoding: 'utf8' }), /Chief Operating Officer +Jan 2021 to present/);
   assert.doesNotMatch(t, /example\.org/);
 });
+
+test('coach readability: run-on sentences and stock résumé words', () => {
+  assert.ok(kinds('Leveraged robust tooling to spearhead the migration of 40 services on time').includes('jargon'));
+  const runOn = `Built the intake form and the dashboard that ${'the staff and the board use to plan '.repeat(3)}each shift and week`;
+  assert.ok(runOn.length <= 200 && kinds(runOn).includes('dense'), runOn.length);
+  assert.ok(!kinds('Received the All-Star Faculty Award').includes('result'), 'an award is a result');
+  assert.deepEqual(kinds('Cut days in A/R from 52 to 38. Then trained two new billers.'), []);
+});
+
+test('coach contractor lens: clients, repeat work, scope; quiet when the bullets already show them', () => {
+  const L = (bullets) => ({ person: { name: 'Sam Rivera', headline: item('hl', 'Designer') }, summary: item('sum', 'Designer who ships.'),
+    experience: [role('c', 'Freelance Designer', 'Rivera Studio', '2019', null, bullets)] });
+  const weak = coach(L(['Designed logos and websites, on time', 'Built 20 sites', 'Shipped a booking flow']));
+  for (const k of ['clients', 'repeat', 'scope']) assert.ok(weak.suggestions.some((s) => s.kinds.includes(k)), k);
+  const strong = coach(L(['Designed sites for small restaurants and clinics under written scopes', 'Clients stayed for years and several returned for redesigns', 'Shipped a booking flow used by 3 clinics']));
+  for (const k of ['clients', 'repeat', 'scope']) assert.ok(!strong.suggestions.some((s) => s.kinds.includes(k)), k);
+  const employee = coach({ ...L(['Designed logos']), experience: [role('e', 'Designer', 'Acme', '2019', null, ['Designed logos, on time'])] });
+  assert.ok(!employee.suggestions.some((s) => ['clients', 'repeat', 'scope'].some((k) => s.kinds.includes(k))));
+});
+
+test('coach floor questions, and counts off (the person\'s choice) never asks how many', () => {
+  const L = { person: { name: 'Sam Rivera', headline: item('hl', 'Designer') }, summary: item('sum', 'Designer.'), experience: [role('r', 'Designer', 'Acme', '2019', null, ['Wrote press releases'])] };
+  const on = coach(L).suggestions.find((s) => s.id === 'r-1');
+  assert.ok(on.questions.some((q) => /how many/i.test(q)) && on.questions.some((q) => /safe floor/i.test(q)), on.questions.join(' | '));
+  const off = coach(L, { counts: false });
+  assert.ok(off.suggestions.every((s) => s.questions.every((q) => !/how many|safe floor/i.test(q))));
+  assert.ok(off.lifts.every((l) => !/number/.test(l.title)), off.lifts.map((l) => l.title).join(' | '));
+});
+
+test('coach page fit never suggests trimming recent leadership or community; points at older lines instead', () => {
+  const y = new Date().getFullYear();
+  const L = { person: { name: 'Sam Rivera', headline: item('hl', 'Designer') }, summary: item('sum', 'Designer.'),
+    experience: [role('now', 'Design Lead', 'Acme', `${y - 2}`, null, ['Led a team of 4 designers through the redesign', 'Shipped the new checkout']),
+      role('old', 'Designer', 'Beta', '2001', '2006', ['Designed print ads'])],
+    volunteer: [item('v-coach', `Assistant Coach, JV Lacrosse, Spring ${y}`), item('v-old', 'Reading Tutor, 1998')] };
+  const r = coach(L, { pages: 3, limit: 2 });
+  const fit = r.suggestions.find((s) => s.id === 'pages');
+  for (const id of ['v-coach', 'now-1', 'now']) assert.ok(fit.keep.includes(id), id);
+  assert.ok(!fit.keep.includes('v-old')); assert.ok(fit.trim.includes('old-1')); assert.ok(!fit.trim.includes('now-1'));
+  assert.doesNotMatch(fit.why, /volunteer work/); assert.match(fit.why, /Keep your recent leadership and community/);
+  assert.match(coachText(r), /Never trim \(recent leadership and community\): .*v-coach/);
+});

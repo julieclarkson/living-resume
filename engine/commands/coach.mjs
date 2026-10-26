@@ -7,5 +7,6 @@ import { P, readJSON, loadLedger, requireWorkspace } from '../lib/util.mjs';
 import { coach, coachText } from '../lib/coach.mjs';
 
 requireWorkspace();
-const report = coach(loadLedger(), { target: readJSON(P('resume', 'rubric.json'), {}).target || '', ...(await pageInfo()) });
+const rubric = readJSON(P('resume', 'rubric.json'), {});
+const report = coach(loadLedger(), { target: rubric.target || '', counts: rubric.coach?.counts !== false, ...(await pageInfo()) });
 console.log(process.argv.includes('--json') ? JSON.stringify(report, null, 2) : coachText(report));
