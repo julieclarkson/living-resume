@@ -88,7 +88,7 @@ test('find: reads all three boards, screens, holds injections, ranks, and writes
   const t = JSON.parse(fs.readFileSync(path.join(dir, 'jobs', 'today.json'), 'utf8'));
   const ids = t.matches.map((m) => m.id);
   assert.deepEqual(ids.sort(), [GH1, LV1, listingId('lv', 'beta', 'lv-beta-ccc-333'), listingId('lv', 'beta', 'lv-beta-ddd-444'), listingId('wk', 'delta', 'wk-delta-ABC123'), listingId('sr', 'Echo', 'sr-Echo-sr1')].sort(), r.out); // a bad date or character code skips nothing; 'unspecified' + 'Remote - US' counts as remote; // sales (title), onsite full-time, crypto, and the injection are out
-  for (const m of t.matches) { assert.ok(m.fit >= 10); assert.ok(['high', 'medium'].includes(m.confidence)); assert.ok(m.covered.length); }
+  for (const m of t.matches) { assert.ok(m.fit >= 10); assert.ok(['high', 'medium', 'low'].includes(m.confidence)); assert.ok(m.covered.length); }
   const html = fs.readFileSync(path.join(dir, 'jobs', 'today.html'), 'utf8');
   assert.match(html, /href="https:\/\/jobs\.lever\.co\/beta\/aaa-111\/apply"[^>]*>Apply</);
   assert.doesNotMatch(html, /<img src=x/); assert.match(html, /&lt;img src=x/);

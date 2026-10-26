@@ -1,6 +1,8 @@
 # Changelog
 
 ## 1.3.0 · 2026-10-26 (release build, not yet published)
+- **Scores that never sound like a verdict on you.** "Low confidence" is gone: matches show strong, good, or some overlap, with a plain note that fit compares wording, not people, and that about 35% and up is worth a real look. "Not on your résumé" now reads "listing words your résumé doesn't use". A role version named for the job (Design Engineer for a Design Engineer listing) is suggested on a tie.
+- The skill searches job-search connectors (Indeed, ZipRecruiter, Dice, Upwork) when the user has one, and brings listings in with `jobs add`.
 - **Job matches that don't hide.** Every listing at or above your fit bar is shown, with confidence as a label (it used to filter out "low confidence" ones, so a 48% fit could vanish). An empty day says why (how many were outside your country, not remote, and so on) and shows the 3 closest listings. Remote jobs in another country ("Remote France" for someone in Charlotte, NC) and hybrid or on-site jobs elsewhere are screened out; set `country` in your criteria if your locations don't say. Fit ignores links, web addresses, city names, and filler words.
 - **Every name prints right without Chrome.** The no-Chrome PDF (Claude Cowork, ChatGPT) switches to a bundled Unicode font (DejaVu Sans) when a résumé has letters like ễ, Ł, or ź, drops invisible characters, and turns "ﬁ" back into "fi". Anything it still can't draw (Japanese, emoji) is named in `build`, and `check` fails until it's reworded or built with Chrome.
 - **Markdown résumés import.** `#` headings, `**bold**`, `*` bullets and links are cleaned up first, so a résumé your AI hands over as Markdown keeps every role and line.

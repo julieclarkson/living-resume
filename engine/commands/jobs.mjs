@@ -147,11 +147,13 @@ function screen(p, c) {
 const pdfName = () => loadRules().pdf_filename;
 const sendWhat = (s) => (s.version ? `your ${s.versionName} version` : 'your main résumé');
 const versionPdf = (slug) => (slug ? `../dist/roles/${slug}/${pdfName()}` : `../dist/${pdfName()}`);
+export const OVERLAP = { high: 'Strong overlap', medium: 'Good overlap', low: 'Some overlap' };
 function score(p, L, roles, c) {
   const best = rankVersions(L, roles, `${p.title}\n${p.title}\n${p.text}`, { skip: [p.company, ...(c.locations || [])] })[0];
   const s = screen(p, c);
-  const gap = best.top.length ? best.missing.length / best.top.length : 1;
-  const confidence = best.fit >= 55 && gap <= 0.3 && !s.unknown?.length ? 'high' : best.fit >= c.min_fit && gap <= 0.5 && (s.unknown?.length || 0) <= 1 ? 'medium' : 'low';
+  // How much the wording overlaps, never a judgment of the person. Every listing uses its own product and team
+  // words, which no applicant's résumé has, so overlap above 60% is rare even for a great fit.
+  const confidence = best.fit >= 50 && !s.unknown?.length ? 'high' : best.fit >= 35 && (s.unknown?.length || 0) <= 1 ? 'medium' : 'low';
   return { id: p.id, fit: best.fit, confidence, version: best.slug, versionName: best.name, covered: best.covered, missing: best.missing, elsewhere: best.elsewhere, unknown: s.unknown || [], remote: s.remote };
 }
 function rank({ all = false } = {}) {
@@ -182,10 +184,10 @@ function page({ picks, closest = [], pool, fresh = pool, why = {}, notes }) {
   const card = ({ p, s }, i) => `<article>
   <h2><span class="n">${i + 1}</span> <a href="${esc(p.url || p.applyUrl)}" rel="noopener noreferrer">${esc(p.title)}</a></h2>
   <p class="meta">${esc(p.company)}${p.location ? ` · ${esc(p.location)}` : ''}${s.remote && !/remote/i.test(p.location || '') ? ' · Remote' : ''}${p.type ? ` · ${esc(p.type)}` : ''}${p.pay ? ` · ${esc(p.pay)}` : ''}</p>
-  <p class="score"><span class="fit">${s.fit}% fit</span> <span class="conf ${s.confidence}">${s.confidence} confidence</span> <span class="ver">Send ${esc(sendWhat(s))}</span></p>
+  <p class="score"><span class="fit">${s.fit}% fit</span> <span class="conf ${s.confidence}">${OVERLAP[s.confidence]}</span> <span class="ver">Send ${esc(sendWhat(s))}</span></p>
   ${notes[p.id] ? `<p class="note">${esc(notes[p.id])}</p>` : ''}
   <p class="why"><b>Your résumé already covers</b> ${esc(s.covered.slice(0, 12).join(', ') || 'little of it')}</p>
-  ${s.missing.length ? `<p class="gap"><b>Not on your résumé</b> ${esc(s.missing.slice(0, 8).join(', '))}</p>` : ''}
+  ${s.missing.length ? `<p class="gap"><b>Listing words your résumé doesn't use</b> ${esc(s.missing.slice(0, 8).join(', '))} <span class="ask">(many are their own product names; add a skill only if it's true)</span></p>` : ''}
   ${s.unknown.length ? `<p class="gap"><b>Check</b> ${esc(s.unknown.join(', '))}</p>` : ''}
   <p class="actions"><a class="btn primary" href="${esc(p.applyUrl || p.url)}" rel="noopener noreferrer">Apply</a> <a class="btn" href="${esc(versionPdf(s.version))}">Résumé PDF</a> <span class="ask">For a tailored version, tell your AI tool "prepare ${esc(p.id)}"</span></p>
 </article>`;
@@ -204,13 +206,13 @@ h2{font-size:19px;margin:0 0 4px;line-height:1.3}h2 a{color:inherit}.n{color:var
 .btn{display:inline-block;padding:9px 16px;border-radius:8px;border:1px solid var(--acc);color:var(--acc);text-decoration:none;font-weight:600}.btn.primary{background:var(--acc);color:var(--bg)}
 .ask{color:var(--mute);font-size:14px}.empty{color:var(--mute)}</style></head><body><main>
 <h1>Your job matches</h1><p class="sub">${esc(new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }))} · ${picks.length} of ${pool} new listings that pass your criteria
-Fit is how much of each listing's key wording your approved résumé lines already cover. Confidence drops when the listing asks for things your résumé doesn't show, or doesn't say whether it's remote or contract.</p>
+Fit compares the listing's wording with your approved résumé's wording. It isn't a judgment of you or your experience. Every listing uses its own product and team words that no applicant has, so scores above 60% are rare even for a great fit, and anything from about 35% is worth a real look.</p>
 ${picks.length ? picks.map(card).join('\n') : `<p class="empty">${esc(emptyText({ pool, fresh, why, c }))}</p>${closest.length ? `<h2 style="margin:28px 0 12px">Closest this time (below your ${c.min_fit}% bar)</h2>${closest.map(card).join('\n')}` : ''}`}
 </main></body></html>`;
   writeText(confined(P('jobs', 'today.html')), html);
   writeText(confined(P('jobs', `${date}.html`)), html);
-  const md = [`# Job matches · ${date}`, '', ...picks.map(({ p, s }, i) => `${i + 1}. **${p.title}** at ${p.company}${p.location ? ` (${p.location})` : ''}: ${s.fit}% fit, ${s.confidence} confidence, send ${sendWhat(s)}.${notes[p.id] ? ` ${notes[p.id]}` : ''}\n   Apply: ${p.applyUrl || p.url}   (id ${p.id})`)];
-  if (!picks.length) { md.push(emptyText({ pool, fresh, why, c })); if (closest.length) md.push('', `Closest this time (below your ${c.min_fit}% bar):`, ...closest.map(({ p, s }) => `- ${p.title} at ${p.company}${p.location ? ` (${p.location})` : ''}: ${s.fit}% fit. Not on your résumé: ${s.missing.slice(0, 5).join(', ')}   (id ${p.id})`)); }
+  const md = [`# Job matches · ${date}`, '', ...picks.map(({ p, s }, i) => `${i + 1}. **${p.title}** at ${p.company}${p.location ? ` (${p.location})` : ''}: ${s.fit}% fit (${OVERLAP[s.confidence].toLowerCase()}), send ${sendWhat(s)}.${notes[p.id] ? ` ${notes[p.id]}` : ''}\n   Apply: ${p.applyUrl || p.url}   (id ${p.id})`)];
+  if (!picks.length) { md.push(emptyText({ pool, fresh, why, c })); if (closest.length) md.push('', `Closest this time (below your ${c.min_fit}% bar):`, ...closest.map(({ p, s }) => `- ${p.title} at ${p.company}${p.location ? ` (${p.location})` : ''}: ${s.fit}% fit. Listing words your résumé doesn't use: ${s.missing.slice(0, 5).join(', ')}   (id ${p.id})`)); }
   writeText(confined(P('jobs', 'today.md')), md.join('\n') + '\n');
   writeJSON(confined(P('jobs', 'today.json')), { date, pool, matches: picks.map(({ p, s }) => ({ ...s, title: p.title, company: p.company, location: p.location, pay: p.pay, url: p.url, applyUrl: p.applyUrl, note: notes[p.id] || null })) });
   return md.join('\n');

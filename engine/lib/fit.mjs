@@ -42,6 +42,9 @@ export function keyTerms(posting, n = 25, skip = []) {
   return [...counts].sort((a, b) => b[1] - a[1]).slice(0, n).map(([k]) => ({ k, w: shown.get(k) }));
 }
 
+// Does the listing's title (its first line) name this role version? Every word of the version's name must appear.
+const titleNames = (posting, name) => { const t = String(posting).split('\n')[0].toLowerCase(); const w = String(name || '').toLowerCase().match(/[a-z]+/g) || []; return w.length > 0 && w.every((x) => t.includes(x)); };
+
 // Every version (the main résumé plus each valid role profile), best fit first.
 export function rankVersions(L, roles, posting, { skip = [] } = {}) {
   const top = keyTerms(posting, 25, skip);
@@ -55,5 +58,7 @@ export function rankVersions(L, roles, posting, { skip = [] } = {}) {
     const elsewhere = pick((t) => !have.has(t.k) && all.has(t.k));
     const missing = pick((t) => !all.has(t.k));
     return { ...v, top: top.map((t) => t.w), covered, elsewhere, missing, fit: top.length ? Math.round((100 * covered.length) / top.length) : 0 };
-  }).sort((a, b) => b.fit - a.fit || (a.slug ? 1 : 0) - (b.slug ? 1 : 0));
+  }).map((v) => ({ ...v, named: !!v.slug && titleNames(posting, v.name) }))
+    // Same fit: the version named for this kind of role ("Design Engineer" for a Design Engineer listing), then the main résumé.
+    .sort((a, b) => b.fit - a.fit || (b.named ? 1 : 0) - (a.named ? 1 : 0) || (a.slug ? 1 : 0) - (b.slug ? 1 : 0));
 }

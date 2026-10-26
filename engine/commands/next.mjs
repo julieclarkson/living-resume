@@ -58,7 +58,7 @@ add(searchSet && (!t || days(t.date) > 7), t ? 'Run this week\'s job search' : '
 const open = t ? (t.matches || []).filter((m) => !st.dismissed[m.id] && !st.applied[m.id]) : [];
 const notes = new Set(list('jobs', 'next').map((f) => f.replace(/\.md$/, '')));
 const pick = open.find((m) => !notes.has(m.id));
-add(pick, `Look at your top match: ${pick?.title} at ${pick?.company}`, `${pick?.fit}% fit, ${pick?.confidence} confidence. Pick one, and get the posting, the person, and a note to send.`, `Help me reach someone at ${pick?.company}`);
+add(pick, `Look at your top match: ${pick?.title} at ${pick?.company}`, `${pick?.fit}% fit (${({ high: 'strong', medium: 'good', low: 'some' })[pick?.confidence] || 'some'} overlap). Pick one, and get the posting, the person, and a note to send.`, `Help me reach someone at ${pick?.company}`);
 const apps = json('applications', 'applications.json') || [];
 const stale = [...apps].reverse().find((a) => a.status === 'applied' && days(a.date) >= 7 && days(a.date) <= 30 && !a.followedUp);
 add(stale, `Follow up on ${stale?.company}`, `You applied ${days(stale?.date)} days ago. A short, friendly note keeps you in mind.`, `Draft a follow-up for ${stale?.company}`);
