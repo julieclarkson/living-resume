@@ -1,6 +1,11 @@
 # Changelog
 
 ## 1.3.0 · 2026-10-26 (unreleased)
+- **Positioning: never update your résumé again.** Claude does the talking and browsing; Living Résumé does the remembering, checking, and building. Every reply ends with one next step.
+- **Catch up my résumé:** the host AI suggests items from what it already knows; only the ones you confirm go in.
+- **Next-step card:** for a job you pick, the posting, your warm path, the likely person (public sources, linked), and one short note you send. Saved to `jobs/next/` for you or any personal agent.
+- **What have I applied to:** `jobs applied` lists applications, newest first.
+- Marketing page and visual guide (`marketing/guide.html`) updated.
 - **Daily job matches (Pro).** Say what you're looking for in your own words; your AI saves it as `resume/job-search.json` (titles, contract or full-time, remote, locations, must-haves, words and companies to avoid, companies to check). `jobs find` reads those companies' public Greenhouse, Lever, and Ashby listings, screens them, scores each against every version of your approved résumé, and writes `jobs/today.html`: fit, confidence, the gaps, which version to send, and an Apply button. Listings from alert emails or the web come in with `jobs add`. Setup asks nine questions before any search. `jobs schedule` gives a no-AI timer line (no tokens) or scheduled-task text with Claude's review, on the days you choose (Wednesday suggested). Never reads email. `jobs prep <id>` makes the best-fit version; `note`, `dismiss`, and `applied` keep the list honest. Never applies for you, never changes your résumé.
 - **Pre-launch:** until `product.config.json` has a Polar store, Pro features are unlocked, with a reminder on every Pro use, in `license status`, and in `check`. Configure the store before release.
 - `jobs boards` checks every company board after setup.

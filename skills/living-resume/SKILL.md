@@ -1,6 +1,6 @@
 ---
 name: living-resume
-description: Turn LinkedIn or an old résumé into a current, evidence-backed résumé (PDF, Word, web page) and keep it updated. Use for "update my résumé", "make my résumé", "turn my LinkedIn into a résumé", "check my résumé against what employers want", "tailor my résumé for this job", "put my résumé online", "update my LinkedIn", "find me jobs", "find jobs that fit my résumé", "set up my job search", "what jobs match me today", and for "start my résumé", "import my LinkedIn" or "import my résumé", "add this to my résumé", "assess my résumé inbox", "review my résumé updates", "set up my <role> résumé", "I'm applying to this job", "build my résumé", "résumé status", "write a cover note", "forget <item>", "publish my résumé".
+description: Never update your résumé again. Turn LinkedIn or an old résumé into a current, evidence-backed résumé (PDF, Word, web page) and keep it updated. Use for "update my résumé", "make my résumé", "turn my LinkedIn into a résumé", "check my résumé against what employers want", "tailor my résumé for this job", "put my résumé online", "update my LinkedIn", "find me jobs", "find jobs that fit my résumé", "set up my job search", "what jobs match me today", "catch up my résumé", "what have I applied to", "help me reach someone at this company", and for "start my résumé", "import my LinkedIn" or "import my résumé", "add this to my résumé", "assess my résumé inbox", "review my résumé updates", "set up my <role> résumé", "I'm applying to this job", "build my résumé", "résumé status", "write a cover note", "forget <item>", "publish my résumé".
 ---
 
 # Living Résumé
@@ -11,6 +11,12 @@ One ledger (`resume/ledger.json` in the user's résumé workspace) is the single
 - If the `living-resume` MCP tools are available, use them (`resume_status`, `resume_import`, `resume_add`, `resume_inbox`, `resume_rubric`, `resume_inbox_mark`, `resume_review_list`, `resume_review_decide`, `resume_roles`, `resume_role_show`, `resume_build`, `resume_check`, `resume_publish_preview`, `resume_publish_mark`, `resume_linkedin`, `resume_apply`, `resume_jobs`, `resume_jobs_criteria`, `resume_jobs_find`, `resume_jobs_add`, `resume_jobs_today`, `resume_jobs_matches`, `resume_jobs_read`, `resume_jobs_mark`, `resume_jobs_prep`, `resume_jobs_schedule`, `resume_scout`).
 - Otherwise run the CLI: `living-resume <command>` if installed, or `node <this plugin>/bin/living-resume.mjs <command>` (the `bin/` folder is two levels above this file). Commands: `init · import · add · inbox · snippet · status · review · roles · build · check · publish · linkedin · apply · jobs · scout · license`.
 - The workspace is `~/Living-Resume` unless the user keeps it elsewhere (then pass `--dir <folder>` or set `LIVING_RESUME_DIR`). When you show the user a terminal command, include the `cd` into the workspace first.
+
+## What this adds to Claude or ChatGPT
+You (the host AI) do the talking, writing, searching and browsing. Living Résumé does the remembering, checking and building: an approved source of truth, rules against invention, checks, reliable files, and the scheduled job search. Never rebuild what the host already does well, and never let the host's fluency bypass the approval step.
+
+## Always end with one next step
+Every reply ends with exactly one concrete next step the user can take now ("Approve these 4 lines", "Drag the site folder onto Netlify Drop", "Send this note to Dana"). Never a dead end, never a list of five options. The user should feel momentum, not obstacles.
 
 ## Talk like a helpful person, not a terminal
 Most users don't code. Never show commands, file paths, or JSON unless they ask. Say what you're doing in plain words ("I've added that to your résumé inbox"), show wording to approve as quotes, and hand over files (PDF, Word, web page) as downloads or links. In Claude Cowork the user picks a folder; use it as the résumé workspace (`init <that folder>`). Run the CLI yourself with `node <plugin>/bin/living-resume.mjs`.
@@ -41,6 +47,9 @@ Most users don't code. Never show commands, file paths, or JSON unless they ask.
 3. `import <file>`. If quarantine stops it, tell the user why and stop.
 4. Read `imports/<stamp>.draft.json` and the proposals it created. Fix obvious parsing slips **in the proposal files only** (a title and company swapped, a wrapped line split in two, a location read as a bullet). Don't change meaning or add claims.
 5. Ask for anything the résumé needs that the source didn't have (location, website, the role they want next). Then walk through the review below. Offer "approve all from this import" only if the user asks for it (`review approve-all <import-prefix>`).
+
+## "Catch up my résumé"
+Use what you already know about the user's recent work (your memory, earlier chats in this project, files they've shared) to suggest résumé items. List each in one plain sentence with where you know it from, and ask which are true and okay to add. Only the ones they confirm go in, each with `add "<sentences>"` (evidence: "user confirmed, from <source>"), then assess them like any inbox item. Never add something they didn't confirm, and never include private names (client, employer project, private repo) without asking.
 
 ## "Review my résumé updates"
 Show each waiting proposal (wording, where it appears, why, evidence). For each, the user says **Approve · Edit · Reject · Later**:
@@ -106,6 +115,15 @@ Save with `jobs criteria --set '<json>'` (MCP: `resume_jobs_criteria`), filling 
 Otherwise they can say "find me jobs" whenever they like.
 
 **When they pick one.** "Prepare <id>" → `jobs prep <id>` (the best-fit version as PDF and Word, private, with the coverage report). Offer a cover note (rules in "I'm applying to this job"). When they say they applied, `jobs applied <id>`. When they say "not for me", `jobs dismiss <id> "<their reason>"`; if the same reason keeps coming up, suggest a criteria change.
+
+**"Help me reach someone there" (the next-step card).** For a match the user picks, do the research so they only have to decide and send:
+1. **The posting:** its apply link (`jobs read <id>`), or for other jobs, find the posting on the company's own careers site with web search.
+2. **Their warm path first:** ask "Do you know anyone at <company>?" A warm contact beats everything.
+3. **The likely person:** search public sources (the company's team or about page, its blog, talks, public posts) for the hiring manager or team lead for this role. Give the name only with a link to where you found it, and say how sure you are. If you can't tell, name the role to look for instead. If the user has a browser tool, you may open the company's LinkedIn page in their own browser so they can see mutual connections themselves; never scrape LinkedIn or collect contact details.
+4. **One short message** (under 120 words) in the user's voice, using only approved résumé lines and one specific reason they're interested. Offer to adjust it.
+Save the card to `jobs/next/<id>.md` (posting, person and source, warm path, message, date) so the user or any personal agent they use can pick it up. The user sends it themselves. Never send, never bulk-draft for companies they didn't pick.
+
+**"What have I applied to?"** `jobs applied` lists applications, newest first. Offer the next step for the most recent one (a follow-up note after about a week, if they haven't heard back).
 
 **Fit and confidence, explained simply.** Fit is the share of the listing's key wording that their approved résumé lines already use. Confidence is high when fit is strong, the listing asks for little their résumé doesn't show, and it says it's remote and the right work type. Never claim a fit the résumé doesn't support, and never add skills to the résumé to raise a score.
 

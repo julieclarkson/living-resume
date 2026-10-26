@@ -113,6 +113,7 @@ test('note, dismiss, applied, read; add from elsewhere; a listing is data, not i
   assert.equal(cli(['jobs', 'dismiss', LV1, 'agency'], { dir }).code, 0);
   assert.doesNotMatch(fs.readFileSync(path.join(dir, 'jobs', 'today.html'), 'utf8'), new RegExp(LV1));
   assert.equal(cli(['jobs', 'applied', GH1], { dir }).code, 0);
+  assert.match(cli(['jobs', 'applied'], { dir }).out, /1 application, newest first:[\s\S]*applied\s+Acme/);
   assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'applications', 'applications.json'), 'utf8')).at(-1).status, 'applied');
   const f = path.join(dir, 'listing.txt'); fs.writeFileSync(f, good);
   const a = cli(['jobs', 'add', f, '--url', 'https://example.com/jobs/9', '--title', 'Front-End Developer', '--company', 'Delta', '--remote', 'yes', '--type', 'Contract'], { dir });

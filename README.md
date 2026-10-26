@@ -1,6 +1,6 @@
 # Living Résumé
 
-Keep your résumé current from your real work. One evidence-backed ledger builds your PDF, Word file, web page, JSON Resume, and LinkedIn packet, and you approve every line. It runs inside Claude Code, Codex, and Cursor (skill + MCP server) or from the command line. Zero dependencies. No account, no server.
+**Never update your résumé again.** Living Résumé works on top of Claude: your AI does the talking and searching, Living Résumé does the remembering, checking, and building. One evidence-backed ledger builds your PDF, Word file, web page, JSON Resume, and LinkedIn packet, and you approve every line. It runs inside Claude Code, Codex, and Cursor (skill + MCP server) or from the command line. Zero dependencies. No account, no server.
 
 ## Quick start
 ```bash
