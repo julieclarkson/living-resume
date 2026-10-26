@@ -12,7 +12,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { PRODUCT, readJSON } from './util.mjs';
+import { PRODUCT, readJSON, stateDir } from './util.mjs';
 
 export const REVALIDATE_AFTER_MS = 24 * 3600 * 1000;
 export const OFFLINE_GRACE_MS = 30 * 24 * 3600 * 1000;
@@ -20,7 +20,6 @@ const TIMEOUT_MS = 8000;
 
 // LIVING_RESUME_PRODUCT_CONFIG is for development and tests (for example a Polar sandbox store).
 export const productConfig = () => readJSON(process.env.LIVING_RESUME_PRODUCT_CONFIG || path.join(PRODUCT, 'product.config.json'));
-const stateDir = () => process.env.LIVING_RESUME_STATE_DIR || path.join(os.homedir(), '.living-resume');
 export const licenseFile = () => path.join(stateDir(), 'license.json');
 export const mask = (k) => (typeof k === 'string' && k.length > 8 ? `${k.slice(0, 4)}…${k.slice(-4)}` : '(set)');
 const KEY_RE = /^[A-Za-z0-9_-]{8,200}$/;
@@ -151,7 +150,7 @@ export const preLaunch = (cfg = productConfig()) => !cfg.store?.organizationId;
 export const proUnlocked = () => preLaunch() || isPro();
 export async function requirePro(feature) {
   const cfg = productConfig();
-  if (preLaunch(cfg)) { console.error('· Pre-launch: Pro features are unlocked because no Polar store is configured in product.config.json. Configure it before release.'); return { ok: true }; }
+  if (preLaunch(cfg)) { console.error('· Pro feature, free before launch.'); return { ok: true }; }
   let s = licenseState();
   if (s.tier === 'pro' && s.stale) { await validate(); s = licenseState(); }
   if (s.tier === 'pro') return { ok: true };

@@ -8,6 +8,9 @@
 //   snippet                                  text to paste into your projects so agents nominate wins
 //   status                                   recording · queue · public · history · plan
 //   review [approve|edit|reject|later <id>]  Approve · Edit · Reject · Later
+//   propose '<json>'                         write one proposal for review (for AI tools without file access)
+//   fix-role <role-id> '<json>'              fix an imported role's title, org, location, start, end
+//   target ["the work you want next"]        show or save the rubric target
 //   build                                    every format → dist/
 //   check                                    every check (run before publishing)
 //   publish [--write]                        dry run, or copy files to your site (never commits)
@@ -29,7 +32,7 @@ const di = argv.indexOf('--dir');
 if (di >= 0) { if (!argv[di + 1]) { console.error('--dir needs a folder'); process.exit(2); } process.env.LIVING_RESUME_DIR = path.resolve(argv[di + 1]); argv.splice(di, 2); }
 
 const ALIASES = { 'gate:test': 'check', test: 'check', tailor: 'apply' };
-const COMMANDS = ['init', 'import', 'add', 'inbox', 'snippet', 'status', 'review', 'roles', 'build', 'check', 'publish', 'linkedin', 'apply', 'jobs', 'scout', 'license'];
+const COMMANDS = ['init', 'import', 'add', 'inbox', 'snippet', 'status', 'review', 'propose', 'fix-role', 'target', 'roles', 'build', 'check', 'publish', 'linkedin', 'apply', 'jobs', 'scout', 'license'];
 const cmd = ALIASES[argv[0]] || argv[0];
 
 if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h') {
@@ -45,7 +48,7 @@ if (cmd === '--version' || cmd === 'version') {
 if (!COMMANDS.includes(cmd)) { console.error(`Unknown command "${argv[0]}". Run: living-resume help`); process.exit(2); }
 
 // Commands that change the workspace run one at a time.
-if (['import', 'add', 'inbox', 'review', 'roles', 'build', 'publish', 'apply', 'jobs', 'scout'].includes(cmd) && !(['review', 'inbox', 'roles', 'jobs'].includes(cmd) && (!argv[1] || ['all', 'list', 'show', 'schedule', 'read', 'boards'].concat(cmd === 'jobs' && argv[1] === 'applied' && !argv[2] ? ['applied'] : []).includes(argv[1]) || (cmd === 'jobs' && argv[1] === 'criteria' && !argv.includes('--set'))))) {
+if (['import', 'add', 'inbox', 'review', 'propose', 'fix-role', 'target', 'roles', 'build', 'publish', 'apply', 'jobs', 'scout'].includes(cmd) && !((cmd === 'target' && !argv[1]) || ['review', 'inbox', 'roles', 'jobs'].includes(cmd) && (!argv[1] || ['all', 'list', 'show', 'schedule', 'read', 'boards'].concat(cmd === 'jobs' && argv[1] === 'applied' && !argv[2] ? ['applied'] : []).includes(argv[1]) || (cmd === 'jobs' && argv[1] === 'criteria' && !argv.includes('--set'))))) {
   const { lockWorkspace, isWorkspace } = await import('../engine/lib/util.mjs');
   if (isWorkspace()) { try { lockWorkspace(); } catch (e) { console.error(`✗ ${e.message}`); process.exit(4); } }
 }

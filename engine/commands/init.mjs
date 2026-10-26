@@ -53,4 +53,4 @@ Next:
   2. Review each line:        living-resume review
   3. Build every format:      living-resume build && living-resume check
 Everything stays on this computer until you publish.`);
-if (process.env.LIVING_RESUME_DIR !== target && target !== DEFAULT_HOME) console.log(`\nTip: commands find this workspace when you run them inside it, or set LIVING_RESUME_DIR=${target}`);
+if (process.env.LIVING_RESUME_VIA !== 'mcp' && process.env.LIVING_RESUME_DIR !== target && target !== DEFAULT_HOME) console.log(`\nTip: commands find this workspace when you run them inside it, or set LIVING_RESUME_DIR=${target}`);

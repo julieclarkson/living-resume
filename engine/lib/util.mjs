@@ -5,6 +5,7 @@
 //   ROOT     = the user's résumé workspace (holds resume/ledger.json and every output)
 // The workspace is resolved once per process:
 //   LIVING_RESUME_DIR env  →  nearest folder above the current one with resume/ledger.json
+//   →  the folder remembered from resume_init (<state dir>/workspace.json)
 //   →  ~/Living-Resume (the default `init` location)  →  the current folder.
 import fs from 'node:fs';
 import os from 'node:os';
@@ -15,6 +16,25 @@ export const ENGINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)),
 export const PRODUCT = path.resolve(ENGINE, '..');
 export const DEFAULT_HOME = path.join(os.homedir(), 'Living-Resume');
 
+// Per-user state outside any workspace (the license cache and the remembered workspace).
+export const stateDir = () => process.env.LIVING_RESUME_STATE_DIR || path.join(os.homedir(), '.living-resume');
+const rememberFile = () => path.join(stateDir(), 'workspace.json');
+// The workspace the user picked at resume_init, so the next conversation (a new MCP process) finds it.
+// Only an absolute path to a real workspace folder (not a symlink) is honored.
+export function rememberedWorkspace() {
+  try {
+    const w = JSON.parse(fs.readFileSync(rememberFile(), 'utf8')).workspace;
+    if (typeof w === 'string' && path.isAbsolute(w) && !fs.lstatSync(w).isSymbolicLink() && fs.existsSync(path.join(w, 'resume', 'ledger.json'))) return path.resolve(w);
+  } catch {}
+  return null;
+}
+export function rememberWorkspace(dir) {
+  fs.mkdirSync(stateDir(), { recursive: true, mode: 0o700 });
+  const f = rememberFile(); const tmp = `${f}.${process.pid}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify({ workspace: path.resolve(dir) }, null, 2) + '\n', { mode: 0o600 });
+  fs.renameSync(tmp, f);
+}
+
 export function resolveWorkspace(env = process.env, cwd = process.cwd()) {
   if (env.LIVING_RESUME_DIR) return path.resolve(env.LIVING_RESUME_DIR);
   let dir = path.resolve(cwd);
@@ -22,6 +42,7 @@ export function resolveWorkspace(env = process.env, cwd = process.cwd()) {
     if (fs.existsSync(path.join(dir, 'resume', 'ledger.json'))) return dir;
     const up = path.dirname(dir); if (up === dir) break; dir = up;
   }
+  const remembered = rememberedWorkspace(); if (remembered) return remembered;
   if (fs.existsSync(path.join(DEFAULT_HOME, 'resume', 'ledger.json'))) return DEFAULT_HOME;
   return path.resolve(cwd);
 }
