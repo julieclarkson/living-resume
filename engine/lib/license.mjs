@@ -150,7 +150,8 @@ export const preLaunch = (cfg = productConfig()) => !cfg.store?.organizationId;
 export const proUnlocked = () => preLaunch() || isPro();
 export async function requirePro(feature) {
   const cfg = productConfig();
-  if (preLaunch(cfg)) { console.error('· Pro feature, free before launch.'); return { ok: true }; }
+  // Said once per reply: a command that runs another (jobs prep runs apply) sets LIVING_RESUME_PRO_NOTED.
+  if (preLaunch(cfg)) { if (!process.env.LIVING_RESUME_PRO_NOTED) console.error('· Pro feature, free before launch.'); return { ok: true }; }
   let s = licenseState();
   if (s.tier === 'pro' && s.stale) { await validate(); s = licenseState(); }
   if (s.tier === 'pro') return { ok: true };

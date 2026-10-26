@@ -45,7 +45,8 @@ if (email) R.privacy.email_allowed = [email.toLowerCase()];
 if (name) R.pdf_filename = pdfFilename(name);
 fs.writeFileSync(rp, JSON.stringify(R, null, 2) + '\n');
 
-console.log(`✓ Résumé workspace ready at ${target}
+if (process.env.LIVING_RESUME_VIA === 'mcp') console.log(`✓ Résumé workspace ready at ${target}\nNext: import their LinkedIn .zip or résumé.`);
+else console.log(`✓ Résumé workspace ready at ${target}
 
 Next:
   1. Bring in what you have:  living-resume import <LinkedIn export .zip or folder, or résumé .pdf/.docx/.txt>

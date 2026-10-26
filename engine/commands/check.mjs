@@ -56,7 +56,7 @@ if (fs.existsSync(dist(R.pdf_filename))) {
   const pages = pdfPageCount(dist(R.pdf_filename));
   check(`PDF: ≤ ${R.limits.pdf_max_pages} pages`, pages > 0 && pages <= R.limits.pdf_max_pages, `${pages} page(s)`);
   const txt = pdfText(dist(R.pdf_filename));
-  if (txt === null) check('PDF: text round-trip (install poppler for this check)', true, 'skipped: pdftotext not installed');
+  if (txt === null) check(process.env.LIVING_RESUME_VIA === 'mcp' ? 'PDF: text round-trip (skipped here)' : 'PDF: text round-trip (install poppler for this check)', true, 'skipped: pdftotext not installed');
   else {
     // Headings must come out of the PDF as readable text, in the order they were printed.
     const order = [L.person.name, ...[...printHtml(L).matchAll(/<h2>([^<]+)<\/h2>/g)].map((m) => m[1].replace(/&amp;/g, '&'))];
@@ -117,5 +117,4 @@ check('quarantine out: blocks an unapproved email', scanOut('Write to someone.el
 const failed = results.filter((r) => !r.ok);
 for (const r of results) console.log(`${r.ok ? '✓' : '✗'} ${r.name}${r.detail ? `  (${r.detail})` : ''}`);
 console.log(`\n${results.length - failed.length}/${results.length} checks passed.`);
-{ const { preLaunch } = await import('../lib/license.mjs'); if (preLaunch()) console.log('· Pre-launch: Pro features are unlocked until the Polar store is configured in product.config.json.'); }
 process.exit(failed.length ? 1 : 0);

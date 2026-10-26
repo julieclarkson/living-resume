@@ -228,3 +228,35 @@ test('resume_guide returns the skill; scout tools are listed only when projectsR
     const ap = await call(s, 'resume_apply', { posting: 'p.txt' }); assert.doesNotMatch(ap.text, /Configure it before release/);
   } finally { s.close(); }
 });
+
+test('MCP replies are plain words: no CLI commands, no Terminal, no developer notes', async () => {
+  const base = tmp('mcp-words'); const folder = path.join(base, 'Resume');
+  const s = session(folder, { LIVING_RESUME_BOARDS_ORIGIN: 'http://127.0.0.1:1' });
+  const clean = (r, what) => { assert.doesNotMatch(r.text, /living-resume |Terminal|product\.config\.json|install poppler/, `${what}: ${r.text}`); return r; };
+  try {
+    await s.req('initialize', {});
+    assert.match(clean(await call(s, 'resume_status'), 'status').text, /No résumé workspace found yet\. Ask where their résumé folder is, then resume_init with it\./);
+    assert.match(clean(await call(s, 'resume_init', { folder }), 'init').text, /Next: import their LinkedIn \.zip or résumé\./);
+    const imp = clean(await call(s, 'resume_import', { text: 'Pat Lee\nOps lead\n\nExperience\nAnalyst, Acme, Austin, TX  2017 – 2019\n- Built the weekly report\n- Ran the month-end close\n' }), 'import');
+    assert.match(imp.text, /Next: review the lines\./);
+    const ids = fs.readdirSync(path.join(folder, 'proposals')).map((f) => f.replace(/\.json$/, '')).sort();
+    assert.match(clean(await call(s, 'resume_review_decide', { id: ids.at(-1), action: 'approve' }), 'decide').text, /Ledger updated\. Next: build and check\./);
+    clean(await call(s, 'resume_build'), 'build'); clean(await call(s, 'resume_check'), 'check');
+    assert.match(clean(await call(s, 'resume_jobs'), 'jobs').text, /No matches yet\. Next: find jobs\./);
+    await call(s, 'resume_jobs_criteria', { set: { looking_for: 'analyst roles', companies: [{ name: 'Acme', board: 'greenhouse:acme' }] } });
+    assert.match(clean(await call(s, 'resume_jobs_boards'), 'boards').text, /can't reach job boards; the timer on the user's computer can, or add listings from web search/);
+    assert.match(clean(await call(s, 'resume_jobs_schedule'), 'schedule').text, /OPTION 2 · WITH YOUR AI'S REVIEW/);
+    // basics with only fields: written, and review shows the fields
+    const b = await call(s, 'resume_propose', { id: 'p-where', kind: 'basics', fields: { city: 'Charlotte', region: 'NC' }, reason: 'Location the user gave', evidence: 'user said so' });
+    assert.equal(b.err, false, b.text);
+    assert.equal(JSON.parse(fs.readFileSync(path.join(folder, 'proposals', 'p-where.json'), 'utf8')).text, 'city: Charlotte · region: NC');
+    assert.match((await call(s, 'resume_review_list')).text, /city: Charlotte · region: NC/);
+    // one import's waiting lines: reject by prefix; approve by prefix only with all_lines
+    const prefix = ids[0].split('-').slice(0, 5).join('-');
+    assert.equal((await call(s, 'resume_review_decide', { id: prefix, action: 'approve' })).err, true);
+    const rj = await call(s, 'resume_review_decide', { id: prefix, action: 'reject' }); assert.equal(rj.err, false, rj.text); assert.match(rj.text, /Rejected \d+ waiting line/);
+    const left = fs.readdirSync(path.join(folder, 'proposals')).map((f) => JSON.parse(fs.readFileSync(path.join(folder, 'proposals', f), 'utf8')));
+    assert.ok(left.filter((p) => p.id.startsWith(prefix)).every((p) => p.status !== 'proposed'));
+    assert.equal(left.find((p) => p.id === 'p-where').status, 'proposed');
+  } finally { s.close(); }
+});

@@ -26,7 +26,7 @@ const out = { id: p.id ? id(p.id, 'proposal id') : `p-${today()}-${Date.now().to
 // Every proposal says why and where it came from (never invent).
 out.reason = str(p.reason, 'reason', 500);
 out.evidence = str(p.evidence, 'evidence', 1000);
-if (p.kind !== 'remove') out.text = str(p.text, 'text', 2000);
+if (p.kind !== 'remove') out.text = str(p.text, 'text', 2000, p.kind !== 'basics');
 
 if (['edit', 'remove', 'variant'].includes(p.kind)) {
   out.target = id(p.target, 'target');
@@ -51,6 +51,11 @@ if (p.fields !== undefined) {
   out.fields = {};
   for (const [k, v] of Object.entries(p.fields)) { if (!allowed.includes(k)) die(`fields.${k} is not allowed here.`); out.fields[k] = str(v, `fields.${k}`, 200, false) ?? ''; }
 } else if (p.kind === 'basics') die('basics needs fields (name, email, url, linkedin, city, region).');
+// basics: the text is optional and, when missing, is built from the fields ("city: Charlotte · region: NC").
+if (p.kind === 'basics') {
+  if (!Object.values(out.fields).some(Boolean)) die('basics needs at least one field with a value.');
+  if (!out.text) out.text = Object.entries(out.fields).filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join(' · ');
+}
 if (p.surfaces !== undefined) {
   const SURF = ['web', 'pdf', 'linkedin', 'json'];
   if (!Array.isArray(p.surfaces) || !p.surfaces.length || p.surfaces.some((x) => !SURF.includes(x))) die(`surfaces must be a list of ${SURF.join(', ')}.`);

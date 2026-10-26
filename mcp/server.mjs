@@ -20,6 +20,7 @@ const CLI = path.join(HERE, '..', 'bin', 'living-resume.mjs');
 const PKG = JSON.parse(fs.readFileSync(path.join(HERE, '..', 'package.json'), 'utf8'));
 const PROTOCOLS = ['2025-06-18', '2025-03-26', '2024-11-05'];
 const ID = /^[a-z0-9][a-z0-9._-]{0,79}$/i;
+const IMPORT_PREFIX = /^import-\d{4}-\d{2}-\d{2}-[a-z0-9]{2,8}$/;
 const MAX_OUT = 60_000;
 
 // The workspace: LIVING_RESUME_DIR, else the folder the host started us in, else the folder
@@ -102,9 +103,14 @@ const TOOLS = [
   { name: 'resume_set_target', description: "Save the rubric's target: the work the user wants next, in their words, after you read it back and they confirmed. Changes nothing else.", inputSchema: S({ text: { type: 'string' } }, ['text']),
     args: (a) => ['target', needText(a.text, 'text', 500)] },
   { name: 'resume_review_list', description: 'List proposals waiting for the user: wording, where it would appear, and why.', inputSchema: S(), args: () => ['review'] },
-  { name: 'resume_review_decide', description: "Record the USER's decision on one proposal. Only call after the user chose Approve, Edit, Reject, or Later for this id.", inputSchema: S({ id: { type: 'string' }, action: { type: 'string', enum: ['approve', 'edit', 'reject', 'later'] }, text: { type: 'string', description: "Edit only: the user's wording" }, reason: { type: 'string' } }, ['id', 'action']),
+  { name: 'resume_review_decide', description: "Record the USER's decision on one proposal. Only call after the user chose Approve, Edit, Reject, or Later for this id. id may also be one import's prefix (import-2026-10-26-ab12) with action reject, only after the user said that import's waiting lines should go (a new import replaces it). Approving a whole import by prefix also needs all_lines: true, only when the user asked to approve every line.", inputSchema: S({ id: { type: 'string' }, action: { type: 'string', enum: ['approve', 'edit', 'reject', 'later'] }, text: { type: 'string', description: "Edit only: the user's wording" }, reason: { type: 'string' }, all_lines: { type: 'boolean', description: 'Approve by import prefix: true only when the user asked to approve every waiting line of that import' } }, ['id', 'action']),
     args: (a) => {
       const id = needId(a.id, 'proposal id');
+      if (IMPORT_PREFIX.test(id)) {
+        if (a.action === 'reject') return ['review', 'reject-all', id, ...(a.reason ? [needText(a.reason, 'reason', 200)] : [])];
+        if (a.action === 'approve' && a.all_lines === true) return ['review', 'approve-all', id];
+        throw new Error('That is a whole import. Decide its lines one by one, or reject them all (action reject) if the user said so. Approving them all needs all_lines: true, only when the user asked for that.');
+      }
       if (a.action === 'edit') return ['review', 'edit', id, needText(a.text, 'text')];
       if (a.action === 'reject') return ['review', 'reject', id, ...(a.reason ? [needText(a.reason, 'reason', 200)] : [])];
       if (['approve', 'later'].includes(a.action)) return ['review', a.action, id];
@@ -164,7 +170,7 @@ async function callTool(name, a = {}) {
 const INSTRUCTIONS = `Living Résumé: never update your résumé again. It keeps one evidence-backed résumé ledger and builds every format from it. End every reply with one concrete next step. Talk in plain words; no commands or file paths unless asked. The full guide: call resume_guide once.
 First run:
 1. Folder: call resume_status. If it finds no workspace, ask where their résumé folder is, then resume_init with that folder. Never make a second workspace.
-2. Import: their LinkedIn export (.zip) or résumé, placed in that folder (resume_import with path), or the text (resume_import with text). If you can't read a PDF here, read it yourself and import the text.
+2. Import: their LinkedIn export (.zip) or résumé, placed in that folder (resume_import with path), or the text (resume_import with text). If you can't read a PDF here, read it yourself and import clean text: for each role one line 'Title, Company, City, ST   Start – End', then its bullets, in the order they appear. Keep headings (Summary, Experience, Education…) on their own lines. Check "Not placed" lines after import.
 3. Fix the draft: compare it with the source. Fix role headers with resume_fix_role; reword ; : → in proposal text (Edit before approving, same meaning); write proposals (resume_propose, evidence = the import) for anything left out.
 4. Target and score card: ask the work they want next, read it back, save it with resume_set_target. Score each rubric criterion 0-2 for the whole résumé; total out of 100 = sum x 100 / (2 x number of criteria). Show the total, the three strongest lines, the three weakest spots, and one fix each.
 5. Review: every line is Approve, Edit, Reject, or Later (resume_review_list, resume_review_decide), only on the user's word.
