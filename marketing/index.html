@@ -243,7 +243,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
         <span class="tag">No coding · Claude Cowork</span>
         <h3>Claude desktop app</h3>
         <ol>
-          <li><a href="https://github.com/julieclarkson/living-resume/releases/latest/download/living-resume.zip">Download Living Résumé</a> (a .zip file). Don't unzip it.</li>
+          <li><a href="https://github.com/julieclarkson/living-resume/archive/refs/heads/main.zip">Download Living Résumé</a> (a .zip file). Don't unzip it.</li>
           <li>Open <b>Customize</b>, then <b>Plugins</b>, then <b>+</b> › <b>Upload plugin</b>, and choose the .zip.</li>
           <li>Pick a folder for your résumé when asked, for example <span class="mono">Documents/Résumé</span>.</li>
           <li>Put your LinkedIn .zip (or old résumé) in that folder.</li>
@@ -260,8 +260,8 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
         <span class="tag">No coding · ChatGPT desktop</span>
         <h3>ChatGPT desktop app</h3>
         <ol>
-          <li><a href="https://github.com/julieclarkson/living-resume/releases/latest/download/living-resume.zip">Download Living Résumé</a> (a .zip file). Unzip it.</li>
-          <li>Add the unzipped <span class="mono">living-resume</span> folder as a marketplace, then install <b>Living Résumé</b> from the <b>Plugins Directory</b>.</li>
+          <li><a href="https://github.com/julieclarkson/living-resume/archive/refs/heads/main.zip">Download Living Résumé</a> (a .zip file). Unzip it.</li>
+          <li>Add the unzipped <span class="mono">living-resume-main</span> folder as a marketplace, then install <b>Living Résumé</b> from the <b>Plugins Directory</b>.</li>
           <li>Pick a folder for your résumé when asked, for example <span class="mono">Documents/Résumé</span>.</li>
           <li>Put your LinkedIn .zip (or old résumé) in that folder.</li>
           <!-- TODO (fix 10): once the display-name field the app reads is verified, set it in plugin.json and use "mention @Living Résumé". -->
@@ -276,21 +276,21 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
     </div>
     <div class="devs">
     <h3>For developers</h3>
-    <p class="works">Claude Code, Codex, Cursor, VS Code, or any MCP client. Same engine, same files, same checks. <a href="https://github.com/julieclarkson/living-resume/releases/latest/download/living-resume.zip">Download</a> and unzip first, and keep the folder where it is: your app runs Living Résumé from it.</p>
+    <p class="works">Claude Code, Codex, Cursor, VS Code, or any MCP client. Same engine, same files, same checks. <a href="https://github.com/julieclarkson/living-resume/archive/refs/heads/main.zip">Download</a> and unzip first, and keep the folder where it is: your app runs Living Résumé from it.</p>
     <div class="more">
       <div>
         <p>Claude Code</p>
-        <pre>/plugin marketplace add ~/Downloads/living-resume
+        <pre>/plugin marketplace add ~/Downloads/living-resume-main
 /plugin install living-resume@living-resume-marketplace</pre>
       </div>
       <!-- Codex plugin commands follow OpenAI's docs (2026-10-26): verify before launch. -->
       <div>
         <p>Codex</p>
-        <pre>codex plugin marketplace add ~/Downloads/living-resume</pre>
+        <pre>codex plugin marketplace add ~/Downloads/living-resume-main</pre>
       </div>
       <div>
         <p>Cursor, VS Code, or any MCP client</p>
-        <pre>node ~/Downloads/living-resume/mcp/server.mjs</pre>
+        <pre>node ~/Downloads/living-resume-main/mcp/server.mjs</pre>
         <p class="works">Use the full path in your client's config. Needs Node.js 18 or newer.</p>
       </div>
       <div>
