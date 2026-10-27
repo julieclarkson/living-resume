@@ -1,7 +1,7 @@
 # Architecture
 
 ```
-bin/living-resume.mjs      one entry point (CLI, skills, MCP all call it)
+cli/living-resume.mjs      one entry point (CLI, skills, MCP all call it)
 engine/commands/*.mjs      init · import · add · inbox · snippet · review · roles · build · check · coach · publish · apply · status · scout · license
 engine/lib/util.mjs        workspace resolution, confinement, lock, ledger helpers
 engine/lib/render.mjs      ledger → print HTML, web page, JSON Resume, LinkedIn packet, report, capability statement

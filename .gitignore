@@ -7,3 +7,6 @@ Living-Resume/
 
 # Usability test runs (dev-only, never released)
 usability/
+
+# Internal build notes (never released)
+docs/BUILD-REPORT.md

@@ -335,7 +335,7 @@ if (sub === 'show' || sub === 'list') {
   const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   const [hh, mm] = sc.time.split(':').map(Number);
   const q = (s) => `'${String(s).replace(/'/g, `'\\''`)}'`;
-  const bin = path.join(PRODUCT, 'bin', 'living-resume.mjs');
+  const bin = path.join(PRODUCT, 'cli', 'living-resume.mjs');
   const when = `${listDays(sc.days)} at ${sc.time}`;
   console.log(`${c.schedule ? '' : 'No schedule set yet, so this uses the suggestion: Wednesdays at 08:00, no AI.\n\n'}OPTION 1 · NO AI, NO TOKENS (${when})
 Your computer runs the search and leaves the page in jobs/today.html. Add this line with "crontab -e":

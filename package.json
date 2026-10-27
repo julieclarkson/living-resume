@@ -4,12 +4,12 @@
   "description": "Never update your résumé again. One evidence-backed ledger builds your PDF, Word file, web page, JSON Resume, and LinkedIn packet, and you approve every line. Works in Claude and ChatGPT (plugins), plus Codex, Cursor, VS Code, and Claude Code. Zero dependencies.",
   "type": "module",
   "bin": {
-    "living-resume": "bin/living-resume.mjs",
+    "living-resume": "cli/living-resume.mjs",
     "living-resume-mcp": "mcp/server.mjs"
   },
   "mcpName": "io.github.julieclarkson/living-resume",
   "files": [
-    "bin/",
+    "cli/",
     "engine/",
     "mcp/",
     "templates/",
@@ -36,7 +36,7 @@
   },
   "scripts": {
     "test": "node --test test/*.test.mjs",
-    "living-resume": "node bin/living-resume.mjs",
+    "living-resume": "node cli/living-resume.mjs",
     "mcp": "node mcp/server.mjs"
   },
   "keywords": [

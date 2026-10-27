@@ -160,8 +160,8 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
         <span class="tag">No coding · Claude Cowork</span>
         <h3>Claude desktop app</h3>
         <ol>
-          <li>Open <b>Customize</b>, then <b>Plugins</b>, then <b>Add marketplace</b>.<div class="path" aria-hidden="true" style="margin-top:6px"><span>Customize</span><i>›</i><span>Plugins</span><i>›</i><span>Add marketplace</span></div></li>
-          <li>Enter <span class="mono">julieclarkson/living-resume</span> and install <b>Living Résumé</b>.</li>
+          <li><a href="https://github.com/julieclarkson/living-resume/releases/latest/download/living-resume.zip">Download Living Résumé</a> (a .zip file). Don't unzip it.</li>
+          <li>Open <b>Customize</b>, then <b>Plugins</b>, then <b>+</b> › <b>Upload plugin</b>, and choose the .zip.<div class="path" aria-hidden="true" style="margin-top:6px"><span>Customize</span><i>›</i><span>Plugins</span><i>›</i><span>+</span><i>›</i><span>Upload plugin</span></div></li>
           <li>Then pick a folder (<span class="mono">Documents/Résumé</span>) when asked.</li>
           <li>Put your LinkedIn .zip (or old résumé) in that folder.</li>
           <li>Say <span class="mono">make my résumé from my LinkedIn</span>.</li>
@@ -170,7 +170,7 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
       </div>
       <!-- LAUNCH CHECKLIST (Julie): verify in the ChatGPT desktop app before launch, then fix this card from what you see:
            1. Is Node.js needed? If yes, add step 0 "Install Node.js from nodejs.org" (and to the Cowork card only if Cowork needs it too).
-           2. The marketplace.json shape and its "./" source (.agents/plugins/marketplace.json) install the plugin.
+           2. Adding the unzipped folder as a marketplace: does the app accept a local folder, and does .agents/plugins/marketplace.json ("./" source) install the plugin? If not, change this card.
            3. The name to mention: does "@Living Résumé" work? (plugin.json has no verified display-name field yet; see README.)
            4. Does the app ask for a folder? Does a file attached in the chat reach that folder?
            Wording follows OpenAI's plugin docs (2026-10-26). Keep this comment until checked. -->
@@ -178,8 +178,8 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
         <span class="tag">No coding · ChatGPT desktop</span>
         <h3>ChatGPT desktop app</h3>
         <ol>
-          <li>Add the marketplace <span class="mono">julieclarkson/living-resume</span>.</li>
-          <li>Open the <b>Plugins Directory</b> and install <b>Living Résumé</b>.<div class="path" aria-hidden="true" style="margin-top:6px"><span>Add marketplace</span><i>›</i><span>Plugins Directory</span><i>›</i><span>Install</span></div></li>
+          <li><a href="https://github.com/julieclarkson/living-resume/releases/latest/download/living-resume.zip">Download Living Résumé</a> (a .zip file). Unzip it.</li>
+          <li>Add the unzipped <span class="mono">living-resume</span> folder as a marketplace, then install <b>Living Résumé</b> from the <b>Plugins Directory</b>.<div class="path" aria-hidden="true" style="margin-top:6px"><span>Add marketplace</span><i>›</i><span>Plugins Directory</span><i>›</i><span>Install</span></div></li>
           <li>Then pick a folder (<span class="mono">Documents/Résumé</span>) when asked.</li>
           <li>Put your LinkedIn .zip (or old résumé) in that folder.</li>
           <!-- TODO (fix 10): once the display-name field the app reads is verified, set it in plugin.json and use "mention @Living Résumé". -->
@@ -188,28 +188,33 @@ footer{border-top:1px solid var(--rule);padding-block:36px 56px;color:var(--mute
         <p class="note" style="font-size:.9rem;color:var(--muted)">Everything stays in that folder on your computer. Your finished files land there too, under <span class="mono">dist</span>.</p>
       </div>
     </div>
+    <p style="margin-top:18px">Living Résumé isn't in a plugin store yet. To update, download it again and repeat the steps.</p>
+    <div class="review" style="margin-top:22px;padding:16px 18px;border:1px solid currentColor;border-radius:10px;opacity:.95">
+      <h3 style="margin:0 0 6px">Tried it? Leave a review.</h3>
+      <p style="margin:0">Living Résumé is new, and your review decides what gets fixed and built next. After your first résumé, <a href="mailto:julie@julieclarkson.com?subject=Living%20R%C3%A9sum%C3%A9%20review">email Julie</a> with what worked, what didn't, and whether she can quote you.</p>
+    </div>
     <div class="devs">
     <h3>For developers</h3>
-    <p style="font-size:.95rem;color:var(--muted)">Claude Code, Codex, Cursor, VS Code, or any MCP client. Same engine, same files, same checks.</p>
+    <p style="font-size:.95rem;color:var(--muted)">Claude Code, Codex, Cursor, VS Code, or any MCP client. Same engine, same files, same checks. <a href="https://github.com/julieclarkson/living-resume/releases/latest/download/living-resume.zip">Download</a> and unzip first, and keep the folder where it is: your app runs Living Résumé from it.</p>
     <div class="ways more">
       <div class="way">
         <span class="tag">Claude Code</span>
         <h3>In your terminal</h3>
-        <pre>/plugin marketplace add julieclarkson/living-resume
-/plugin install living-resume</pre>
+        <pre>/plugin marketplace add ~/Downloads/living-resume
+/plugin install living-resume@living-resume-marketplace</pre>
       </div>
       <!-- Codex plugin commands follow OpenAI's docs (2026-10-26): verify before launch. -->
       <div class="way">
         <span class="tag">Codex</span>
         <h3>OpenAI plugin</h3>
-        <pre>codex plugin marketplace add julieclarkson/living-resume</pre>
+        <pre>codex plugin marketplace add ~/Downloads/living-resume</pre>
         <p style="font-size:.9rem;color:var(--muted)">Then install Living Résumé from the plugins list and mention it with <span class="mono">$</span>.</p>
       </div>
       <div class="way">
         <span class="tag">Cursor · VS Code · MCP</span>
         <h3>Any MCP client</h3>
-        <pre>npx -y -p living-resume living-resume-mcp</pre>
-        <p style="font-size:.9rem;color:var(--muted)">After the npm package is published. Needs Node.js 18 or newer.</p>
+        <pre>node ~/Downloads/living-resume/mcp/server.mjs</pre>
+        <p style="font-size:.9rem;color:var(--muted)">Use the full path in your client's config. Needs Node.js 18 or newer.</p>
       </div>
     </div>
     </div>

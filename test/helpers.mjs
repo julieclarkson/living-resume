@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export const CLI = path.join(ROOT, 'bin', 'living-resume.mjs');
+export const CLI = path.join(ROOT, 'cli', 'living-resume.mjs');
 export const tmp = (name) => fs.mkdtempSync(path.join(os.tmpdir(), `lr-${name}-`));
 
 export function cli(args, { dir, env = {}, input } = {}) {

@@ -16,7 +16,7 @@ import { execFile } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const CLI = path.join(HERE, '..', 'bin', 'living-resume.mjs');
+const CLI = path.join(HERE, '..', 'cli', 'living-resume.mjs');
 const PKG = JSON.parse(fs.readFileSync(path.join(HERE, '..', 'package.json'), 'utf8'));
 const PROTOCOLS = ['2025-06-18', '2025-03-26', '2024-11-05'];
 const ID = /^[a-z0-9][a-z0-9._-]{0,79}$/i;

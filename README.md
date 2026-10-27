@@ -12,18 +12,27 @@ npx living-resume build && npx living-resume check       # every format → ~/Li
 In an AI tool, just say "start my résumé", "add this to my résumé", "assess my résumé inbox", "set up my design engineer résumé", "I'm applying to this job", or "publish my résumé".
 
 ## Install in your AI tool
-- **Claude Cowork (no coding):** Customize → Plugins → Add marketplace → `julieclarkson/living-resume` → Install. Pick a folder for your résumé when asked, put your LinkedIn .zip (or old résumé) in it, then say "make my résumé from my LinkedIn". Claude runs everything and hands you the files. PDFs work without Chrome (a built-in fallback).
-- **ChatGPT desktop app (no coding):** add the marketplace `julieclarkson/living-resume`, install Living Résumé from the Plugins Directory, pick a folder and put your LinkedIn .zip (or old résumé) in it, then in a local thread mention Living Résumé and say "make my résumé from my LinkedIn". Packaged as an OpenAI plugin: root `plugin.json`, `mcp.json`, `skills/`, and `.agents/plugins/marketplace.json`. Not yet checked in the app: see the launch checklist below.
-- **Claude Code:** `/plugin marketplace add julieclarkson/living-resume` then `/plugin install living-resume` (skill, slash commands, and MCP server).
-- **Codex:** `codex plugin marketplace add julieclarkson/living-resume`, then install it from the plugins list and mention it with `$`. Or add only the MCP server: `codex mcp add living-resume -- npx -y -p living-resume living-resume-mcp`, with `AGENTS.md` or `.codex/prompts/` for guidance.
-- **Cursor / any MCP client** (after the npm package is published): `{"mcpServers":{"living-resume":{"command":"npx","args":["-y","-p","living-resume","living-resume-mcp"]}}}`. VS Code (`.vscode/mcp.json`) uses a `servers` key: `{"servers":{"living-resume":{"type":"stdio","command":"npx","args":["-y","-p","living-resume","living-resume-mcp"]}}}`.
+Living Résumé isn't in any plugin store yet. Download it from this repo, then add it to your app.
+
+**Download:** [living-resume.zip](https://github.com/julieclarkson/living-resume/releases/latest/download/living-resume.zip). To update later, download it again and repeat the same steps.
+
+- **Claude desktop app (no coding):** don't unzip it. Open **Customize → Plugins**, select **+ → Upload plugin**, and choose `living-resume.zip`. Pick a folder for your résumé when asked, put your LinkedIn .zip (or old résumé) in it, then say "make my résumé from my LinkedIn". Claude runs everything and hands you the files. PDFs work without Chrome (a built-in fallback).
+- **ChatGPT desktop app (no coding):** unzip it, add the unzipped `living-resume` folder as a marketplace, install Living Résumé from the Plugins Directory, pick a folder and put your LinkedIn .zip (or old résumé) in it, then in a local thread mention Living Résumé and say "make my résumé from my LinkedIn". Packaged as an OpenAI plugin: root `plugin.json`, `mcp.json`, `skills/`, and `.agents/plugins/marketplace.json`. Not yet checked in the app: see the launch checklist below.
+- **Claude Code:** unzip it, then `/plugin marketplace add ~/Downloads/living-resume` and `/plugin install living-resume@living-resume-marketplace` (skill, slash commands, and MCP server).
+- **Codex:** unzip it, then `codex plugin marketplace add ~/Downloads/living-resume`, install it from the plugins list, and mention it with `$`. Or add only the MCP server: `codex mcp add living-resume -- node ~/Downloads/living-resume/mcp/server.mjs`, with `AGENTS.md` or `.codex/prompts/` for guidance.
+- **Cursor / any MCP client:** unzip it and point the client at the server with the full path: `{"mcpServers":{"living-resume":{"command":"node","args":["/Users/you/Downloads/living-resume/mcp/server.mjs"]}}}`. VS Code (`.vscode/mcp.json`) uses a `servers` key: `{"servers":{"living-resume":{"type":"stdio","command":"node","args":["/Users/you/Downloads/living-resume/mcp/server.mjs"]}}}`. Needs Node.js 18 or newer.
+
+For Claude Code, Codex, and MCP clients, keep the unzipped folder where it is: your app runs Living Résumé from it. If you move it, add it again from the new place.
 
 All of these drive the same engine (CLI + MCP server); only install and wording differ. In hosts that don't load the skill (Cursor, VS Code, plain MCP clients), the `resume_guide` tool returns it.
+
+### Leave a review
+Living Résumé is new, and your review decides what gets fixed and built next. After your first résumé, [email julie@julieclarkson.com](mailto:julie@julieclarkson.com?subject=Living%20R%C3%A9sum%C3%A9%20review) with what worked, what didn't, and whether I can quote you.
 
 ### Launch checklist: verify in the ChatGPT desktop app
 The ChatGPT card follows OpenAI's plugin docs (2026-10-26) and has only been checked statically. Before launch, install it in the app and fix the card (`marketing/index.html`, `marketing/guide.html`, this README) from what you see:
 1. Is Node.js needed? `mcp.json` runs `node`. If the app doesn't bring its own, add step 0 "Install Node.js from nodejs.org" to the ChatGPT card (and to the Cowork card only if Cowork needs it too).
-2. The `.agents/plugins/marketplace.json` shape and its `"./"` source: does adding the marketplace find and install the plugin?
+2. Adding the unzipped folder as a marketplace: does the app accept a local folder, and does the `.agents/plugins/marketplace.json` `"./"` source install the plugin? If not, change the card.
 3. The name to mention: does "@Living Résumé" work? `plugin.json` has no display-name field yet because the field the app reads isn't verified; until then the card says "mention Living Résumé" without the @.
 4. Does the app ask for a folder, and does a file attached in the chat reach that folder? (The card tells people to put the file in the folder.)
 The HTML pages carry the same list as comments; remove them once checked.
@@ -54,7 +63,7 @@ The HTML pages carry the same list as comments; remove them once checked.
 Use `--dir <folder>` or `LIVING_RESUME_DIR` to point at a workspace elsewhere.
 
 ## Free and Pro
-Free: import, the résumé inbox and rubric, review, every format, one role profile, checks, publish, LinkedIn packet; a small credit link on the web page (never on the PDF). Pro (yearly, via Polar): unlimited role profiles, job-by-job versions (`apply`), the scout, capability statement and vendor kit, no credit link. The license is checked against Polar's public license-key endpoint, cached locally, and works offline for 30 days between checks.
+Free: import, the résumé inbox and rubric, review, every format, one role profile, checks, publish, LinkedIn packet; a small credit link on the web page (never on the PDF). Pro (yearly, via Polar): unlimited role profiles, job-by-job versions (`apply`), the scout, capability statement and vendor kit, no credit link. The license is checked against Polar's public license-key endpoint, cached locally, and works offline for 30 days between checks. Each check sends only your license key, Polar's organization id, and a label with your computer's name; nothing about your résumé. Job matches send only company board names and your job titles to those companies' public job boards. Full list in [PRIVACY.md](PRIVACY.md).
 
 ## Requirements
 Node 18.17+. PDF: Google Chrome, Chromium, Edge, or Brave (or `CHROME_PATH`), else Python with reportlab. DOCX: macOS `textutil` or `pandoc` (without them, your AI makes the Word file from `dist/resume-print.html`). Optional: poppler (`pdftotext`) for PDF import and the PDF text check.
