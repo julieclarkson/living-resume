@@ -235,7 +235,9 @@ test('MCP replies are plain words: no CLI commands, no Terminal, no developer no
   const clean = (r, what) => { assert.doesNotMatch(r.text, /living-resume |Terminal|product\.config\.json|install poppler/, `${what}: ${r.text}`); return r; };
   try {
     await s.req('initialize', {});
-    assert.match(clean(await call(s, 'resume_status'), 'status').text, /No résumé workspace found yet\. Ask where their résumé folder is, then resume_init with it\./);
+    const first = clean(await call(s, 'resume_status'), 'status');
+    assert.match(first.text, /Let's get started with setup! There's no résumé folder yet\. Ask where their résumé folder should be, then resume_init with it\./);
+    assert.equal(first.err, false, 'no folder yet is a normal first step, not an error');
     assert.match(clean(await call(s, 'resume_init', { folder }), 'init').text, /Next: import their LinkedIn \.zip or résumé\./);
     const imp = clean(await call(s, 'resume_import', { text: 'Pat Lee\nOps lead\n\nExperience\nAnalyst, Acme, Austin, TX  2017 – 2019\n- Built the weekly report\n- Ran the month-end close\n' }), 'import');
     assert.match(imp.text, /Next: review the lines\./);

@@ -54,7 +54,7 @@ export const P = (...a) => path.join(ROOT, ...a);
 export const isWorkspace = (dir = ROOT) => fs.existsSync(path.join(dir, 'resume', 'ledger.json'));
 export function requireWorkspace() {
   if (!isWorkspace()) {
-    if (process.env.LIVING_RESUME_VIA === 'mcp') console.error('No résumé workspace found yet. Ask where their résumé folder is, then resume_init with it.');
+    if (process.env.LIVING_RESUME_VIA === 'mcp') console.error("Let's get started with setup! There's no résumé folder yet. Ask where their résumé folder should be, then resume_init with it.");
     else console.error(`✗ No résumé workspace found (looked for resume/ledger.json from ${process.cwd()}).\n  Start one:  living-resume init   (or set LIVING_RESUME_DIR)`);
     process.exit(2);
   }
